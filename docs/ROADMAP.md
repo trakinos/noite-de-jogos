@@ -1,8 +1,14 @@
-# Dominion Friends — Roadmap
+# Noite de Jogos — Roadmap
 
-Last updated: 2026-10-07
+Last updated: 2026-10-24
 
-## Done
+Noite de Jogos (formerly Dominion Friends) is a site where one group of friends plays board games online, each person on their own device, usually while on a call. It has two games:
+- **Dominion Friends:** Dominion with the Feira theme. Playable now.
+- **Dono do Bairro:** the classic rules of Banco Imobiliário with a neighborhood theme. Planned.
+
+Design: `docs/superpowers/specs/2026-10-24-noite-de-jogos-banco-imobiliario-design.md`
+
+## Done (Dominion Friends)
 
 - [x] **Rules engine:** Dominion 2nd-edition base set with all 26 kingdom cards. Tested with 200 simulated games and fuzzed against malformed input. (Plan 1)
 - [x] **Online play:** one player hosts from their browser and friends join by room code or link over PeerJS. Includes rejoining after a refresh, heartbeat-based disconnect detection, and an "End game" button for the host. (Plan 2)
@@ -10,7 +16,39 @@ Last updated: 2026-10-07
 - [x] **Deploy workflow:** GitHub Actions runs typecheck, tests and build, then publishes to GitHub Pages.
 - [x] **Solo test:** two tabs on one machine.
 
-## Now
+## Noite de Jogos
+
+### A. Platform: rename, front page, shared parts
+Dominion must keep working and its tests must stay green after every step.
+- [ ] Split the reusable parts out of Dominion: room codes and join links, PeerJS transport and heartbeat, a generic host (lobby, seats, colors, rejoin, turn clock, per-player views), i18n plumbing, design tokens and shared components. Each game becomes a module: its engine, intents, views, timeout move, lobby options and screens.
+- [ ] A room tells the guest which game it is, so joining never asks you to choose.
+- [ ] **Front page** (option C with a join row): the site name and PT/EN switch, "Seu nome · trocar", a join row (code + Entrar), then one "Criar" row per game with its name, tag, player count and length. It replaces the Dominion Home screen. Invite links skip it.
+- [ ] **Rename** the site to Noite de Jogos: the repo becomes `trakinos/noite-de-jogos`, and the new address is `trakinos.github.io/noite-de-jogos/`. Ask before doing it.
+- [ ] **Redirect** the old address: a tiny `dominion-friends` repo whose page redirects to the new address and keeps `#join=CODE`. Check that an old invite link still works.
+- [ ] Update the title, docs, CHANGELOG and git remote.
+
+### B. Dono do Bairro (Banco Imobiliário rules)
+Classic rules, 2–6 players, playable on working values first. The user checks the board on screen and real values replace the working ones later.
+- [ ] **Board data:** 40 squares, 22 pontos in 8 ruas, 6 serviços (companhias), and the Deu Bom / Deu Ruim deck. All of it is one data file with working values close to the classic edition, and the names live in a theme file (PT/EN).
+- [ ] **Engine:** rolling and moving, doubles (3 doubles = Xilindró), the Ponto de Ônibus pay ($200), buy or leave (no auction), rent (full street doubles it, puxadinhos/prédio, serviços = dice × multiplier, all 6 doubles it), Bolão and IPTU, the cards deck, the Carta do Advogado (Habeas Corpus).
+- [ ] **Building:** only on your own turn and only with the full rua, built evenly, up to 4 puxadinhos then a prédio, sold back at half price.
+- [ ] **Mortgage** at the printed value, paid off at +20%.
+- [ ] **Xilindró:** up to 3 turns; leave with doubles, the $50 fine or the Carta do Advogado.
+- [ ] **Trading on your own turn only:** pontos, money and Carta do Advogado in either direction, which the other player accepts or declines. It has its own short answer clock.
+- [ ] **Debts and bankruptcy:** sell and mortgage to pay (also off-turn, only to settle a debt), "Faliu", and the last player left wins.
+- [ ] **Turn timer and timeouts:** the cautious move (never spends money by choice).
+- [ ] Engine tests: unit tests, simulated games and fuzzed intents, the same as Dominion.
+- [ ] **Board mockups** (a neighborhood map around the pracinha) for the user to choose from, then the screens: lobby, board, your panel, opponents, trade dialog, animated dice and token, log, end screen, rules dialog. Phone first, dark mode.
+- [ ] **Partida rápida** (lobby options, all off by default, one switch turns on the bundle): a time limit (30/45/60/90 min, the round finishes, the richest player wins), prédio after 3 puxadinhos, deal out pontos at the start, leave the Xilindró early.
+- [ ] Playtest with friends on a call. **The user checks the board's names and values** against a real classic set and sends corrections. Only the data file changes.
+
+### C. Dono do Bairro, later
+- [ ] Replace the working values with the checked classic numbers and Sorte ou Revés cards.
+- [ ] Counter-offers in trades.
+- [ ] Bots to fill seats.
+- [ ] Sounds (dice, buying, rent, going to the Xilindró).
+
+## Dominion Friends
 
 ### 1. Put it online ✅
 Nothing else is needed before friends anywhere can play.
@@ -28,7 +66,7 @@ Real players will find what two tabs on one machine can't.
 
 Round 1 feedback and what changed: `docs/superpowers/specs/2026-10-05-playtest-round-1-design.md`
 
-## Next
+### Next
 
 ### 3. Theme (the Tanto Cuore step)
 The game rules don't change; only the presentation does.
@@ -65,7 +103,7 @@ Order these by playtest feedback.
 - [ ] The choice dialog doesn't manage keyboard focus.
 - [ ] Connections from refused players stay open until those players leave.
 
-## Later
+### Later
 
 ### 6. Bigger additions
 - [ ] Custom cards. The engine already supports them as data plus a small effect function.
@@ -74,14 +112,8 @@ Order these by playtest feedback.
 - [ ] Save and resume a game. This would need the card effects rewritten as steps that can be saved, instead of paused functions held in the host's memory.
 - [ ] Hand hosting over to another player if the host leaves.
 
-### 7. Other games
-Use what Dominion Friends already has to host other games for the same group of friends.
-- [ ] Decide which games to add.
-- [ ] Separate the reusable parts from the Dominion-specific ones: rooms and join links, the PeerJS host/guest connection, the lobby, player colors, the turn timer, translations and the design system.
-- [ ] Give each game its own rules engine, written the same way: state on the host, an intent for each player move, and a per-player view.
-- [ ] **Start page:** a first screen that lists the available games, where you choose one before hosting or joining. Each game card shows its name, player count and length. Invite links skip it and open the right game's lobby directly.
-
 ## References
+- Noite de Jogos + Dono do Bairro design: `docs/superpowers/specs/2026-10-24-noite-de-jogos-banco-imobiliario-design.md`
 - Design spec: `docs/superpowers/specs/2026-10-04-dominion-friends-design.md`
 - Plan 1 (engine): `docs/superpowers/plans/2026-10-04-engine-and-cards.md`
 - Plan 2 (networking and UI): `docs/superpowers/plans/2026-10-04-networking-and-ui.md`
