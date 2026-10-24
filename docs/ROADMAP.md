@@ -20,9 +20,9 @@ Design: `docs/superpowers/specs/2026-10-24-noite-de-jogos-banco-imobiliario-desi
 
 ### A. Platform: rename, front page, shared parts
 Dominion must keep working and its tests must stay green after every step.
-- [ ] Lobbies say which game they are (`LobbyState.game`), and a game catalog feeds the front page.
-- [ ] A room tells the guest which game it is, so joining never asks you to choose.
-- [ ] **Front page** (option C with a join row): the site name and PT/EN switch, "Seu nome · trocar", a join row (code + Entrar), then one "Criar" row per game with its name, tag, player count and length. It replaces the Dominion Home screen. Invite links skip it.
+- [x] Lobbies say which game they are (`LobbyState.game`), and a game catalog feeds the front page.
+- [x] A room tells the guest which game it is, so joining never asks you to choose.
+- [x] **Front page** (option C with a join row): the site name and PT/EN switch, "Seu nome · trocar", a join row (code + Entrar), then one "Criar" row per game with its name, tag, player count and length. It replaces the Dominion Home screen. Invite links skip it.
 - [ ] **Rename** the site to Noite de Jogos: the repo becomes `trakinos/noite-de-jogos`, and the new address is `trakinos.github.io/noite-de-jogos/`. Ask before doing it.
 - [ ] **Redirect** the old address: a tiny `dominion-friends` repo whose page redirects to the new address and keeps `#join=CODE`. Check that an old invite link still works.
 - [ ] Update the title, docs, CHANGELOG and git remote.

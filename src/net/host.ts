@@ -72,6 +72,7 @@ export class HostSession {
 
   get lobby(): LobbyState {
     return {
+      game: 'dominion',
       hostId: this.hostSeatId ?? '',
       players: this.seats.map((s) => ({ id: s.id, name: s.name, online: s.conn !== null, color: s.color })),
       kingdom: [...this.kingdom],

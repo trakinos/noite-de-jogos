@@ -8,6 +8,7 @@ const lobby = {
     { id: 'p0', name: 'Ana', online: true, color: 'teal' as const },
     { id: 'p1', name: 'Bo', online: true, color: 'pink' as const },
   ],
+  game: 'dominion' as const,
   kingdom: [],
   inGame: true,
   turnTimer: null,

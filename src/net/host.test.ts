@@ -5,6 +5,10 @@ import { flush } from './memory';
 import { connectClient, join, seededHostOptions } from './testing';
 
 describe('HostSession lobby', () => {
+  it('tags the lobby with its game', () => {
+    expect(new HostSession(seededHostOptions()).lobby.game).toBe('dominion');
+  });
+
   it('makes the local connection the host and welcomes it', async () => {
     const host = new HostSession(seededHostOptions());
     const me = await join(host, 'Ana', { local: true });

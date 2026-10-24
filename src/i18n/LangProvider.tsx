@@ -46,7 +46,7 @@ export function LangProvider({ children }: { children: ReactNode }) {
   );
   useEffect(() => {
     document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
-    document.title = value.tr.t('appName');
+    document.title = value.tr.t('siteName');
   }, [lang, value]);
   return <LangContext.Provider value={value}>{children}</LangContext.Provider>;
 }
