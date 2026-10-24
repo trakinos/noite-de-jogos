@@ -6,7 +6,7 @@ import { Centered } from './components/Centered';
 import { hostGame, joinGame, type ActiveSession } from './connect';
 import { Board } from './screens/Board';
 import { EndScreen } from './screens/EndScreen';
-import { Home } from './screens/Home';
+import { FrontPage } from './screens/FrontPage';
 import { Lobby } from './screens/Lobby';
 import { Icon } from './components/Icon';
 import { LangToggle } from './components/LangToggle';
@@ -21,6 +21,10 @@ export function App() {
   // Computed once: StrictMode re-runs effects, but never re-runs a state initializer's result.
   const [entry] = useState(() => entryAction(location.hash, loadName()));
   const [busy, setBusy] = useState(entry.kind === 'autoJoin');
+  // True only while the invite-link auto-join is in flight; a later manual join uses the normal busy state.
+  const [autoJoining, setAutoJoining] = useState(entry.kind === 'autoJoin');
+  // Code to prefill in the front page's join row: an invite, or a join that just failed or was refused.
+  const [invitedCode, setInvitedCode] = useState<string | null>(entry.kind === 'invited' ? entry.code : null);
   const [error, setError] = useState<string | null>(null);
   const autoJoined = useRef(false);
   const state = useGuestState(active?.session ?? null);
@@ -29,6 +33,7 @@ export function App() {
   useEffect(() => {
     if (state?.status !== 'rejected') return;
     setError(state.error);
+    if (active) setInvitedCode(active.code);
     active?.close();
     setActive(null);
     // Don't let a refresh retry a dead room.
@@ -40,7 +45,7 @@ export function App() {
     if (entry.kind !== 'autoJoin' || autoJoined.current) return;
     autoJoined.current = true;
     const { code, name } = entry;
-    void connect(name, () => joinGame(code, name));
+    void connect(name, () => joinGame(code, name), code).finally(() => setAutoJoining(false));
   }, []);
 
   // Closing the host's tab ends the game for everyone, so ask first.
@@ -57,7 +62,7 @@ export function App() {
     };
   }, [active]);
 
-  async function connect(name: string, open: () => Promise<ActiveSession>) {
+  async function connect(name: string, open: () => Promise<ActiveSession>, retryCode?: string) {
     saveName(name);
     setBusy(true);
     setError(null);
@@ -65,6 +70,7 @@ export function App() {
       setActive(await open());
     } catch (err) {
       setError(describePeerError(err));
+      if (retryCode) setInvitedCode(retryCode);
       history.replaceState(null, '', location.pathname);
     } finally {
       setBusy(false);
@@ -75,11 +81,12 @@ export function App() {
     active?.close();
     setActive(null);
     setError(null);
+    setInvitedCode(null);
     history.replaceState(null, '', location.pathname);
   }
 
   function renderScreen() {
-    if (entry.kind === 'autoJoin' && busy && !active) {
+    if (entry.kind === 'autoJoin' && autoJoining && !active) {
       return (
         <Centered>
           <Loader />
@@ -90,12 +97,12 @@ export function App() {
 
     if (!active || !state || state.status === 'rejected') {
       return (
-        <Home
+        <FrontPage
           initialName={loadName()}
-          initialCode={entry.kind === 'invited' ? entry.code : ''}
+          invitedCode={invitedCode}
           busy={busy}
           error={state?.status === 'rejected' ? state.error : error}
-          onHost={(name) => connect(name, () => hostGame(name))}
+          onHost={(_game, name) => connect(name, () => hostGame(name))}
           onJoin={(code, name) =>
             connect(name, async () => {
               const session = await joinGame(code, name);
