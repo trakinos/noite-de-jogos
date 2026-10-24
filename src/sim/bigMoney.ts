@@ -1,6 +1,7 @@
 import { ownedCards } from '../engine/zones';
 import { getCard, isType } from '../cards/registry';
 import type { Game } from '../engine/game';
+import { openPrompts } from '../engine/timeout';
 import type { CardId, Intent, Prompt, PromptAnswer } from '../engine/types';
 
 /** The simplest legal answer to any prompt. */
@@ -32,10 +33,11 @@ export function defaultAnswer(prompt: Prompt): PromptAnswer {
 /** Big Money with kingdom cards: answer prompts, play Actions and Treasures, then buy Province/Gold/Silver or a kingdom card. */
 export function botMove(game: Game): { playerId: string; intent: Intent } {
   const s = game.state;
-  if (s.pending) {
+  const [open] = openPrompts(s);
+  if (open) {
     return {
-      playerId: s.players[s.pending.player].id,
-      intent: { type: 'answerPrompt', answer: defaultAnswer(s.pending) },
+      playerId: s.players[open.player].id,
+      intent: { type: 'answerPrompt', answer: defaultAnswer(open) },
     };
   }
   const p = s.players[s.turn.player];

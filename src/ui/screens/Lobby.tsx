@@ -10,6 +10,7 @@ import { ColorPicker } from '../components/ColorPicker';
 import { Icon } from '../components/Icon';
 import { KingdomPicker } from '../components/KingdomPicker';
 import { Pile } from '../components/Pile';
+import { RulesDialog } from '../components/RulesDialog';
 import { sortByCost } from '../moves';
 
 interface Props {
@@ -27,6 +28,7 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onLeave }:
   const [draft, setDraft] = useState<CardId[]>(lobby.kingdom);
   const [startError, setStartError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [rules, setRules] = useState(false);
   const kingdomKey = lobby.kingdom.join(',');
   useEffect(() => setDraft(lobby.kingdom), [kingdomKey]);
 
@@ -59,6 +61,10 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onLeave }:
     <main className="screen lobby">
       <header className="lobby__header">
         <h1>{tr.t('room', { code })}</h1>
+        <button type="button" className="rules-btn" onClick={() => setRules(true)} title={tr.t('rules')}>
+          <Icon name="book" />
+          <span>{tr.t('rules')}</span>
+        </button>
         <button type="button" onClick={onLeave}>
           <Icon name="door" />
           {tr.t('leave')}
@@ -183,6 +189,7 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onLeave }:
           {tr.t('waitingHostStart')}
         </div>
       )}
+      {rules && <RulesDialog kingdom={draft} onClose={() => setRules(false)} />}
     </main>
   );
 }

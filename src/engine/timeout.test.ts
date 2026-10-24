@@ -3,7 +3,7 @@ import { KINGDOM_IDS } from '../cards/registry';
 import { botMove } from '../sim/bigMoney';
 import { Game } from './game';
 import { createRng, nextInt, shuffle } from './rng';
-import { answerAtRandom, finishTurn } from './timeout';
+import { answerAtRandom, finishTurn, openPrompts } from './timeout';
 import { newState, setZones, TEST_KINGDOM } from './testkit';
 
 describe('answerAtRandom', () => {
@@ -17,9 +17,9 @@ describe('answerAtRandom', () => {
     setZones(state, 1, { hand: ['copper', 'copper', 'estate', 'estate', 'silver'] });
     const game = new Game(state);
     expect(game.apply('p0', { type: 'playAction', handIndex: 0 }).ok).toBe(true);
-    expect(game.state.pending?.player).toBe(1);
+    expect(openPrompts(game.state).map((p) => p.player)).toEqual([1]);
     expect(answerAtRandom(game, createRng(1))).toBe(true);
-    expect(game.state.pending).toBeNull();
+    expect(openPrompts(game.state)).toEqual([]);
     expect(game.state.players[1].hand).toHaveLength(3);
   });
 });

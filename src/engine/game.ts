@@ -1,5 +1,5 @@
 import { getCard, isType } from '../cards/registry';
-import type { Gen } from '../cards/types';
+import type { EffectContext, Gen } from '../cards/types';
 import { createContext } from './context';
 import { validateAnswer } from './prompts';
 import { computeResult, isGameOver } from './scoring';
@@ -14,6 +14,7 @@ export class Game {
   readonly state: GameState;
   /** The card effect paused on a prompt. Lives only in host memory. */
   private effect: Gen | null = null;
+  private effectCtx: EffectContext | null = null;
 
   constructor(state: GameState) {
     this.state = state;
@@ -30,6 +31,17 @@ export class Game {
     if (player < 0) return fail('Unknown player');
     if (!intent || typeof intent !== 'object') return fail('Invalid intent');
 
+    if (s.group) {
+      if (intent.type !== 'answerPrompt') return fail('Waiting for a choice to be made');
+      const i = s.group.prompts.findIndex((p, k) => p.player === player && s.group!.answers[k] === null);
+      if (i < 0) return fail('It is not your choice to make');
+      if (!this.effect) return fail('This choice can no longer be resumed');
+      const err = validateAnswer(s.group.prompts[i], intent.answer);
+      if (err) return fail(err);
+      s.group.answers[i] = intent.answer;
+      if (s.group.answers.every((a) => a !== null)) this.resume(s.group.answers as PromptAnswer[]);
+      return ok();
+    }
     if (s.pending) {
       if (intent.type !== 'answerPrompt') return fail('Waiting for a choice to be made');
       if (s.pending.player !== player) return fail('It is not your choice to make');
@@ -81,19 +93,25 @@ export class Game {
     this.current.hand.splice(i, 1);
     this.current.inPlay.push(card);
     this.log(turn.player, 'plays', [card]);
-    this.effect = createContext(this.state, turn.player).playCard(card);
+    this.effectCtx = createContext(this.state, turn.player);
+    this.effect = this.effectCtx.playCard(card);
     this.resume(undefined);
     return ok();
   }
 
   /** Runs the paused effect until it needs another answer or finishes. */
-  private resume(answer: PromptAnswer | undefined): void {
+  private resume(answer: PromptAnswer | PromptAnswer[] | undefined): void {
     const effect = this.effect;
     if (!effect) return;
     const step = answer === undefined ? effect.next() : effect.next(answer);
+    this.state.pending = null;
+    this.state.group = null;
     if (step.done) {
       this.effect = null;
-      this.state.pending = null;
+      this.effectCtx = null;
+    } else if (Array.isArray(step.value)) {
+      const prompts = step.value;
+      this.state.group = { card: this.effectCtx?.resolving ?? null, prompts, answers: prompts.map(() => null) };
     } else {
       this.state.pending = step.value;
     }

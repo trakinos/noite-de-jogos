@@ -1,9 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { Game } from '../../engine/game';
 import { answerCards, answerOption, newState, setZones } from '../../engine/testkit';
+import { openPrompts } from '../../engine/timeout';
 import type { CardId } from '../../engine/types';
 
 const COPPERS: CardId[] = ['copper', 'copper', 'copper', 'copper', 'copper'];
+const open = (g: Game) => openPrompts(g.state);
 
 /** 3-player game. Player 0 has `card` at hand index 0; opponents get the given hands and decks. */
 function attack(card: CardId, opp: { hand: CardId[]; deck?: CardId[] }[]): Game {
@@ -19,19 +21,37 @@ describe('Militia', () => {
   it('makes each other player discard down to 3', () => {
     const g = attack('militia', [{ hand: COPPERS }, { hand: ['copper', 'copper', 'copper'] }]);
     expect(g.state.turn.coins).toBe(2);
-    expect(g.state.pending).toMatchObject({ kind: 'chooseCards', player: 1, min: 2, max: 2 });
+    expect(open(g)).toMatchObject([{ kind: 'chooseCards', player: 1, min: 2, max: 2 }]);
+    expect(g.state.group?.card).toBe('militia');
     expect(g.apply('p0', answerCards([0, 1]))).toEqual({ ok: false, reason: 'It is not your choice to make' });
     g.apply('p1', answerCards([0, 1]));
     expect(g.state.players[1].hand).toHaveLength(3);
     expect(g.state.players[1].discard).toEqual(['copper', 'copper']);
-    expect(g.state.pending).toBeNull();
+    expect(open(g)).toEqual([]);
+    expect(g.state.group).toBeNull();
+  });
+
+  it('asks every victim at once, and they answer in any order', () => {
+    const g = attack('militia', [{ hand: COPPERS }, { hand: ['estate', ...COPPERS] }]);
+    expect(open(g).map((p) => [p.player, p.kind === 'chooseCards' && p.min])).toEqual([[1, 2], [2, 3]]);
+    expect(g.apply('p2', answerCards([0, 1, 2]))).toEqual({ ok: true });
+    // p2 is done; their discard waits for everyone, so effects still land in turn order.
+    expect(open(g).map((p) => p.player)).toEqual([1]);
+    expect(g.state.group?.answers.map((a) => a !== null)).toEqual([false, true]);
+    expect(g.apply('p2', answerCards([0, 1, 2]))).toEqual({ ok: false, reason: 'It is not your choice to make' });
+    g.apply('p1', answerCards([0, 1]));
+    expect(g.state.players[1].hand).toHaveLength(3);
+    expect(g.state.players[2].hand).toHaveLength(3);
+    expect(g.state.group).toBeNull();
+    expect(g.state.log.filter((l) => l.text === 'discards').map((l) => l.player)).toEqual([1, 2]);
   });
 
   it('is blocked by a revealed Moat', () => {
     const g = attack('militia', [{ hand: ['moat', ...COPPERS.slice(1)] }, { hand: COPPERS }]);
-    expect(g.state.pending).toMatchObject({ kind: 'chooseOption', player: 1 });
+    // Only the Moat holder decides first; the attack's own choices come after every reaction.
+    expect(open(g)).toMatchObject([{ kind: 'chooseOption', player: 1 }]);
     g.apply('p1', answerOption(0));
-    expect(g.state.pending).toMatchObject({ kind: 'chooseCards', player: 2 });
+    expect(open(g)).toMatchObject([{ kind: 'chooseCards', player: 2 }]);
     g.apply('p2', answerCards([0, 1]));
     expect(g.state.players[1].hand).toHaveLength(5);
     expect(g.state.players[2].hand).toHaveLength(3);
@@ -40,7 +60,7 @@ describe('Militia', () => {
   it('still hits a player who does not reveal Moat', () => {
     const g = attack('militia', [{ hand: ['moat', ...COPPERS.slice(1)] }, { hand: ['copper'] }]);
     g.apply('p1', answerOption(1));
-    expect(g.state.pending).toMatchObject({ kind: 'chooseCards', player: 1, min: 2, max: 2 });
+    expect(open(g)).toMatchObject([{ kind: 'chooseCards', player: 1, min: 2, max: 2 }]);
   });
 });
 
@@ -72,7 +92,7 @@ describe('Bandit', () => {
     ]);
     expect(g.state.players[0].discard).toEqual(['gold']);
     expect(g.state.players[1].discard).toEqual(['copper']);
-    expect(g.state.pending).toMatchObject({ kind: 'chooseCards', player: 2, cards: ['silver', 'gold'], selectable: [0, 1] });
+    expect(open(g)).toMatchObject([{ kind: 'chooseCards', player: 2, cards: ['silver', 'gold'], selectable: [0, 1] }]);
     g.apply('p2', answerCards([0]));
     expect(g.state.trash).toEqual(['gold', 'silver']);
     expect(g.state.players[2].discard).toEqual(['gold']);
@@ -86,7 +106,7 @@ describe('Bureaucrat', () => {
       { hand: COPPERS },
     ]);
     expect(g.state.players[0].deck[0]).toBe('silver');
-    expect(g.state.pending).toMatchObject({ kind: 'chooseCards', player: 1, selectable: [0, 1], min: 1, max: 1 });
+    expect(open(g)).toMatchObject([{ kind: 'chooseCards', player: 1, selectable: [0, 1], min: 1, max: 1 }]);
     g.apply('p1', answerCards([1]));
     expect(g.state.players[1].deck[0]).toBe('duchy');
     expect(g.state.players[1].hand).toHaveLength(4);
@@ -96,6 +116,6 @@ describe('Bureaucrat', () => {
   it('topdecks automatically when there is only one Victory card', () => {
     const g = attack('bureaucrat', [{ hand: ['estate', 'copper'] }, { hand: COPPERS }]);
     expect(g.state.players[1].deck[0]).toBe('estate');
-    expect(g.state.pending).toBeNull();
+    expect(open(g)).toEqual([]);
   });
 });

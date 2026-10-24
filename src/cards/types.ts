@@ -1,6 +1,7 @@
 import type { CardId, CardType, GameState, Prompt, PromptAnswer } from '../engine/types';
 
-export type Gen<T = void> = Generator<Prompt, T, PromptAnswer>;
+/** Effects yield one prompt, or an array of prompts for different players to answer at the same time. */
+export type Gen<T = void> = Generator<Prompt | Prompt[], T, PromptAnswer | PromptAnswer[]>;
 export type Effect = (ctx: EffectContext) => Gen;
 
 export interface CardData {
@@ -91,8 +92,15 @@ export interface EffectContext {
   chooseOption(player: number, spec: ChooseOptionSpec): Gen<number>;
   /** Returns the cards in the chosen order (first = top). No prompt for 0–1 cards. */
   orderCards(player: number, cards: CardId[], spec: { id: string; message: string }): Gen<CardId[]>;
-  /** Asks Moat holders whether to reveal; returns the opponents the attack hits, in turn order. */
+  /**
+   * Runs `each(player)` for every player at once: their prompts open together and are answered in any order.
+   * Effects still apply in the order of `players`. Each run may only ask its own player single prompts.
+   */
+  simultaneously<T>(players: number[], each: (player: number) => Gen<T>): Gen<T[]>;
+  /** Asks every Moat holder at once whether to reveal; returns the opponents the attack hits, in turn order. */
   attackedOpponents(): Gen<number[]>;
+  /** The card whose effect is resolving right now, or null. */
+  readonly resolving: CardId | null;
   /** Resolves a card's effect. The caller is responsible for moving the card into play. */
   playCard(card: CardId): Gen;
 }
