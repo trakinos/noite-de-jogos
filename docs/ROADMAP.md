@@ -23,9 +23,9 @@ Dominion must keep working and its tests must stay green after every step.
 - [x] Lobbies say which game they are (`LobbyState.game`), and a game catalog feeds the front page.
 - [x] A room tells the guest which game it is, so joining never asks you to choose.
 - [x] **Front page** (option C with a join row): the site name and PT/EN switch, "Seu nome · trocar", a join row (code + Entrar), then one "Criar" row per game with its name, tag, player count and length. It replaces the Dominion Home screen. Invite links skip it.
-- [ ] **Rename** the site to Noite de Jogos: the repo becomes `trakinos/noite-de-jogos`, and the new address is `trakinos.github.io/noite-de-jogos/`. Ask before doing it.
-- [ ] **Redirect** the old address: a tiny `dominion-friends` repo whose page redirects to the new address and keeps `#join=CODE`. Check that an old invite link still works.
-- [ ] Update the title, docs, CHANGELOG and git remote.
+- [x] **Rename** the site to Noite de Jogos: the repo becomes `trakinos/noite-de-jogos`, and the new address is `trakinos.github.io/noite-de-jogos/`. Ask before doing it.
+- [x] **Redirect** the old address: a tiny `dominion-friends` repo whose page redirects to the new address and keeps `#join=CODE`. Check that an old invite link still works.
+- [x] Update the title, docs, CHANGELOG and git remote.
 
 ### B. Dono do Bairro (Banco Imobiliário rules)
 Classic rules, 2–6 players, playable on working values first. The user checks the board on screen and real values replace the working ones later.

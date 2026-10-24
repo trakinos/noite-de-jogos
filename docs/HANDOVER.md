@@ -5,8 +5,8 @@ Last updated: 2026-10-05. Read this first, then `docs/ROADMAP.md`. What changed 
 ## What this is
 A browser deck-building card game for 2–4 friends. It uses Dominion 2nd-edition base-set rules, re-themed as "Feira" (a Brazilian street market: Centavo/Moeda/Nota, Banca/Barraca/Mercadão, Fiado for Curse), the way Tanto Cuore re-themed Dominion. One player hosts from their own browser tab and the others join with a room code or link. Play is peer-to-peer over WebRTC (PeerJS), with no game server.
 
-- **Live:** https://trakinos.github.io/dominion-friends/. Every push to `main` deploys through GitHub Actions, after typecheck, tests and build pass.
-- **Repo:** https://github.com/trakinos/dominion-friends (public). The remote is SSH (`git@github.com:trakinos/dominion-friends.git`), and a plain `git push` works.
+- **Live:** https://trakinos.github.io/noite-de-jogos/ (the old address https://trakinos.github.io/dominion-friends/ redirects there and keeps `#join=CODE`; its page lives in the separate `trakinos/dominion-friends` repo, source `tools/redirect/index.html`). Every push to `main` deploys through GitHub Actions, after typecheck, tests and build pass.
+- **Repo:** https://github.com/trakinos/noite-de-jogos (public; renamed from `dominion-friends` on 2026-10-24). The remote is SSH (`git@github.com:trakinos/noite-de-jogos.git`), and a plain `git push` works.
 - **Language:** Brazilian Portuguese by default, with an EN/PT toggle that each player sets for themselves.
 - **Status:** deployed and browser-tested. Playtest round 1 is done and its feedback shipped on 2026-10-05: player colors, a colored turn board, the turn timer, the click guard and the VP tally. Next: more playtests, 3–4 players and phones; see `docs/ROADMAP.md`.
 

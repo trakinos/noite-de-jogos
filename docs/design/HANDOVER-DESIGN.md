@@ -2,7 +2,7 @@
 
 > **Historical.** This was the brief before the Feira theme existed. The current reference is [`docs/DESIGN-SYSTEM.md`](../DESIGN-SYSTEM.md).
 
-Last updated: 2026-10-04 · Live: https://trakinos.github.io/dominion-friends/ · Screenshots: `docs/design/screens/`
+Last updated: 2026-10-04 · Live: https://trakinos.github.io/noite-de-jogos/ · Screenshots: `docs/design/screens/`
 
 ## 1. What this is
 **Dominion Friends** is a browser card game that 2–4 friends play together online, each on their own device. One player hosts from their browser tab and the others join with a 4-letter room code or a share link. Games last about 20–40 minutes.
