@@ -1,6 +1,17 @@
-# Changelog — Dominion Friends
+# Changelog — Noite de Jogos
 
-What changed for players, newest first. Every push to `main` deploys to https://trakinos.github.io/dominion-friends/.
+What changed for players, newest first. Every push to `main` deploys to https://trakinos.github.io/noite-de-jogos/.
+
+## Unreleased — Noite de Jogos
+
+### Added
+- **Noite de Jogos.** The site is now a home for several games. Dominion is playable; "Dono do Bairro" is listed as "Em breve".
+- **New front page.** It shows the site name, "Seu nome · trocar", a join row (code + Entrar) and one "Criar" row per game. It replaces the old Home screen.
+- **Rooms know their game.** Each lobby is tagged with its game, so a guest who joins never has to choose one.
+- **Invite links join straight away.** If your name is already saved, an invite link takes you into the room. If not, it asks for your name with the code filled in.
+
+### Changed
+- **New address.** The site now lives at https://trakinos.github.io/noite-de-jogos/. Old Dominion Friends links keep working: they forward to the new address and keep the invite code.
 
 ## Unreleased — Simultaneous attacks, rulebook, pile alerts
 
