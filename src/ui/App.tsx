@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { describePeerError } from '../net/errors';
-import { codeFromHash, joinLink } from '../net/roomCode';
+import { joinLink } from '../net/roomCode';
 import { useLang } from '../i18n/LangProvider';
 import { Centered } from './components/Centered';
 import { hostGame, joinGame, type ActiveSession } from './connect';
@@ -11,14 +11,18 @@ import { Lobby } from './screens/Lobby';
 import { Icon } from './components/Icon';
 import { LangToggle } from './components/LangToggle';
 import { Loader } from './components/Loader';
+import { entryAction } from './entry';
 import { loadName, saveName } from './storage';
 import { useGuestState } from './useGuestState';
 
 export function App() {
   const { tr } = useLang();
   const [active, setActive] = useState<ActiveSession | null>(null);
-  const [busy, setBusy] = useState(false);
+  // Computed once: StrictMode re-runs effects, but never re-runs a state initializer's result.
+  const [entry] = useState(() => entryAction(location.hash, loadName()));
+  const [busy, setBusy] = useState(entry.kind === 'autoJoin');
   const [error, setError] = useState<string | null>(null);
+  const autoJoined = useRef(false);
   const state = useGuestState(active?.session ?? null);
 
   // A refused join (room full, game in progress) sends the player back to the home screen.
@@ -27,7 +31,17 @@ export function App() {
     setError(state.error);
     active?.close();
     setActive(null);
+    // Don't let a refresh retry a dead room.
+    history.replaceState(null, '', location.pathname);
   }, [state?.status]);
+
+  // An invite link with a saved name joins straight away, exactly once.
+  useEffect(() => {
+    if (entry.kind !== 'autoJoin' || autoJoined.current) return;
+    autoJoined.current = true;
+    const { code, name } = entry;
+    void connect(name, () => joinGame(code, name));
+  }, []);
 
   // Closing the host's tab ends the game for everyone, so ask first.
   useEffect(() => {
@@ -51,6 +65,7 @@ export function App() {
       setActive(await open());
     } catch (err) {
       setError(describePeerError(err));
+      history.replaceState(null, '', location.pathname);
     } finally {
       setBusy(false);
     }
@@ -64,11 +79,20 @@ export function App() {
   }
 
   function renderScreen() {
+    if (entry.kind === 'autoJoin' && busy && !active) {
+      return (
+        <Centered>
+          <Loader />
+          <h2>{tr.t('joiningRoom', { code: entry.code })}</h2>
+        </Centered>
+      );
+    }
+
     if (!active || !state || state.status === 'rejected') {
       return (
         <Home
           initialName={loadName()}
-          initialCode={codeFromHash(location.hash) ?? ''}
+          initialCode={entry.kind === 'invited' ? entry.code : ''}
           busy={busy}
           error={state?.status === 'rejected' ? state.error : error}
           onHost={(name) => connect(name, () => hostGame(name))}
