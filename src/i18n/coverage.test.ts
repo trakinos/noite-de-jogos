@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { BASIC_IDS, KINGDOM_IDS } from '../cards/registry';
 import { Game } from '../engine/game';
 import { createRng, shuffle } from '../engine/rng';
+import { openPrompts } from '../engine/timeout';
 import type { CardType, Intent } from '../engine/types';
 import { botMove } from '../sim/bigMoney';
 import { DICTIONARIES } from './index';
@@ -74,8 +75,7 @@ function collect(seed: number): void {
     seed,
   });
   for (let step = 0; step < 20000 && !game.state.result; step++) {
-    const p = game.state.pending;
-    if (p) {
+    for (const p of openPrompts(game.state)) {
       ids.add(p.id);
       if (p.kind === 'chooseOption') p.optionIds.forEach((o) => optionIds.add(o));
     }

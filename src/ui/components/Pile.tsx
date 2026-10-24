@@ -6,6 +6,9 @@ import { primaryType } from '../format';
 import { Card } from './Card';
 import { Icon } from './Icon';
 
+/** Piles with this many cards or fewer show their count in the alert color. */
+export const LOW_PILE = 2;
+
 interface Props {
   id: CardId;
   /** Cards left; omitted in the lobby picker. */
@@ -31,6 +34,8 @@ export function Pile({ id, count, highlight, selected, off, dimmed, showTypes, o
   const name = tr.card(id);
   const text = tr.cardText(id);
   const empty = count === 0;
+  /** Two or fewer left: the count turns loud so nobody misses a pile about to run out. */
+  const low = count !== undefined && count > 0 && count <= LOW_PILE;
   const types = def.types.map((ty) => tr.cardType(ty)).join(' · ');
   const className = [
     'pile',
@@ -40,6 +45,7 @@ export function Pile({ id, count, highlight, selected, off, dimmed, showTypes, o
     off && 'is-off',
     dimmed && 'is-dimmed',
     empty && 'is-empty',
+    low && 'is-low',
     onClick && 'is-clickable',
   ]
     .filter(Boolean)
@@ -57,7 +63,7 @@ export function Pile({ id, count, highlight, selected, off, dimmed, showTypes, o
         }}
         onBlur={() => setPeek(false)}
         title={`${name}: ${text}`}
-        aria-label={`${name}, $${def.cost}${count === undefined ? '' : `, ×${count}`}. ${types}. ${text}`}
+        aria-label={`${name}, $${def.cost}${count === undefined ? '' : low ? `, ${tr.t('pileLow', { n: count })}` : `, ×${count}`}. ${types}. ${text}`}
         aria-pressed={selected === undefined ? undefined : selected}
       >
         {selected && (
@@ -74,7 +80,11 @@ export function Pile({ id, count, highlight, selected, off, dimmed, showTypes, o
         </span>
         <span className="pile__end" aria-hidden="true">
           <span className="coin">{def.cost}</span>
-          {count !== undefined && <span className="pile__count">{empty ? tr.t('pileEmpty') : `×${count}`}</span>}
+          {count !== undefined && (
+            <span className="pile__count" title={low ? tr.t('pileLow', { n: count }) : undefined}>
+              {empty ? tr.t('pileEmpty') : `×${count}`}
+            </span>
+          )}
         </span>
       </button>
       <div className="pile__preview" aria-hidden="true">

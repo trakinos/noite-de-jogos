@@ -33,7 +33,7 @@ function runGame(seed: number): Game {
     if (res.ok && playedCard) stats.played.add(playedCard);
     if (res.ok && intent.type === 'answerPrompt') stats.prompts++;
     if (!res.ok) throw new Error(`seed ${seed}: illegal bot move ${JSON.stringify(intent)}: ${res.reason}`);
-    if (!game.state.pending && totalCards(game.state) !== expected) {
+    if (!game.state.pending && !game.state.group && totalCards(game.state) !== expected) {
       throw new Error(`seed ${seed}: card count changed at step ${step}`);
     }
   }

@@ -1,7 +1,7 @@
 import { DEFAULT_KINGDOM, KINGDOM_IDS } from '../cards/registry';
 import { Game } from '../engine/game';
 import { createRng, shuffle } from '../engine/rng';
-import { answerAtRandom, finishTurn } from '../engine/timeout';
+import { answerAtRandom, finishTurn, openPrompts } from '../engine/timeout';
 import type { ApplyResult, CardId, Intent } from '../engine/types';
 import { viewFor } from '../engine/view';
 import { PLAYER_COLORS, type PlayerColorId } from '../theme/playerColors';
@@ -180,7 +180,7 @@ export class HostSession {
     const game = this.activeGame;
     if (game && this.clock) {
       const s = game.state;
-      this.clock.sync({ turn: s.turn, currentPlayer: s.turn.player, pending: s.pending, over: s.result !== null });
+      this.clock.sync({ turn: s.turn, currentPlayer: s.turn.player, pending: s.pending, group: s.group, over: s.result !== null });
     }
     this.broadcastViews();
   }
@@ -248,7 +248,7 @@ export class HostSession {
     const s = game.state;
     const rng = createRng(this.newSeed());
     if (kind === 'response') {
-      if (s.pending) game.note(s.pending.player, 'timeout: random answer');
+      for (const p of openPrompts(s)) game.note(p.player, 'timeout: random answer');
       answerAtRandom(game, rng);
     } else {
       game.note(s.turn.player, 'timeout: turn ended');

@@ -48,6 +48,18 @@ export type Prompt =
   | { kind: 'chooseOption'; id: string; params?: PromptParams; player: number; message: string; options: string[]; optionIds: string[]; cards?: CardId[] }
   | { kind: 'orderCards'; id: string; params?: PromptParams; player: number; message: string; cards: CardId[] };
 
+/**
+ * Prompts for several players at once, such as everyone hit by an attack.
+ * They answer in any order; the effect resumes once every prompt has an answer.
+ */
+export interface PromptGroup {
+  /** The card whose effect asked, if any. */
+  card: CardId | null;
+  prompts: Prompt[];
+  /** answers[i] answers prompts[i]; null until that player answers. */
+  answers: (PromptAnswer | null)[];
+}
+
 export type PromptAnswer =
   | { kind: 'cards'; indices: number[] }
   | { kind: 'supply'; card: CardId | null }
@@ -92,6 +104,8 @@ export interface GameState {
   trash: CardId[];
   turn: TurnState;
   pending: Prompt | null;
+  /** Prompts answered simultaneously. Never set together with `pending`. */
+  group: PromptGroup | null;
   log: LogEntry[];
   rng: RngState;
   result: GameResult | null;

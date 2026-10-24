@@ -24,6 +24,7 @@ describe('viewFor', () => {
     const s = newState({ players: 3 });
     setZones(s, 0, { hand: ['militia'], deck: [], discard: [] });
     setZones(s, 1, { hand: ['gold', 'gold', 'gold', 'gold', 'gold'], deck: [], discard: [] });
+    setZones(s, 2, { hand: ['gold', 'gold', 'gold'], deck: [], discard: [] });
     const g = new Game(s);
     g.apply('p0', { type: 'playAction', handIndex: 0 });
 
@@ -31,13 +32,29 @@ describe('viewFor', () => {
     expect(mine.prompt).toMatchObject({ kind: 'chooseCards', player: 1 });
     expect(mine.waitingOn).toBeNull();
 
+    // An attack's choices are a group: everyone sees who is still choosing, but only their own prompt.
+    const group = { card: 'militia', players: [{ player: 1, done: false }] };
     const theirs = viewFor(g.state, 'p0');
     expect(theirs.prompt).toBeNull();
-    expect(theirs.waitingOn).toEqual({ player: 1, message: 'Discard 2 card(s), down to 3', id: 'discardDownTo', params: { n: 2 } });
+    expect(theirs.group).toEqual(group);
 
     const uninvolved = viewFor(g.state, 'p2');
     expect(uninvolved.prompt).toBeNull();
-    expect(uninvolved.waitingOn).toEqual({ player: 1, message: 'Discard 2 card(s), down to 3', id: 'discardDownTo', params: { n: 2 } });
+    expect(uninvolved.group).toEqual(group);
+    expect(mine.group).toEqual(group);
+
+    g.apply('p1', { type: 'answerPrompt', answer: { kind: 'cards', indices: [0, 1] } });
+    expect(viewFor(g.state, 'p0').group).toBeNull();
+  });
+
+  it('shows a single prompt from your own card as waitingOn to the others', () => {
+    const s = newState();
+    setZones(s, 0, { hand: ['chapel', 'copper'], deck: [], discard: [] });
+    const g = new Game(s);
+    g.apply('p0', { type: 'playAction', handIndex: 0 });
+    expect(viewFor(g.state, 'p0').prompt).toMatchObject({ id: 'trashUpTo4' });
+    expect(viewFor(g.state, 'p1').waitingOn).toMatchObject({ player: 0 });
+    expect(viewFor(g.state, 'p1').group).toBeNull();
   });
 
   it('shows Sentry\'s looked-at cards only to the player looking', () => {

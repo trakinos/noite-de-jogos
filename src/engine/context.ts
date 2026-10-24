@@ -1,6 +1,6 @@
 import { getCard, isType } from '../cards/registry';
 import type { EffectContext, Gen } from '../cards/types';
-import type { CardId, GameState, PlayerState, PromptAnswer } from './types';
+import type { CardId, GameState, PlayerState, Prompt, PromptAnswer } from './types';
 import { drawCards, emptyPileCount, takeTop } from './zones';
 
 type AnswerOf<K extends PromptAnswer['kind']> = Extract<PromptAnswer, { kind: K }>;
@@ -13,6 +13,8 @@ function removeFromHand(p: PlayerState, indices: number[]): CardId[] {
 }
 
 export function createContext(state: GameState, me: number): EffectContext {
+  /** Cards whose effects are resolving, innermost last (Throne Room nests). */
+  const playing: CardId[] = [];
   const ctx: EffectContext = {
     me,
     state,
@@ -124,29 +126,48 @@ export function createContext(state: GameState, me: number): EffectContext {
       const answer = yield { kind: 'orderCards', id: spec.id, player, message: spec.message, cards: [...cards] };
       return (answer as AnswerOf<'order'>).order.map((i) => cards[i]);
     },
-    *attackedOpponents(): Gen<number[]> {
-      const hit: number[] = [];
-      for (const opp of ctx.opponents()) {
-        const reaction = state.players[opp].hand.find((c) => isType(c, 'reaction'));
-        if (reaction) {
-          const choice = yield* ctx.chooseOption(opp, {
-            id: 'revealReaction',
-            message: 'An attack is coming. Reveal your Reaction to block it?',
-            options: ['Reveal', "Don't reveal"],
-            optionIds: ['reveal', 'dontReveal'],
-          });
-          if (choice === 0) {
-            ctx.log(opp, 'reveals', [reaction]);
-            continue;
-          }
-        }
-        hit.push(opp);
+    *simultaneously<T>(players: number[], each: (player: number) => Gen<T>): Gen<T[]> {
+      const runs = players.map(each);
+      const steps = runs.map((run) => run.next());
+      for (;;) {
+        const open = steps.map((step, i) => (step.done ? -1 : i)).filter((i) => i >= 0);
+        if (open.length === 0) return steps.map((step) => step.value as T);
+        const prompts = open.map((i) => {
+          const asked = steps[i].value as Prompt | Prompt[];
+          if (Array.isArray(asked)) throw new Error('simultaneously: a run may only ask single prompts');
+          return asked;
+        });
+        const answers = (yield prompts) as PromptAnswer[];
+        open.forEach((i, k) => (steps[i] = runs[i].next(answers[k])));
       }
-      return hit;
+    },
+    *attackedOpponents(): Gen<number[]> {
+      const blocked = yield* ctx.simultaneously(ctx.opponents(), function* (opp) {
+        const reaction = state.players[opp].hand.find((c) => isType(c, 'reaction'));
+        if (!reaction) return false;
+        const choice = yield* ctx.chooseOption(opp, {
+          id: 'revealReaction',
+          message: 'An attack is coming. Reveal your Reaction to block it?',
+          options: ['Reveal', "Don't reveal"],
+          optionIds: ['reveal', 'dontReveal'],
+        });
+        if (choice !== 0) return false;
+        ctx.log(opp, 'reveals', [reaction]);
+        return true;
+      });
+      return ctx.opponents().filter((_, i) => !blocked[i]);
+    },
+    get resolving() {
+      return playing.length > 0 ? playing[playing.length - 1] : null;
     },
     *playCard(card): Gen {
       const effect = getCard(card).play;
-      if (effect) yield* effect(ctx);
+      playing.push(card);
+      try {
+        if (effect) yield* effect(ctx);
+      } finally {
+        playing.pop();
+      }
     },
   };
   return ctx;

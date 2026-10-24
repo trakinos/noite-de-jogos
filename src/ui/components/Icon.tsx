@@ -77,6 +77,7 @@ const PATHS = {
   shuffle: <path d="M16 4h4v4M20 4l-6 6M4 20l6-6M16 20h4v-4M20 20L4 4" />,
   door: <path d="M14 4H6v16h8M10 12h10M17 9l3 3-3 3" />,
   play: <path d="M7 4l13 8-13 8V4z" />,
+  book: <path d="M4 5a2 2 0 0 1 2-2h5v17H6a2 2 0 0 0-2 2V5zM20 5a2 2 0 0 0-2-2h-5v17h5a2 2 0 0 1 2 2V5z" />,
 };
 
 export type IconName = keyof typeof PATHS;

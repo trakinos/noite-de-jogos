@@ -1,5 +1,7 @@
 # Design Handover — Dominion Friends (for Claude Design)
 
+> **Historical.** This was the brief before the Feira theme existed. The current reference is [`docs/DESIGN-SYSTEM.md`](../DESIGN-SYSTEM.md).
+
 Last updated: 2026-10-04 · Live: https://trakinos.github.io/dominion-friends/ · Screenshots: `docs/design/screens/`
 
 ## 1. What this is

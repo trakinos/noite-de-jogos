@@ -2,7 +2,19 @@
 
 What changed for players, newest first. Every push to `main` deploys to https://trakinos.github.io/dominion-friends/.
 
-## Unreleased — Buy animation
+## Unreleased — Simultaneous attacks, rulebook, pile alerts
+
+### Changed
+- **Attacks are answered by everyone at once.** When an Attack such as Rapa hits several players, they all choose at the same time instead of one after another. Moat (Guarda-chuva) holders decide first, then everyone hit makes their choice together. The effects still apply in turn order.
+
+### Added
+- **Waiting for the others.** While an attack's choices are open, whoever isn't choosing sees a dialog listing everyone involved, with each player's status updating live from "Choosing…" to "Done". It can be hidden into a banner and shown again.
+- **Rulebook.** A Rules button in the board header and the lobby opens a short guide to the rules, in both languages, plus the rule text of this game's 10 Kingdom cards.
+- **Pile ran out.** When a Supply pile reaches 0, a dialog shows its counter dropping to 0, how many piles are empty, and whether the game ends this turn.
+- **Low piles stand out.** A pile with 2 or fewer cards shows its count in orange, with a slow pulse.
+- **Design system.** `docs/DESIGN-SYSTEM.md` documents the colors, type, motion and components.
+
+## 2026-10-06 — Buy animation
 
 ### Added
 - **Buying.** A bought card pops out of its pile and flies to the buyer's discard pile (or their seat at the top, for other players). On phones, while you shop on the Supply tab, it flies to the Hand tab.

@@ -114,11 +114,11 @@ describe('HostSession turn timer edge cases', () => {
     s.players[0].hand = ['copper', 'copper', 'estate', 'estate', 'silver'];
     ctx.bo.send({ type: 'intent', intent: { type: 'playAction', handIndex: 0 } });
     await flush();
-    expect(s.pending?.player).toBe(0);
+    expect(s.group?.prompts.map((p) => p.player)).toEqual([0]);
     expect(ctx.ana.last('view')!.clock).toEqual({ kind: 'response', remainingMs: RESPONSE_MS, totalMs: RESPONSE_MS });
     ctx.sched.advance(RESPONSE_MS);
     await flush();
-    expect(s.pending).toBeNull();
+    expect(s.group).toBeNull();
     expect(s.players[0].hand).toHaveLength(3);
     expect(s.log.some((e) => e.text === 'timeout: random answer' && e.player === 0)).toBe(true);
     expect(s.turn.player).toBe(1);

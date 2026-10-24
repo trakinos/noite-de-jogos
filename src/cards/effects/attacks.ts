@@ -5,12 +5,12 @@ export const ATTACK_EFFECTS: Record<CardId, Effect> = {
   *militia(ctx) {
     ctx.addCoins(2);
     const victims = yield* ctx.attackedOpponents();
-    for (const opp of victims) {
+    yield* ctx.simultaneously(victims, function* (opp) {
       const n = ctx.state.players[opp].hand.length - 3;
-      if (n <= 0) continue;
+      if (n <= 0) return;
       const picked = yield* ctx.chooseFromHand(opp, { id: 'discardDownTo', params: { n }, min: n, max: n, message: `Discard ${n} card(s), down to 3` });
       ctx.discardFromHand(opp, picked);
-    }
+    });
   },
   *witch(ctx) {
     ctx.draw(ctx.me, 2);
@@ -20,9 +20,9 @@ export const ATTACK_EFFECTS: Record<CardId, Effect> = {
   *bandit(ctx) {
     ctx.gain(ctx.me, 'gold');
     const victims = yield* ctx.attackedOpponents();
-    for (const opp of victims) {
+    yield* ctx.simultaneously(victims, function* (opp) {
       const revealed = ctx.takeFromDeck(opp, 2);
-      if (revealed.length === 0) continue;
+      if (revealed.length === 0) return;
       ctx.log(opp, 'reveals', revealed);
       const targets = revealed
         .map((_, i) => i)
@@ -32,22 +32,22 @@ export const ATTACK_EFFECTS: Record<CardId, Effect> = {
       });
       ctx.trashCards(opp, picked.map((i) => revealed[i]));
       ctx.discardCards(opp, revealed.filter((_, i) => !picked.includes(i)));
-    }
+    });
   },
   *bureaucrat(ctx) {
     ctx.gain(ctx.me, 'silver', 'deck');
     const victims = yield* ctx.attackedOpponents();
-    for (const opp of victims) {
+    yield* ctx.simultaneously(victims, function* (opp) {
       const hand = ctx.state.players[opp].hand;
       const picked = yield* ctx.chooseFromHand(opp, {
         id: 'topdeckVictory', min: 1, max: 1, message: 'Put a Victory card from your hand onto your deck', filter: (c) => ctx.isType(c, 'victory'),
       });
       if (picked.length === 0) {
         ctx.log(opp, 'reveals a hand with no Victory cards', hand);
-        continue;
+        return;
       }
       ctx.log(opp, 'reveals', [hand[picked[0]]]);
       ctx.topdeckFromHand(opp, picked[0]);
-    }
+    });
   },
 };

@@ -63,6 +63,7 @@ export function createGame(opts: SetupOptions): GameState {
     trash: [],
     turn: freshTurn(nextInt(rng, n)),
     pending: null,
+    group: null,
     log: [],
     rng,
     result: null,

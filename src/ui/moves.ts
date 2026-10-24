@@ -12,7 +12,7 @@ export function isMyTurn(view: PlayerView): boolean {
 
 /** My turn, and nobody is in the middle of answering a prompt. */
 function canAct(view: PlayerView): boolean {
-  return isMyTurn(view) && view.prompt === null && view.waitingOn === null;
+  return isMyTurn(view) && view.prompt === null && view.waitingOn === null && view.group === null;
 }
 
 export function playableHand(view: PlayerView): boolean[] {

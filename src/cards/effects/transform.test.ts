@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { Game } from '../../engine/game';
 import { answerCards, answerOption, answerSupply, newState, setZones } from '../../engine/testkit';
 import type { CardId } from '../../engine/types';
+import { openPrompts } from '../../engine/timeout';
 
 function play(hand: CardId[], deck: CardId[] = []): Game {
   const state = newState({ kingdom: ['cellar', 'chapel', 'moat', 'village', 'workshop', 'militia', 'smithy', 'festival', 'throne_room', 'market'] });
@@ -157,14 +158,14 @@ describe('Throne Room interactions', () => {
     g.apply('p0', { type: 'playAction', handIndex: 0 });
     g.apply('p0', answerCards([0]));
     // First Militia: p1 is asked about Moat, then p2 discards.
-    expect(state.pending).toMatchObject({ kind: 'chooseOption', player: 1, options: ['Reveal', "Don't reveal"] });
+    expect(openPrompts(state)).toMatchObject([{ kind: 'chooseOption', player: 1, options: ['Reveal', "Don't reveal"] }]);
     g.apply('p1', answerOption(0));
-    expect(state.pending).toMatchObject({ kind: 'chooseCards', player: 2 });
+    expect(openPrompts(state)).toMatchObject([{ kind: 'chooseCards', player: 2 }]);
     g.apply('p2', answerCards([0, 1]));
     // Second Militia: p1 is asked again; p2 already has 3 cards.
-    expect(state.pending).toMatchObject({ kind: 'chooseOption', player: 1 });
+    expect(openPrompts(state)).toMatchObject([{ kind: 'chooseOption', player: 1 }]);
     g.apply('p1', answerOption(0));
-    expect(state.pending).toBeNull();
+    expect(openPrompts(state)).toEqual([]);
     expect(state.turn.coins).toBe(4);
     expect(state.players[1].hand).toEqual(['moat', 'gold', 'gold', 'gold', 'gold']);
     expect(state.players[2].hand).toHaveLength(3);

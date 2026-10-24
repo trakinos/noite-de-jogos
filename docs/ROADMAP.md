@@ -1,6 +1,6 @@
 # Dominion Friends — Roadmap
 
-Last updated: 2026-10-05
+Last updated: 2026-10-07
 
 ## Done
 
@@ -73,6 +73,13 @@ Order these by playtest feedback.
 - [ ] Expansion cards (Intrigue, Seaside and so on).
 - [ ] Save and resume a game. This would need the card effects rewritten as steps that can be saved, instead of paused functions held in the host's memory.
 - [ ] Hand hosting over to another player if the host leaves.
+
+### 7. Other games
+Use what Dominion Friends already has to host other games for the same group of friends.
+- [ ] Decide which games to add.
+- [ ] Separate the reusable parts from the Dominion-specific ones: rooms and join links, the PeerJS host/guest connection, the lobby, player colors, the turn timer, translations and the design system.
+- [ ] Give each game its own rules engine, written the same way: state on the host, an intent for each player move, and a per-player view.
+- [ ] **Start page:** a first screen that lists the available games, where you choose one before hosting or joining. Each game card shows its name, player count and length. Invite links skip it and open the right game's lobby directly.
 
 ## References
 - Design spec: `docs/superpowers/specs/2026-10-04-dominion-friends-design.md`

@@ -1,7 +1,7 @@
 import type { Game } from './game';
 import { randomAnswer } from './randomAnswer';
 import type { RngState } from './rng';
-import type { Prompt, PromptAnswer } from './types';
+import type { GameState, Prompt, PromptAnswer } from './types';
 
 /** Safety net: a turn never needs anywhere near this many forced moves. */
 const MAX_FORCED_MOVES = 500;
@@ -21,12 +21,22 @@ export function timeoutAnswer(prompt: Prompt, rng: RngState): PromptAnswer {
   return randomAnswer(prompt, rng);
 }
 
-/** Answers the pending prompt as a timed-out player (see timeoutAnswer), as the player who owns it. */
+/** Prompts still waiting for an answer: the pending one, or the unanswered part of a group. */
+export function openPrompts(state: GameState): Prompt[] {
+  if (state.pending) return [state.pending];
+  const group = state.group;
+  return group ? group.prompts.filter((_, i) => group.answers[i] === null) : [];
+}
+
+/** Answers every open prompt as a timed-out player (see timeoutAnswer), as the player who owns it. */
 export function answerAtRandom(game: Game, rng: RngState): boolean {
-  const p = game.state.pending;
-  if (!p) return false;
-  const owner = game.state.players[p.player].id;
-  return game.apply(owner, { type: 'answerPrompt', answer: timeoutAnswer(p, rng) }).ok;
+  const open = openPrompts(game.state);
+  let answered = false;
+  for (const p of open) {
+    const owner = game.state.players[p.player].id;
+    answered = game.apply(owner, { type: 'answerPrompt', answer: timeoutAnswer(p, rng) }).ok || answered;
+  }
+  return answered;
 }
 
 /** Ends the current turn: timeout answers for open prompts, then End Phase until the next player is up. Never plays or buys. */
@@ -34,7 +44,7 @@ export function finishTurn(game: Game, rng: RngState): void {
   const s = game.state;
   const turn = s.turn;
   for (let i = 0; i < MAX_FORCED_MOVES && !s.result && s.turn === turn; i++) {
-    if (s.pending) answerAtRandom(game, rng);
+    if (s.pending || s.group) answerAtRandom(game, rng);
     else game.apply(s.players[turn.player].id, { type: 'endPhase' });
   }
 }

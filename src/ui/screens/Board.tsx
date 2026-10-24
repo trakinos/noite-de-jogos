@@ -1,17 +1,20 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import type { Intent } from '../../engine/types';
+import type { CardId, Intent } from '../../engine/types';
 import type { PlayerView } from '../../engine/view';
 import type { LocalClock } from '../../net/guest';
 import type { LobbyState } from '../../net/protocol';
 import { useLang } from '../../i18n/LangProvider';
 import { Card } from '../components/Card';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { GroupDialog } from '../components/GroupDialog';
 import { Hand } from '../components/Hand';
 import { Legend } from '../components/Legend';
 import { Icon } from '../components/Icon';
 import { Log } from '../components/Log';
 import { Opponents } from '../components/Opponents';
+import { PileOutDialog } from '../components/PileOutDialog';
 import { PromptPanel } from '../components/PromptPanel';
+import { RulesDialog } from '../components/RulesDialog';
 import { Supply } from '../components/Supply';
 import { TimerBar } from '../components/TimerBar';
 import { TurnActions } from '../components/TurnActions';
@@ -63,7 +66,25 @@ export function Board({ view, lobby, code, error, clock, onIntent, onDismissErro
   const current = view.players[view.turn.player];
   const me = view.players[view.you];
   const mine = isMyTurn(view);
-  const idle = mine && view.prompt === null && view.waitingOn === null;
+  const idle = mine && view.prompt === null && view.waitingOn === null && view.group === null;
+  const [rules, setRules] = useState(false);
+  // Hiding the waiting dialog lasts until that group of choices is over.
+  const [groupHidden, setGroupHidden] = useState(false);
+  useEffect(() => {
+    if (!view.group) setGroupHidden(false);
+  }, [view.group === null]);
+  const groupDone = view.group?.players.filter((p) => p.done).length ?? 0;
+
+  // Piles that just ran out, shown one at a time.
+  const [pilesOut, setPilesOut] = useState<{ card: CardId; from: number; empty: number }[]>([]);
+  const lastSupply = useRef(view.supply);
+  useEffect(() => {
+    const before = lastSupply.current;
+    lastSupply.current = view.supply;
+    if (before === view.supply) return;
+    const out = Object.keys(view.supply).filter((id) => view.supply[id] === 0 && (before[id] ?? 0) > 0);
+    if (out.length > 0) setPilesOut((q) => [...q, ...out.map((card) => ({ card, from: before[card], empty: ending.emptyPiles }))]);
+  }, [view.supply]);
 
   /** Moves that would end the Action phase early ask first while an Action could still be played. */
   function guarded(intent: Intent, body: string) {
@@ -88,6 +109,10 @@ export function Board({ view, lobby, code, error, clock, onIntent, onDismissErro
           <span className="room">{code}</span>
         </div>
         <Opponents view={view} online={online} colorOf={colorOf} />
+        <button type="button" className="rules-btn" onClick={() => setRules(true)} title={tr.t('rules')}>
+          <Icon name="book" />
+          <span>{tr.t('rules')}</span>
+        </button>
         {onEndGame && (
           <details className="menu" ref={menu}>
             <summary aria-label={tr.t('moreOptions')} title={tr.t('moreOptions')}>
@@ -202,7 +227,17 @@ export function Board({ view, lobby, code, error, clock, onIntent, onDismissErro
               {clock?.kind === 'response' && <TimerBar clock={clock} />}
             </div>
           )}
-          {!view.waitingOn && !mine && !online(view.turn.player) && (
+          {view.group && groupHidden && !view.prompt && (
+            <div className="banner">
+              <Icon name="clock" />
+              {tr.t('groupTitle')} · {tr.t('groupProgress', { done: groupDone, total: view.group.players.length })}
+              <button type="button" className="banner__action" onClick={() => setGroupHidden(false)}>
+                {tr.t('groupShow')}
+              </button>
+              {clock?.kind === 'response' && <TimerBar clock={clock} />}
+            </div>
+          )}
+          {!view.waitingOn && !view.group && !mine && !online(view.turn.player) && (
             <div className="banner">
               <Icon name="clock" />
               {tr.t('waitingForOffline', { name: current.name })}
@@ -268,6 +303,31 @@ export function Board({ view, lobby, code, error, clock, onIntent, onDismissErro
           onAnswer={(answer) => onIntent({ type: 'answerPrompt', answer })}
         />
       )}
+
+      {view.group && !view.prompt && !groupHidden && (
+        <GroupDialog
+          group={view.group}
+          you={view.you}
+          names={names}
+          colorOf={colorOf}
+          online={online}
+          clock={clock}
+          onHide={() => setGroupHidden(true)}
+        />
+      )}
+
+      {pilesOut.length > 0 && !view.prompt && !(view.group && !groupHidden) && (
+        <PileOutDialog
+          key={pilesOut[0].card}
+          card={pilesOut[0].card}
+          from={pilesOut[0].from}
+          empty={pilesOut[0].empty}
+          max={EMPTY_PILES_TO_END}
+          onClose={() => setPilesOut((q) => q.slice(1))}
+        />
+      )}
+
+      {rules && <RulesDialog kingdom={view.kingdom} onClose={() => setRules(false)} />}
 
       {guard && guardStillApplies(guard.view, view) && (
         <ConfirmDialog

@@ -12,7 +12,7 @@ interface Props {
 /** Your turn buttons. Renders nothing on other players' turns or while a choice is open. */
 export function TurnActions({ view, onPlayAll, onEndPhase }: Props) {
   const { tr } = useLang();
-  if (!isMyTurn(view) || view.prompt !== null || view.waitingOn !== null) return null;
+  if (!isMyTurn(view) || view.prompt !== null || view.waitingOn !== null || view.group !== null) return null;
   return (
     <div className="turn-actions">
       <button type="button" disabled={!canPlayAllTreasures(view)} onClick={onPlayAll}>

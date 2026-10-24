@@ -11,6 +11,8 @@
   --danger: #b42318;
   --danger-text: #ffffff;
   --online: #2f8f4e;
+  --alert: #d4380d;
+  --alert-text: #ffffff;
   --card-body: #fff8ea;
   --table: #e4d0aa;
   --table-dot: rgb(90 60 30 / 0.1);
@@ -54,6 +56,8 @@
     --danger: #ff8a7a;
     --danger-text: #2a0b07;
     --online: #5cc98a;
+    --alert: #ff9a3c;
+    --alert-text: #2a1204;
     --card-body: #2a2017;
     --table: #241b12;
     --table-dot: rgb(255 230 190 / 0.05);
@@ -764,6 +768,8 @@ button.link:hover { color: var(--text); }
 
 /* ===== Phone ===== */
 @media (max-width: 767px) {
+  .rules-btn { padding: 0 10px; }
+  .rules-btn span { display: none; }
   .screen { padding: 12px 16px 24px; }
   .lobby__grid { grid-template-columns: minmax(0, 1fr); }
   .lobby__header { padding-right: 0; padding-top: 24px; }
@@ -857,6 +863,68 @@ button.link:hover { color: var(--text); }
   .end .actions button { flex: 1; }
 }
 
+/* rules button + rulebook dialog */
+.rules-btn { margin-left: auto; min-height: 40px; padding: 0 12px; }
+.rules-btn + .menu { margin-left: 0; }
+.rules { max-width: 640px; gap: 14px; }
+.rules__head { display: flex; align-items: center; gap: 12px; position: sticky; top: -20px; margin: -20px -20px 0; padding: 16px 20px 12px; background: var(--surface); border-bottom: 2px solid var(--border); z-index: 1; }
+.rules__head h2 { flex: 1; }
+.rules__ic { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); flex: none; }
+.rules__close { width: 40px; min-height: 40px; padding: 0; }
+.rules__section h3 { font-size: 16px; margin: 0 0 6px; }
+.rules__section ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-weight: 600; }
+.rules__section li::marker { color: var(--stripe-a); }
+.rules__cards { margin: 0; display: grid; gap: 8px; }
+.rules__cards > div { padding: 8px 10px; border-radius: var(--r-md); background: var(--surface-2); }
+.rules__cards dt { font-family: var(--font-display); font-weight: 800; }
+.rules__cards dd { margin: 2px 0 0; font-size: 13px; font-weight: 600; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+/* everyone answering an attack at once (GroupDialog) */
+.group { max-width: 440px; justify-items: center; text-align: center; }
+.group p { margin: 0; }
+.group__sig { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+.group__sig .ico { width: 30px; height: 30px; animation: pulse 1.6s ease-in-out infinite; }
+.group__list { list-style: none; margin: 4px 0 0; padding: 0; width: 100%; display: grid; gap: 8px; }
+.group__list li {
+  display: flex; align-items: center; gap: 10px; padding: 8px 12px 8px 8px; text-align: left;
+  border-radius: var(--r-md); border: 2px solid var(--border); background: var(--surface);
+  transition: background var(--dur-base), border-color var(--dur-base);
+}
+.group__list li.is-done { border-color: var(--online); background: color-mix(in srgb, var(--online) 10%, var(--surface)); }
+.group__name { flex: 1; font-weight: 800; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.group__you { color: var(--muted); font-weight: 700; }
+.group__status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: var(--muted); }
+.group__list li.is-done .group__status { color: var(--online); }
+.group__list li.is-done .group__status .ico { animation: chipIn var(--dur-slow) var(--ease-spring); }
+.group__dots { width: 22px; height: 8px; background: radial-gradient(circle, currentColor 2.5px, transparent 3px) 0 50% / 8px 8px repeat-x; animation: pulse 1.2s ease-in-out infinite; }
+.group__progress { font-size: 13px; font-weight: 800; color: var(--muted); }
+.banner__action { margin-left: auto; min-height: 32px; padding: 0 12px; }
+
+/* a Supply pile ran out (PileOutDialog); low piles (Pile .is-low) */
+.pile-out__stage { position: relative; width: 120px; height: 132px; display: grid; place-items: center; }
+.pile-out__card { transition: transform 420ms var(--ease-out), opacity 420ms var(--ease-out); }
+.pile-out__card.is-gone { transform: translateY(18px) scale(0.85) rotate(-6deg); opacity: 0.35; filter: grayscale(1); }
+.pile-out__count {
+  position: absolute; right: -6px; bottom: -4px; min-width: 52px; height: 52px; padding: 0 10px; border-radius: 99px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 800; font-size: 28px;
+  background: var(--alert); color: var(--alert-text); border: 3px solid var(--surface); box-shadow: var(--e2);
+  animation: countDrop 420ms var(--ease-spring);
+}
+.pile-out__count.is-zero { background: var(--danger); color: var(--danger-text); animation: countZero 520ms var(--ease-spring); }
+.pile-out__ending { display: flex; align-items: center; gap: 8px; font-weight: 800; color: var(--danger); }
+.pile.is-low { border-color: var(--alert); }
+.pile.is-low .pile__count {
+  padding: 1px 7px; border-radius: 99px; background: var(--alert); color: var(--alert-text); font-size: 12.5px;
+  animation: lowPulse 1.8s ease-in-out infinite;
+}
+/* A faded (unaffordable) pile keeps its low count loud: fade the parts, not the tile. */
+.pile.is-dimmed.is-low { opacity: 1; filter: none; }
+.pile.is-dimmed.is-low > .pile__thumb, .pile.is-dimmed.is-low > .pile__name, .pile.is-dimmed.is-low .coin { opacity: 0.45; filter: saturate(0.3); }
+@keyframes countDrop { 0% { transform: translateY(-14px) scale(0.6); opacity: 0; } }
+@keyframes countZero { 0% { transform: scale(1.6); } 40% { transform: scale(0.9) rotate(-8deg); } }
+@keyframes lowPulse { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--alert) 30%, transparent); } }
+
 /* cards in flight between deck, hand, play area and discard (useCardMotion) */
 .flights { position: fixed; inset: 0; z-index: 45; pointer-events: none; overflow: hidden; }
 .flights > * { position: absolute; margin: 0; box-sizing: border-box; will-change: transform, opacity; }
@@ -868,4 +936,7 @@ button.link:hover { color: var(--text); }
   .timer.is-low { animation: none; }
   .tally__fill, .tally__chip, .end__reveal { transition: none; animation: none; }
   .flights { display: none; }
+  .pile.is-low .pile__count, .group__dots, .group__sig .ico { animation: none; }
+  .pile-out__card { transition: none; }
+  .pile-out__count, .group__list li.is-done .group__status .ico { animation: none; }
 }

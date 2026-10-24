@@ -27,6 +27,8 @@ export interface ClockInput {
   currentPlayer: number;
   /** The engine's pending prompt: a new object means a new prompt. */
   pending: { player: number } | null;
+  /** Prompts answered at the same time (an attack): one response clock for the whole group. */
+  group?: object | null;
   over: boolean;
 }
 
@@ -48,7 +50,7 @@ export class TurnClock {
     private readonly onExpire: (kind: ClockKind) => void,
   ) {}
 
-  sync({ turn, currentPlayer, pending, over }: ClockInput): void {
+  sync({ turn, currentPlayer, pending, group = null, over }: ClockInput): void {
     if (over) {
       this.stop();
       return;
@@ -58,11 +60,12 @@ export class TurnClock {
       this.turn = turn;
       this.turnLeft = this.turnMs;
     }
-    if (pending && pending.player !== currentPlayer) {
-      if (this.response?.prompt === pending) return;
+    const responding = group ?? (pending && pending.player !== currentPlayer ? pending : null);
+    if (responding) {
+      if (this.response?.prompt === responding) return;
       this.pauseTurn();
       this.clearTimer();
-      this.response = { prompt: pending, deadline: this.scheduler.now() + RESPONSE_MS };
+      this.response = { prompt: responding, deadline: this.scheduler.now() + RESPONSE_MS };
       this.timer = this.scheduler.set(() => this.expire('response'), RESPONSE_MS);
       return;
     }
