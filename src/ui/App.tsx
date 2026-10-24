@@ -62,7 +62,8 @@ export function App() {
     };
   }, [active]);
 
-  async function connect(name: string, open: () => Promise<ActiveSession>, retryCode?: string) {
+  // keepHash: a failed rejoin leaves the address alone so a refresh can still auto-rejoin.
+  async function connect(name: string, open: () => Promise<ActiveSession>, retryCode?: string, keepHash = false) {
     saveName(name);
     setBusy(true);
     setError(null);
@@ -71,7 +72,7 @@ export function App() {
     } catch (err) {
       setError(describePeerError(err));
       if (retryCode) setInvitedCode(retryCode);
-      history.replaceState(null, '', location.pathname);
+      if (!keepHash) history.replaceState(null, '', location.pathname);
     } finally {
       setBusy(false);
     }
@@ -98,11 +99,20 @@ export function App() {
     if (!active || !state || state.status === 'rejected') {
       return (
         <FrontPage
+          key={invitedCode ?? ''}
           initialName={loadName()}
           invitedCode={invitedCode}
           busy={busy}
           error={state?.status === 'rejected' ? state.error : error}
-          onHost={(_game, name) => connect(name, () => hostGame(name))}
+          onHost={(_game, name) =>
+            connect(name, async () => {
+              const session = await hostGame(name);
+              // Drop a stale invite so the address bar and a refresh never point at the old room.
+              history.replaceState(null, '', location.pathname);
+              setInvitedCode(null);
+              return session;
+            })
+          }
           onJoin={(code, name) =>
             connect(name, async () => {
               const session = await joinGame(code, name);
@@ -133,7 +143,7 @@ export function App() {
           <div className="actions actions--center">
             <button type="button" className="primary" disabled={busy} onClick={() => {
                 active.close();
-                void connect(name, () => joinGame(code, name));
+                void connect(name, () => joinGame(code, name), undefined, true);
               }}>
               <Icon name="refresh" />
               {busy ? tr.t('rejoining') : tr.t('rejoin')}
