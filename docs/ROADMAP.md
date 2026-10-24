@@ -20,7 +20,7 @@ Design: `docs/superpowers/specs/2026-10-24-noite-de-jogos-banco-imobiliario-desi
 
 ### A. Platform: rename, front page, shared parts
 Dominion must keep working and its tests must stay green after every step.
-- [ ] Split the reusable parts out of Dominion: room codes and join links, PeerJS transport and heartbeat, a generic host (lobby, seats, colors, rejoin, turn clock, per-player views), i18n plumbing, design tokens and shared components. Each game becomes a module: its engine, intents, views, timeout move, lobby options and screens.
+- [ ] Lobbies say which game they are (`LobbyState.game`), and a game catalog feeds the front page.
 - [ ] A room tells the guest which game it is, so joining never asks you to choose.
 - [ ] **Front page** (option C with a join row): the site name and PT/EN switch, "Seu nome · trocar", a join row (code + Entrar), then one "Criar" row per game with its name, tag, player count and length. It replaces the Dominion Home screen. Invite links skip it.
 - [ ] **Rename** the site to Noite de Jogos: the repo becomes `trakinos/noite-de-jogos`, and the new address is `trakinos.github.io/noite-de-jogos/`. Ask before doing it.
@@ -29,6 +29,7 @@ Dominion must keep working and its tests must stay green after every step.
 
 ### B. Dono do Bairro (Banco Imobiliário rules)
 Classic rules, 2–6 players, playable on working values first. The user checks the board on screen and real values replace the working ones later.
+- [ ] Generic host: split the reusable host parts (lobby, seats, colors, rejoin, turn clock, per-player views) away from Dominion's engine, so a game module plugs in. Deferred from A until the second engine shows its real shape.
 - [ ] **Board data:** 40 squares, 22 pontos in 8 ruas, 6 serviços (companhias), and the Deu Bom / Deu Ruim deck. All of it is one data file with working values close to the classic edition, and the names live in a theme file (PT/EN).
 - [ ] **Engine:** rolling and moving, doubles (3 doubles = Xilindró), the Ponto de Ônibus pay ($200), buy or leave (no auction), rent (full street doubles it, puxadinhos/prédio, serviços = dice × multiplier, all 6 doubles it), Bolão and IPTU, the cards deck, the Carta do Advogado (Habeas Corpus).
 - [ ] **Building:** only on your own turn and only with the full rua, built evenly, up to 4 puxadinhos then a prédio, sold back at half price.
@@ -118,4 +119,5 @@ Order these by playtest feedback.
 - Plan 1 (engine): `docs/superpowers/plans/2026-10-04-engine-and-cards.md`
 - Plan 2 (networking and UI): `docs/superpowers/plans/2026-10-04-networking-and-ui.md`
 - Playtest round 1 spec: `docs/superpowers/specs/2026-10-05-playtest-round-1-design.md`
+- Noite de Jogos platform plan: `docs/superpowers/plans/2026-10-24-noite-de-jogos-platform.md`
 - Playtest round 1 plan: `docs/superpowers/plans/2026-10-05-playtest-round-1.md`
