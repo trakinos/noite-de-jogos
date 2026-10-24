@@ -161,6 +161,12 @@ const ui = {
   "pileOutProvince": "The game ends at the end of this turn.",
   "pileOutLast": "The game ends at the end of this turn: {max} piles are empty.",
   "pileLow": "Only {n} left",
+  "gameDominionName": "Dominion Friends",
+  "gameDominionTag": "Deck-building",
+  "gameDominionLength": "30–45 min",
+  "gameBairroName": "Dono do Bairro",
+  "gameBairroTag": "Buying up the neighborhood",
+  "gameBairroLength": "45 min–2 h",
 } as const;
 
 export type UiKey = keyof typeof ui;

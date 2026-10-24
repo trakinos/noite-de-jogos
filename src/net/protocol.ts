@@ -1,6 +1,7 @@
 import type { CardId, Intent } from '../engine/types';
 import type { PlayerView } from '../engine/view';
 import { isPlayerColor, type PlayerColorId } from '../theme/playerColors';
+import type { GameId } from '../games/catalog';
 import type { ClockInfo } from './turnClock';
 
 export interface LobbyPlayer {
@@ -11,6 +12,7 @@ export interface LobbyPlayer {
 }
 
 export interface LobbyState {
+  game: GameId;
   hostId: string;
   players: LobbyPlayer[];
   kingdom: CardId[];

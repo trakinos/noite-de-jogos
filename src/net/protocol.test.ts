@@ -38,6 +38,8 @@ describe('parseHostMessage', () => {
   it('parses each message type', () => {
     expect(parseHostMessage({ type: 'welcome', playerId: 'p1', token: 't' })).toEqual({ type: 'welcome', playerId: 'p1', token: 't' });
     expect(parseHostMessage({ type: 'lobby', lobby: { hostId: 'p0' } })?.type).toBe('lobby');
+    const lobby = parseHostMessage({ type: 'lobby', lobby: { game: 'dominion', hostId: 'p0' } });
+    expect(lobby?.type === 'lobby' && lobby.lobby.game).toBe('dominion');
     expect(parseHostMessage({ type: 'view', view: { you: 0 } })?.type).toBe('view');
     expect(parseHostMessage({ type: 'error', reason: 'Room full' })).toEqual({ type: 'error', reason: 'Room full' });
   });

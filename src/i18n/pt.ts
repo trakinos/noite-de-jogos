@@ -159,6 +159,12 @@ const pt: Dictionary = {
     "pileOutProvince": "A partida acaba no fim deste turno.",
     "pileOutLast": "A partida acaba no fim deste turno: {max} pilhas estão vazias.",
     "pileLow": "Só restam {n}",
+    "gameDominionName": "Dominion Friends",
+    "gameDominionTag": "Construção de baralho",
+    "gameDominionLength": "30–45 min",
+    "gameBairroName": "Dono do Bairro",
+    "gameBairroTag": "Compra e venda no bairro",
+    "gameBairroLength": "45 min–2 h",
   },
   prompts: {
     "discardDownTo": "Descarte {n} carta(s) até ficar com 3",
