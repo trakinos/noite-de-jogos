@@ -68,7 +68,7 @@ describe('buying', () => {
   it('landing on an unowned 60 ponto offers it, and buying costs $60', () => {
     const s = game(2);
     roll(s, [1, 2]);
-    expect(s.phase).toEqual({ kind: 'buy', square: 3 });
+    expect(s.phase).toEqual({ kind: 'buy', square: 3, rollAgain: false });
     expect(apply(s, 0, { type: 'buy' })).toEqual({ ok: true });
     expect(s.players[0].cash).toBe(START_MONEY - 60);
     expect(s.owned[3]).toEqual({ owner: 0, houses: 0, mortgaged: false });
@@ -90,7 +90,7 @@ describe('buying', () => {
     s.players[0].cash = 59;
     roll(s, [1, 2]);
     expect(apply(s, 0, { type: 'buy' })).toEqual({ ok: false, reason: 'notEnoughCash' });
-    expect(s.phase).toEqual({ kind: 'buy', square: 3 });
+    expect(s.phase).toEqual({ kind: 'buy', square: 3, rollAgain: false });
   });
 });
 
@@ -289,5 +289,124 @@ describe('guards', () => {
         expect(d.reasons[r], `${lang} reason ${r}`).toBeTruthy();
       }
     }
+  });
+});
+
+describe('jail', () => {
+  const jailed = (s: BairroState, p = 0) => { s.players[p].pos = JAIL_POS; s.players[p].jailTurns = 0; };
+
+  it('paying the $50 fine releases and then rolls normally', () => {
+    const s = game(2);
+    jailed(s);
+    expect(apply(s, 0, { type: 'payJailFine' })).toEqual({ ok: true });
+    expect(s.players[0]).toMatchObject({ jailTurns: null, cash: START_MONEY - 50 });
+    expect(s.phase).toEqual({ kind: 'roll' });
+    roll(s, [1, 1]);
+    expect(s.players[0].pos).toBe(12);
+    expect(s.phase).toEqual({ kind: 'buy', square: 12, rollAgain: true });
+  });
+
+  it('the fine needs $50 and a jailed player in the roll phase', () => {
+    const s = game(2);
+    expect(apply(s, 0, { type: 'payJailFine' })).toEqual({ ok: false, reason: 'notNow' });
+    jailed(s);
+    s.players[0].cash = 49;
+    expect(apply(s, 0, { type: 'payJailFine' })).toEqual({ ok: false, reason: 'notEnoughCash' });
+    expect(s.players[0].jailTurns).toBe(0);
+  });
+
+  it('a lawyer card releases and goes to the bottom of the deck', () => {
+    const s = game(2);
+    jailed(s);
+    expect(apply(s, 0, { type: 'useLawyer' })).toEqual({ ok: false, reason: 'notNow' });
+    s.players[0].lawyerCards = 1;
+    s.deck = s.deck.filter(c => c !== 'c01');
+    const len = s.deck.length;
+    expect(apply(s, 0, { type: 'useLawyer' })).toEqual({ ok: true });
+    expect(s.players[0]).toMatchObject({ jailTurns: null, lawyerCards: 0, cash: START_MONEY });
+    expect(s.deck).toHaveLength(len + 1);
+    expect(s.deck.at(-1)).toBe('c01');
+    expect(s.phase).toEqual({ kind: 'roll' });
+  });
+
+  it('a second lawyer card returns c02 when c01 is already in the deck', () => {
+    const s = game(2);
+    jailed(s);
+    s.players[0].lawyerCards = 1;
+    s.deck = s.deck.filter(c => c !== 'c02');
+    apply(s, 0, { type: 'useLawyer' });
+    expect(s.deck.at(-1)).toBe('c02');
+  });
+
+  it('doubles release the player, who moves but does not roll again', () => {
+    const s = game(2);
+    jailed(s);
+    roll(s, [2, 2]);
+    expect(s.players[0]).toMatchObject({ jailTurns: null, pos: 14 });
+    expect(s.doublesInRow).toBe(0);
+    expect(s.phase).toEqual({ kind: 'buy', square: 14, rollAgain: false });
+    apply(s, 0, { type: 'decline' });
+    expect(s.phase).toEqual({ kind: 'manage', rollAgain: false });
+    expect(apply(s, 0, { type: 'roll' })).toEqual({ ok: false, reason: 'notNow' });
+  });
+
+  it('a failed roll stays in jail and ends the roll phase', () => {
+    const s = game(2);
+    jailed(s);
+    roll(s, [1, 2]);
+    expect(s.players[0]).toMatchObject({ jailTurns: 1, pos: JAIL_POS });
+    expect(s.phase).toEqual({ kind: 'manage', rollAgain: false });
+    expect(apply(s, 0, { type: 'endTurn' })).toEqual({ ok: true });
+  });
+
+  it('the third failed roll pays the fine and moves by that roll', () => {
+    const s = game(2);
+    jailed(s);
+    s.players[0].jailTurns = 2;
+    roll(s, [1, 2]);
+    expect(s.players[0]).toMatchObject({ jailTurns: null, pos: 13, cash: START_MONEY - 50 });
+    expect(s.phase).toEqual({ kind: 'buy', square: 13, rollAgain: false });
+  });
+
+  it('the forced fine becomes a debt when cash is short', () => {
+    const s = game(2);
+    jailed(s);
+    s.players[0].jailTurns = 2;
+    s.players[0].cash = 10;
+    roll(s, [1, 2]);
+    expect(s.debts).toEqual([{ debtor: 0, creditor: null, amount: 50 }]);
+    expect(s.players[0]).toMatchObject({ jailTurns: null, pos: 13, cash: 10 });
+  });
+
+  it('an owner in jail still collects rent', () => {
+    const s = game(2);
+    jailed(s, 1);
+    give(s, 1, 1);
+    s.players[0].pos = 38;
+    roll(s, [1, 2]);
+    expect(s.players[1].cash).toBe(START_MONEY + 2);
+  });
+
+  it('jail log keys and reasons have text in both dictionaries', () => {
+    const s = game(2);
+    jailed(s);
+    s.players[0].lawyerCards = 1;
+    apply(s, 0, { type: 'useLawyer' });
+    jailed(s);
+    apply(s, 0, { type: 'payJailFine' });
+    jailed(s);
+    roll(s, [1, 2]);
+    s.players[0].jailTurns = 2;
+    s.phase = { kind: 'roll' };
+    roll(s, [1, 2]);
+    s.players[0].jailTurns = 1;
+    s.phase = { kind: 'roll' };
+    roll(s, [3, 3]);
+    for (const lang of ['pt', 'en'] as const) {
+      const d = BAIRRO_DICTIONARIES[lang];
+      for (const e of s.log) expect(d.log[e.key], `${lang} log ${e.key}`).toBeTruthy();
+    }
+    const keys = s.log.map(e => e.key);
+    for (const k of ['usedLawyer', 'paidJailFine', 'jailRollFailed', 'jailFineForced', 'leftJailDoubles']) expect(keys, k).toContain(k);
   });
 });

@@ -11,7 +11,7 @@ export interface Ownership { owner: number; houses: number /* 0–4, 5 = prédio
 
 export type Phase =
   | { kind: 'roll' }                         // current player must roll (or act on jail options)
-  | { kind: 'buy'; square: number }          // landed on an unowned ponto/servico
+  | { kind: 'buy'; square: number; rollAgain: boolean }          // landed on an unowned ponto/servico
   | { kind: 'manage'; rollAgain: boolean };  // build/trade/etc; then roll again (doubles) or end turn
 
 export interface Debt { debtor: number; creditor: number | null /* null = bank */; amount: number }

@@ -1,6 +1,6 @@
 import { nextInt } from '../../engine/rng';
 import type { ApplyResult } from '../module';
-import { BOARD, JAIL_POS, PASS_START, RUAS } from './board';
+import { BOARD, JAIL_FINE, JAIL_POS, PASS_START, RUAS } from './board';
 import type { BairroIntent, BairroState } from './types';
 
 const ok = (): ApplyResult => ({ ok: true });
@@ -20,6 +20,8 @@ const HANDLERS: Partial<Record<IntentType, Handler>> = {
   buy: s => buy(s),
   decline: s => decline(s),
   endTurn: s => endTurn(s),
+  payJailFine: s => payJailFine(s),
+  useLawyer: s => useLawyer(s),
 };
 
 /** Applies one intent from `player` (a seat index), mutating `s`. Never throws on malformed input. */
@@ -98,14 +100,14 @@ export function rentFor(s: BairroState, pos: number, diceSum: number): number {
 }
 
 /** Resolves the square the current player just reached. May set the phase (buy, jail). */
-function land(s: BairroState, player: number, diceSum: number): void {
+function land(s: BairroState, player: number, diceSum: number, rollAgain: boolean): void {
   const pos = s.players[player].pos;
   const sq = BOARD[pos];
   switch (sq.kind) {
     case 'ponto':
     case 'servico': {
       const own = s.owned[pos];
-      if (!own) { s.phase = { kind: 'buy', square: pos }; return; }
+      if (!own) { s.phase = { kind: 'buy', square: pos, rollAgain }; return; }
       if (own.owner === player) return;
       const amount = rentFor(s, pos, diceSum);
       if (amount > 0 && charge(s, player, own.owner, amount)) log(s, player, 'paidRent', { to: own.owner, pos, amount });
@@ -138,27 +140,66 @@ function roll(s: BairroState): ApplyResult {
   const ph = s.phase;
   if (!(ph.kind === 'roll' || (ph.kind === 'manage' && ph.rollAgain))) return fail('notNow');
   const player = s.current;
+  const p = s.players[player];
+  const wasJailed = p.jailTurns !== null;
   const dice = rollDice(s);
   const doubles = dice[0] === dice[1];
   s.lastRoll = dice;
   log(s, player, 'rolled', { d1: dice[0], d2: dice[1] });
   // Set before landing so squares that change the phase (buy, jail) override it.
   s.phase = { kind: 'manage', rollAgain: false };
-  if (doubles && ++s.doublesInRow === 3) {
+  if (wasJailed) {
+    if (doubles) {
+      p.jailTurns = null;
+      log(s, player, 'leftJailDoubles');
+    } else if (++p.jailTurns! < 3) {
+      log(s, player, 'jailRollFailed', { turns: p.jailTurns! });
+      return ok();
+    } else {
+      p.jailTurns = null;
+      if (charge(s, player, null, JAIL_FINE)) log(s, player, 'jailFineForced', { amount: JAIL_FINE });
+    }
+  } else if (doubles && ++s.doublesInRow === 3) {
     log(s, player, 'thirdDouble');
     sendToJail(s, player);
     return ok();
   }
+  // A jail exit never earns an extra roll, even on doubles.
+  const again = doubles && !wasJailed;
   moveBy(s, player, dice[0] + dice[1]);
-  land(s, player, dice[0] + dice[1]);
-  if (s.phase.kind === 'manage') s.phase.rollAgain = doubles && s.players[player].jailTurns === null;
+  land(s, player, dice[0] + dice[1], again);
+  if (s.phase.kind === 'manage') s.phase.rollAgain = again && p.jailTurns === null;
+  return ok();
+}
+
+function leaveJail(s: BairroState, key: string, params?: Record<string, string | number>): void {
+  s.players[s.current].jailTurns = null;
+  log(s, s.current, key, params);
+}
+
+function payJailFine(s: BairroState): ApplyResult {
+  const p = s.players[s.current];
+  if (s.phase.kind !== 'roll' || p.jailTurns === null) return fail('notNow');
+  if (p.cash < JAIL_FINE) return fail('notEnoughCash');
+  p.cash -= JAIL_FINE;
+  leaveJail(s, 'paidJailFine', { amount: JAIL_FINE });
+  return ok();
+}
+
+function useLawyer(s: BairroState): ApplyResult {
+  const p = s.players[s.current];
+  if (s.phase.kind !== 'roll' || p.jailTurns === null || p.lawyerCards < 1) return fail('notNow');
+  p.lawyerCards--;
+  // lawyerCards is a count, so the card id is inferred: c01 unless it is already back in the deck.
+  s.deck.push(s.deck.includes('c01') ? 'c02' : 'c01');
+  leaveJail(s, 'usedLawyer');
   return ok();
 }
 
 /** After a buy decision, keep the roll-again that the dice earned. */
 function afterBuyDecision(s: BairroState): void {
-  const doubles = s.lastRoll !== null && s.lastRoll[0] === s.lastRoll[1];
-  s.phase = { kind: 'manage', rollAgain: doubles && s.players[s.current].jailTurns === null };
+  const rollAgain = s.phase.kind === 'buy' && s.phase.rollAgain;
+  s.phase = { kind: 'manage', rollAgain };
 }
 
 function buy(s: BairroState): ApplyResult {
