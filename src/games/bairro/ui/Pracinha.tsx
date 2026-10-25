@@ -29,7 +29,7 @@ export function Pracinha({ view, names, awaiting, onIntent, onTrade, compact = f
   // The debt dialog owns Pay and Faliu while you owe.
   const actions = view.pending === 'debt' ? [] : actionsFor(view, awaiting);
   const waiting = waitingFor(view, names, tr.lang);
-  const last = view.log.at(-1);
+  const last = [...view.log].reverse().find(e => e.key !== 'turnStarted');
   const faces = useDiceFaces(view);
   const label = (a: Action) => text.ui(a.label, a.amount === undefined ? undefined : { amount: money(tr.lang, a.amount) });
 
@@ -47,7 +47,7 @@ export function Pracinha({ view, names, awaiting, onIntent, onTrade, compact = f
       ) : (
         <p className="pracinha__log">{text.ui('noRollYet')}</p>
       )}
-      {last && <p className="pracinha__log" aria-live="polite">{text.logLine(last, names)}</p>}
+      {last && <p className="pracinha__log" aria-live={compact ? 'polite' : undefined}>{text.logLine(last, names)}</p>}
       {waiting && <p className="pracinha__log" role="status">{text.ui(waiting.key, waiting.params)}</p>}
       {view.pending === 'debt' && <p className="pracinha__log" role="status">{text.ui('debtOpenHint')}</p>}
       {actions.length > 0 && (

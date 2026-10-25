@@ -1,3 +1,4 @@
+import { DECK } from '../deck';
 import { BOARD_SIZE } from './geometry';
 import type { BairroView } from '../view';
 
@@ -12,8 +13,13 @@ export interface TokenMove {
 /** The longest walk a roll can give (two dice); anything longer is a jump. */
 const MAX_WALK = 12;
 
-/** The log entries `next` has beyond `prev`. */
-const newEntries = (prev: BairroView, next: BairroView) => next.log.slice(prev.log.length);
+/** The log entries `next` has beyond `prev`; the wire log is capped, so count by `logTotal`. */
+export function newEntries(prev: BairroView, next: BairroView) {
+  const n = Math.min(next.logTotal - prev.logTotal, next.log.length);
+  return n > 0 ? next.log.slice(-n) : [];
+}
+
+const advancesToStart = (card: unknown) => DECK.find(c => c.id === card)?.effect.kind === 'advanceToStart';
 
 /** Token moves between two views of the same game: a walk, or a jump for jail and long card moves. */
 export function movesBetween(prev: BairroView, next: BairroView): TokenMove[] {
@@ -24,8 +30,8 @@ export function movesBetween(prev: BairroView, next: BairroView): TokenMove[] {
     const to = p.pos;
     if (from === to) return [];
     const distance = (to - from + BOARD_SIZE) % BOARD_SIZE;
-    const jailed = fresh.some(e => e.player === player && e.key === 'wentToJail');
-    if (jailed || distance > MAX_WALK) return [{ player, from, to, steps: [to] }];
+    const jumped = fresh.some(e => e.player === player && (e.key === 'wentToJail' || (e.key === 'luck' && advancesToStart(e.params?.card))));
+    if (jumped || distance > MAX_WALK) return [{ player, from, to, steps: [to] }];
     return [{ player, from, to, steps: Array.from({ length: distance }, (_, i) => (from + i + 1) % BOARD_SIZE) }];
   });
 }

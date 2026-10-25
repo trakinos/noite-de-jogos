@@ -21,6 +21,13 @@ describe('viewFor', () => {
     expect(JSON.stringify(v)).not.toContain('c01');
   });
 
+  it('reports the full log length', () => {
+    const s = game(2);
+    rig(s, [[1, 2]]);
+    apply(s, 0, { type: 'roll' });
+    expect(viewFor(s, 0).logTotal).toBe(s.log.length);
+  });
+
   it('is a copy: changing the view leaves the state alone', () => {
     const s = game(2);
     give(s, 0, 1);

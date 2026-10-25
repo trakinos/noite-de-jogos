@@ -63,14 +63,14 @@ export function useDiceFaces(view: BairroView): [number, number] | null {
     clearTimeout(timers.current.done);
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const before = prev.current;
     prev.current = view;
     if (before === view || !rolledBetween(before, view) || stayStill()) return;
     stop();
     setRolling(true);
-    const face = () => 1 + Math.floor(Math.random() * 6);
-    timers.current.tick = setInterval(() => setFaces([face(), face()]), SHAKE_TICK_MS);
+    let n = 0;
+    timers.current.tick = setInterval(() => setFaces([1 + ((n * 5 + 2) % 6), 1 + ((n++ * 3 + 4) % 6)]), SHAKE_TICK_MS);
     timers.current.done = setTimeout(() => {
       stop();
       setRolling(false);
