@@ -9,6 +9,8 @@ import { playerColor } from '../../../ui/playerColor';
 import { BAIRRO_DICTIONARIES } from '../i18n';
 import type { BairroIntent } from '../types';
 import type { BairroView } from '../view';
+import { EscrituraDialog } from './EscrituraDialog';
+import { escrituraFor } from './escritura';
 import { MapBoard } from './MapBoard';
 import { StreetBoard } from './StreetBoard';
 import { useMediaQuery } from './useMediaQuery';
@@ -42,8 +44,11 @@ export function BairroBoard({ view, lobby, code, error, clock, awaiting, onInten
   const menu = useRef<HTMLDetailsElement>(null);
   const names = view.players.map(p => p.name);
   const colors = view.players.map(p => playerColor(lobby, p.id));
-  // Tapping a square or an escritura opens its escritura (the dialog comes with the building rules).
-  const onOpenSquare = (_pos: number) => {};
+  // Tapping a square or an escritura opens its escritura; squares that are not deeds do nothing.
+  const [deedPos, setDeedPos] = useState<number | null>(null);
+  const onOpenSquare = (pos: number) => {
+    if (escrituraFor(view, pos)) setDeedPos(pos);
+  };
 
   useEffect(() => {
     if (!error) return;
@@ -92,6 +97,10 @@ export function BairroBoard({ view, lobby, code, error, clock, awaiting, onInten
       </header>
 
       {wide ? <MapBoard {...layout} /> : <StreetBoard {...layout} />}
+
+      {deedPos !== null && (
+        <EscrituraDialog view={view} pos={deedPos} names={names} awaiting={awaiting} onIntent={onIntent} onClose={() => setDeedPos(null)} />
+      )}
 
       {errorText && (
         <div className="toast bboard__toast" role="alert">

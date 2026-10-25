@@ -128,5 +128,12 @@ export const en: BairroDictionary = {
     players: 'Players', youTag: 'you', deeds: '{n} deeds', deedOne: '1 deed',
     streetStrip: 'Neighborhood streets', playersSheet: 'See players and deeds', bankruptTag: 'bust',
     yourDeeds: 'Your escrituras', noDeeds: 'None yet', servicos: 'Services', wholeRua: 'whole street',
+    escOwner: 'Owner: {name}', escPrice: 'Price {amount}', escRent: 'Rent', escNow: 'now',
+    escBase: 'No buildings', escDoubled: '×2 with the whole rua', escDoubledNote: 'With the whole rua and no buildings, the base rent doubles',
+    escHouseCost: 'Each puxadinho costs {amount}', escMortgageValue: 'Mortgage: {amount}', escMortgaged: 'Mortgaged: collects no rent',
+    servicoRule: 'dice × {mult}', servicoDouble: '×2 with all 6 services',
+    servicoNote: 'Rent is the dice total times {mult}; it doubles for whoever holds all 6 services',
+    btnBuild: 'Build a puxadinho (-{amount})', btnBuildPredio: 'Build a prédio (-{amount})',
+    btnSell: 'Sell a building (+{amount})', btnMortgage: 'Mortgage (+{amount})', btnUnmortgage: 'Pay off the mortgage (-{amount})',
   },
 };

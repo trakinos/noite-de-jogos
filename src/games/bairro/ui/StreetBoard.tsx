@@ -1,6 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useLang } from '../../../i18n/LangProvider';
 import { Icon } from '../../../ui/components/Icon';
+import { BairroDialog } from './BairroDialog';
 import { BOARD_SIZE } from './geometry';
 import type { LayoutProps } from './MapBoard';
 import { MiniMap } from './MiniMap';
@@ -38,13 +39,6 @@ export function StreetBoard({ view, names, colors, awaiting, onIntent, onOpenSqu
     mounted.current = true;
   }, [myPos]);
 
-  useEffect(() => {
-    if (!sheet) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setSheet(false);
-    addEventListener('keydown', onKey);
-    return () => removeEventListener('keydown', onKey);
-  }, [sheet]);
-
   const me = view.players[view.you];
   const others = view.players.flatMap((p, i) => (i === view.you ? [] : [{ p, i }]));
 
@@ -72,25 +66,17 @@ export function StreetBoard({ view, names, colors, awaiting, onIntent, onOpenSqu
         <Icon name="more" />
       </button>
       {sheet && (
-        <div className="overlay" role="dialog" aria-modal="true" aria-label={text.ui('players')} onClick={() => setSheet(false)}>
-          <div className="prompt panel bsheet" onClick={e => e.stopPropagation()}>
-            <div className="bsheet__head">
-              <h2>{text.ui('players')}</h2>
-              <button type="button" autoFocus onClick={() => setSheet(false)} aria-label={tr.t('close')}>
-                <Icon name="x" />
-              </button>
-            </div>
-            <PlayersPanel
-              view={view}
-              names={names}
-              colors={colors}
-              onOpenSquare={pos => {
-                setSheet(false);
-                onOpenSquare(pos);
-              }}
-            />
-          </div>
-        </div>
+        <BairroDialog title={text.ui('players')} onClose={() => setSheet(false)}>
+          <PlayersPanel
+            view={view}
+            names={names}
+            colors={colors}
+            onOpenSquare={pos => {
+              setSheet(false);
+              onOpenSquare(pos);
+            }}
+          />
+        </BairroDialog>
       )}
     </div>
   );

@@ -1073,3 +1073,18 @@ button.link:hover { color: var(--text); }
 .bsheet__head button { min-width: 44px; min-height: 44px; }
 .bsheet .bpanel__box h2 { font-size: 15px; }
 .bsheet .bpanel__box:first-child h2 { display: none; }
+.besc { max-width: 420px; }
+.besc__awning { height: 10px; border-radius: 99px; }
+.besc__meta { margin: 0; display: flex; flex-wrap: wrap; gap: 2px 14px; font-weight: 700; }
+.besc__note { margin: 0; }
+.besc__rent { width: 100%; border-collapse: collapse; }
+.besc__rent caption { text-align: left; font-weight: 800; padding-bottom: 4px; }
+.besc__rent th { text-align: left; font-weight: 600; }
+.besc__rent td { text-align: right; font-variant-numeric: tabular-nums; }
+.besc__rent th, .besc__rent td { padding: 4px 8px; border-top: 1px solid var(--border); }
+.besc__rent tr.is-current { background: var(--surface-2); font-weight: 800; }
+.besc__now { color: var(--accent); font-size: 0.85em; }
+.besc__actions { display: grid; gap: 10px; }
+.besc__action { display: grid; gap: 4px; }
+.besc__action button { min-height: 48px; width: 100%; }
+.besc__reason { color: var(--muted); }

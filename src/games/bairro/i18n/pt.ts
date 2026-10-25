@@ -128,5 +128,12 @@ export const pt: BairroDictionary = {
     players: 'Jogadores', youTag: 'você', deeds: '{n} escrituras', deedOne: '1 escritura',
     streetStrip: 'Ruas do bairro', playersSheet: 'Ver jogadores e escrituras', bankruptTag: 'faliu',
     yourDeeds: 'Suas escrituras', noDeeds: 'Nenhuma ainda', servicos: 'Serviços', wholeRua: 'rua completa',
+    escOwner: 'Dono: {name}', escPrice: 'Preço {amount}', escRent: 'Aluguel', escNow: 'agora',
+    escBase: 'Sem construções', escDoubled: '×2 com a rua completa', escDoubledNote: 'Com a rua completa e sem construções, o aluguel base dobra',
+    escHouseCost: 'Cada puxadinho custa {amount}', escMortgageValue: 'Hipoteca: {amount}', escMortgaged: 'Hipotecado: não rende aluguel',
+    servicoRule: 'dados × {mult}', servicoDouble: '×2 com os 6 serviços',
+    servicoNote: 'O aluguel é o total dos dados vezes {mult}; dobra para quem tem os 6 serviços',
+    btnBuild: 'Construir puxadinho (-{amount})', btnBuildPredio: 'Construir prédio (-{amount})',
+    btnSell: 'Vender construção (+{amount})', btnMortgage: 'Hipotecar (+{amount})', btnUnmortgage: 'Pagar a hipoteca (-{amount})',
   },
 };
