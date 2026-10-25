@@ -351,6 +351,7 @@ function goBankrupt(s: BairroState, player: number): ApplyResult {
   }
   p.cash = 0;
   p.bankrupt = true;
+  s.bankruptOrder.push(player);
   // A bankrupt player neither pays nor collects.
   s.debts = s.debts.filter(d => d.debtor !== player && d.creditor !== player);
   const solvent = s.players.flatMap((x, i) => (x.bankrupt ? [] : [i]));

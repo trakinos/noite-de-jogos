@@ -3,6 +3,7 @@ import { BOARD, RUAS } from '../board';
 import { DECK } from '../deck';
 import { runFuzz, runSimulation } from '../simkit';
 import { BAIRRO_DICTIONARIES } from './index';
+import { RULES_LAYOUT } from '../ui/rulesLayout';
 
 describe.each(['pt', 'en'] as const)('bairro dictionary %s', lang => {
   const d = BAIRRO_DICTIONARIES[lang];
@@ -24,6 +25,21 @@ describe('bairro ui strings', () => {
   it('every ui key exists in both languages', () => {
     const keys = new Set([...Object.keys(BAIRRO_DICTIONARIES.pt.ui), ...Object.keys(BAIRRO_DICTIONARIES.en.ui)]);
     for (const lang of ['pt', 'en'] as const) for (const k of keys) expect(BAIRRO_DICTIONARIES[lang].ui, `${lang}.${k}`).toHaveProperty(k);
+  });
+});
+
+describe('bairro rules text', () => {
+  it('every rules key exists in both languages', () => {
+    const keys = new Set([...Object.keys(BAIRRO_DICTIONARIES.pt.rules), ...Object.keys(BAIRRO_DICTIONARIES.en.rules)]);
+    for (const lang of ['pt', 'en'] as const) for (const k of keys) expect(BAIRRO_DICTIONARIES[lang].rules, `${lang}.${k}`).toHaveProperty(k);
+  });
+  it('the layout uses only existing keys and leaves none unused', () => {
+    const used = RULES_LAYOUT.flatMap(sec => [sec.title, ...sec.items]);
+    for (const lang of ['pt', 'en'] as const) {
+      const rules = BAIRRO_DICTIONARIES[lang].rules;
+      for (const k of used) expect(rules, `${lang}.${k}`).toHaveProperty(k);
+      expect(Object.keys(rules).filter(k => !used.includes(k)), lang).toEqual([]);
+    }
   });
 });
 

@@ -675,6 +675,20 @@ describe('debts', () => {
     expect(s.winner).toBeNull();
   });
 
+  it('appends each bankrupt seat to bankruptOrder, starting empty', () => {
+    const s = game(4);
+    expect(s.bankruptOrder).toEqual([]);
+    s.phase = { kind: 'manage', rollAgain: false };
+    s.players[2].cash = 0;
+    s.debts.push({ debtor: 2, creditor: null, amount: 100 });
+    expect(apply(s, 2, { type: 'goBankrupt' })).toEqual({ ok: true });
+    expect(s.bankruptOrder).toEqual([2]);
+    s.players[0].cash = 0;
+    s.debts.push({ debtor: 0, creditor: 1, amount: 100 });
+    expect(apply(s, 0, { type: 'goBankrupt' })).toEqual({ ok: true });
+    expect(s.bankruptOrder).toEqual([2, 0]);
+  });
+
   it('the last solvent player wins and everything is refused', () => {
     const s = shortOnRent();
     expect(apply(s, 0, { type: 'goBankrupt' })).toEqual({ ok: true });

@@ -24,6 +24,10 @@ export function invariantViolations(s: BairroState): string[] {
     const houses = ruaPositions(rua).map(i => s.owned[i]?.houses ?? 0);
     if (Math.max(...houses) - Math.min(...houses) > 1) out.push(`rua ${rua} uneven: ${houses.join(',')}`);
   }
+  const broke = s.players.flatMap((p, i) => (p.bankrupt ? [i] : []));
+  if (s.bankruptOrder.length !== broke.length || broke.some(i => !s.bankruptOrder.includes(i)) || new Set(s.bankruptOrder).size !== s.bankruptOrder.length) {
+    out.push(`bankruptOrder [${s.bankruptOrder.join(',')}] != bankrupt seats [${broke.join(',')}]`);
+  }
   const lawyers = s.players.reduce((n, p) => n + p.lawyerCards, 0);
   if (lawyers + s.deck.length !== DECK.length) out.push(`lawyer cards ${lawyers} + deck ${s.deck.length} != ${DECK.length}`);
   return out;
