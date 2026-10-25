@@ -23,6 +23,7 @@ const ui = {
   "invitedFrontTitle": "You're invited to room {code}",
   "room": "Room {code}",
   "leave": "Leave",
+  "unsupportedGame": "This room is for a game this version doesn't have yet. Refresh the page.",
   "invite": "Invite friends",
   "shareLink": "Share link",
   "copyLink": "Copy",

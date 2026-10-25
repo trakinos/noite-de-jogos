@@ -21,6 +21,7 @@ const pt: Dictionary = {
     "invitedFrontTitle": "Você recebeu um convite para a sala {code}",
     "room": "Sala {code}",
     "leave": "Sair",
+    "unsupportedGame": "Esta sala é de um jogo que esta versão ainda não tem. Atualize a página.",
     "invite": "Convide amigos",
     "shareLink": "Link de convite",
     "copyLink": "Copiar",

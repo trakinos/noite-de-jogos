@@ -13,6 +13,7 @@ import { Icon } from './components/Icon';
 import { LangToggle } from './components/LangToggle';
 import { Loader } from './components/Loader';
 import { entryAction } from './entry';
+import { screensFor } from './gameScreens';
 import { loadName, saveName } from './storage';
 import { useGuestState } from './useGuestState';
 
@@ -162,6 +163,19 @@ export function App() {
         <Centered>
           <Loader />
           <h2>{tr.t('joiningRoom', { code: active.code })}</h2>
+        </Centered>
+      );
+    }
+
+    if (screensFor(state.lobby.game) === 'unsupported') {
+      return (
+        <Centered>
+          <p>{tr.t('unsupportedGame')}</p>
+          <div className="actions actions--center">
+            <button type="button" onClick={leave}>
+              {tr.t('leave')}
+            </button>
+          </div>
         </Centered>
       );
     }
