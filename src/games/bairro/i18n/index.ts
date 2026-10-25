@@ -10,6 +10,7 @@ export interface BairroDictionary {
   log: Record<string, string>;
   reasons: Record<string, string>;
   terms: Record<string, string>;
+  ui: Record<string, string>;
 }
 
 export const BAIRRO_DICTIONARIES: Record<Lang, BairroDictionary> = { pt, en };

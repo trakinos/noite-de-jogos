@@ -116,4 +116,7 @@ export const pt: BairroDictionary = {
     puxadinho: 'puxadinho', predio: 'prédio', escritura: 'escritura', prefeitura: 'Prefeitura',
     faliu: 'faliu', 'dono-do-bairro': 'Dono do Bairro',
   },
+  ui: {
+    underConstruction: 'Em construção',
+  },
 };

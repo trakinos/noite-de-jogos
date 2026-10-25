@@ -20,6 +20,13 @@ describe.each(['pt', 'en'] as const)('bairro dictionary %s', lang => {
   });
 });
 
+describe('bairro ui strings', () => {
+  it('every ui key exists in both languages', () => {
+    const keys = new Set([...Object.keys(BAIRRO_DICTIONARIES.pt.ui), ...Object.keys(BAIRRO_DICTIONARIES.en.ui)]);
+    for (const lang of ['pt', 'en'] as const) for (const k of keys) expect(BAIRRO_DICTIONARIES[lang].ui, `${lang}.${k}`).toHaveProperty(k);
+  });
+});
+
 describe('bairro log and reason keys', () => {
   let logKeys = new Set<string>();
   let reasons = new Set<string>();

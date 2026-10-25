@@ -1,8 +1,4 @@
-import { useEffect, useState } from 'react';
-import { KINGDOM_IDS } from '../../cards/registry';
-import { createRng, shuffle } from '../../engine/rng';
-import type { CardId } from '../../engine/types';
-import { dominionModule, type DominionOptions } from '../../games/dominion/module';
+import { useState, type ReactNode } from 'react';
 import { TURN_TIMER_OPTIONS, type HostSession } from '../../net/host';
 import type { LobbyState } from '../../net/protocol';
 import { useLang } from '../../i18n/LangProvider';
@@ -10,10 +6,6 @@ import { colorHex, type PlayerColorId } from '../../theme/playerColors';
 import { Avatar } from '../components/Avatar';
 import { ColorPicker } from '../components/ColorPicker';
 import { Icon } from '../components/Icon';
-import { KingdomPicker } from '../components/KingdomPicker';
-import { Pile } from '../components/Pile';
-import { RulesDialog } from '../components/RulesDialog';
-import { sortByCost } from '../moves';
 
 interface Props {
   lobby: LobbyState;
@@ -23,23 +15,18 @@ interface Props {
   host: HostSession | null;
   onSetColor(color: PlayerColorId): void;
   onLeave(): void;
+  /** The game's own options section, below the turn timer. */
+  options?: ReactNode;
+  /** Opens the game's rulebook; the Rules button is hidden without it. */
+  onRules?: () => void;
+  /** Extra readiness the game's options impose on Start: whether it's met, what to tell the host if not, and a summary line. */
+  startGate?: { ready: boolean; notReady: string; summary: string };
 }
 
-export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onLeave }: Props) {
+export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onLeave, options, onRules, startGate }: Props) {
   const { tr } = useLang();
-  const kingdom = (lobby.options as DominionOptions).kingdom;
-  const [draft, setDraft] = useState<CardId[]>(kingdom);
   const [startError, setStartError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [rules, setRules] = useState(false);
-  const kingdomKey = kingdom.join(',');
-  useEffect(() => setDraft(kingdom), [kingdomKey]);
-
-  function toggle(id: CardId) {
-    const next = draft.includes(id) ? draft.filter((c) => c !== id) : draft.length < 10 ? [...draft, id] : draft;
-    setDraft(next);
-    if (next.length === 10) host?.setOptions({ kingdom: next });
-  }
 
   async function copy() {
     try {
@@ -58,16 +45,19 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onLeave }:
   }
 
   const enoughPlayers = lobby.players.length >= lobby.minPlayers;
-  const canStart = enoughPlayers && draft.length === 10;
+  const optionsReady = startGate ? startGate.ready : true;
+  const canStart = enoughPlayers && optionsReady;
   const openSeats = Math.max(0, lobby.maxPlayers - lobby.players.length);
   return (
     <main className="screen lobby">
       <header className="lobby__header">
         <h1>{tr.t('room', { code })}</h1>
-        <button type="button" className="rules-btn" onClick={() => setRules(true)} title={tr.t('rules')}>
-          <Icon name="book" />
-          <span>{tr.t('rules')}</span>
-        </button>
+        {onRules && (
+          <button type="button" className="rules-btn" onClick={onRules} title={tr.t('rules')}>
+            <Icon name="book" />
+            <span>{tr.t('rules')}</span>
+          </button>
+        )}
         <button type="button" onClick={onLeave}>
           <Icon name="door" />
           {tr.t('leave')}
@@ -147,39 +137,15 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onLeave }:
             )}
             {lobby.turnTimer !== null && <span className="zone__hint">{tr.t('timerHint')}</span>}
           </div>
-          {host ? (
-            <KingdomPicker
-              selected={draft}
-              onToggle={toggle}
-              onRandomize={() => host.setOptions({ kingdom: shuffle(createRng(Math.floor(Math.random() * 2 ** 31)), KINGDOM_IDS).slice(0, 10) })}
-              onReset={() => {
-                // the lobby may already hold the default while the draft is half-edited
-                const { kingdom: defaults } = dominionModule.defaultOptions();
-                setDraft(defaults);
-                host.setOptions({ kingdom: defaults });
-              }}
-            />
-          ) : (
-            <>
-              <div className="picker__bar">
-                <h2>{tr.t('kingdom')}</h2>
-                <span className="zone__hint">{tr.t('kingdomByHost')}</span>
-              </div>
-              <div className="pile-grid">
-                {sortByCost(kingdom).map((id) => (
-                  <Pile key={id} id={id} showTypes />
-                ))}
-              </div>
-            </>
-          )}
+          {options}
         </section>
       </div>
 
       {host ? (
         <div className="startbar">
           <div className="startbar__info">
-            <strong>{canStart ? tr.t('readyToStart') : !enoughPlayers ? tr.t('needPlayer') : tr.t('choose10')}</strong>
-            <span>{tr.t('startSummary', { players: lobby.players.length, cards: draft.length })}</span>
+            <strong>{canStart ? tr.t('readyToStart') : !enoughPlayers ? tr.t('needPlayer') : startGate?.notReady}</strong>
+            {startGate && <span>{startGate.summary}</span>}
             {startError && <span className="error">{tr.reason(startError)}</span>}
           </div>
           <button type="button" className="primary lg" disabled={!canStart} onClick={start}>
@@ -193,7 +159,6 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onLeave }:
           {tr.t('waitingHostStart')}
         </div>
       )}
-      {rules && <RulesDialog kingdom={draft} onClose={() => setRules(false)} />}
     </main>
   );
 }

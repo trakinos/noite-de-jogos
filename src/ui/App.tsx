@@ -9,6 +9,8 @@ import { Board } from './screens/Board';
 import { EndScreen } from './screens/EndScreen';
 import { FrontPage } from './screens/FrontPage';
 import { Lobby } from './screens/Lobby';
+import { DominionLobby } from '../games/dominion/ui/DominionLobbyOptions';
+import { BairroScreens } from '../games/bairro/ui/BairroScreens';
 import { Icon } from './components/Icon';
 import { LangToggle } from './components/LangToggle';
 import { Loader } from './components/Loader';
@@ -180,9 +182,11 @@ export function App() {
       );
     }
 
+    const screens = screensFor(state.lobby.game);
     if (!state.lobby.inGame) {
+      const LobbyScreen = screens === 'dominion' ? DominionLobby : Lobby;
       return (
-        <Lobby
+        <LobbyScreen
           lobby={state.lobby}
           me={state.playerId}
           code={active.code}
@@ -202,6 +206,8 @@ export function App() {
         </Centered>
       );
     }
+
+    if (screens === 'bairro') return <BairroScreens onLeave={leave} />;
 
     const view = asDominionView(state.view);
     if (view.result) {

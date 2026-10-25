@@ -116,4 +116,7 @@ export const en: BairroDictionary = {
     puxadinho: 'puxadinho (ramshackle add-on)', predio: 'prédio (building)', escritura: 'escritura (deed)',
     prefeitura: 'Prefeitura (city hall, the bank)', faliu: 'went bust', 'dono-do-bairro': 'Dono do Bairro',
   },
+  ui: {
+    underConstruction: 'Under construction',
+  },
 };
