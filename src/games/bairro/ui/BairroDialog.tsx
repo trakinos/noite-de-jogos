@@ -28,6 +28,7 @@ export function BairroDialog({ title, onClose, children, className = '', returnF
   // Read while rendering, before the dialog takes focus.
   const opener = useRef<Element | null>(returnFocus ?? (typeof document === 'undefined' ? null : document.activeElement));
   const closeButton = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
   const pressedBackdrop = useRef(false);
   const latest = useRef({ onClose, dismissable });
   latest.current = { onClose, dismissable };
@@ -35,7 +36,8 @@ export function BairroDialog({ title, onClose, children, className = '', returnF
   useEffect(() => {
     const me = Symbol('dialog');
     open.push(me);
-    closeButton.current?.focus();
+    // Without a close button, the panel itself takes focus so the keyboard starts inside the dialog.
+    (closeButton.current ?? panel.current)?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && open.at(-1) === me && latest.current.dismissable) latest.current.onClose();
     };
@@ -62,7 +64,7 @@ export function BairroDialog({ title, onClose, children, className = '', returnF
 
   return (
     <div className="overlay" role="dialog" aria-modal="true" aria-labelledby={titleId} onMouseDown={onBackdrop(true)} onClick={onBackdrop(false)}>
-      <div className={`prompt panel bsheet ${className}`}>
+      <div ref={panel} tabIndex={-1} className={`prompt panel bsheet ${className}`}>
         <div className="bsheet__head">
           <h2 id={titleId}>{title}</h2>
           {dismissable && (

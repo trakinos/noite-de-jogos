@@ -1,6 +1,4 @@
-import { useState } from 'react';
 import { useLang } from '../../../i18n/LangProvider';
-import { ConfirmDialog } from '../../../ui/components/ConfirmDialog';
 import { BOARD } from '../board';
 import type { BairroIntent } from '../types';
 import type { BairroView } from '../view';
@@ -8,6 +6,7 @@ import { actionsFor } from './actions';
 import type { Action } from './actions';
 import { money } from './text';
 import { useBairroText } from './useBairroText';
+import { waitingFor } from './waiting';
 
 const PRACINHA_POS = BOARD.findIndex(sq => sq.kind === 'pracinha');
 
@@ -24,15 +23,11 @@ interface Props {
 export function Pracinha({ view, names, awaiting, onIntent, compact = false }: Props) {
   const { tr } = useLang();
   const text = useBairroText();
-  const [confirmBust, setConfirmBust] = useState(false);
-  const actions = actionsFor(view, awaiting);
+  // The debt dialog owns Pay and Faliu while you owe.
+  const actions = view.pending === 'debt' ? [] : actionsFor(view, awaiting);
+  const waiting = waitingFor(view, names, tr.lang);
   const last = view.log.at(-1);
   const label = (a: Action) => text.ui(a.label, a.amount === undefined ? undefined : { amount: money(tr.lang, a.amount) });
-
-  function press(a: Action) {
-    if (a.id === 'goBankrupt') setConfirmBust(true);
-    else if (a.intent) onIntent(a.intent);
-  }
 
   return (
     <div className={`pracinha${compact ? ' pracinha--compact' : ''}`}>
@@ -49,33 +44,22 @@ export function Pracinha({ view, names, awaiting, onIntent, compact = false }: P
         <p className="pracinha__log">{text.ui('noRollYet')}</p>
       )}
       {last && <p className="pracinha__log" aria-live="polite">{text.logLine(last, names)}</p>}
+      {waiting && <p className="pracinha__log" role="status">{text.ui(waiting.key, waiting.params)}</p>}
+      {view.pending === 'debt' && <p className="pracinha__log" role="status">{text.ui('debtOpenHint')}</p>}
       {actions.length > 0 && (
         <div className="pracinha__actions">
           {actions.map((a, i) => (
             <button
               key={a.id}
               type="button"
-              className={a.id === 'goBankrupt' ? 'danger' : i === 0 ? 'primary' : ''}
+              className={i === 0 ? 'primary' : ''}
               disabled={!a.enabled}
-              onClick={() => press(a)}
+              onClick={() => a.intent && onIntent(a.intent)}
             >
               {label(a)}
             </button>
           ))}
         </div>
-      )}
-      {confirmBust && (
-        <ConfirmDialog
-          title={text.ui('bankruptTitle')}
-          body={text.ui('bankruptBody')}
-          cancel={text.ui('bankruptCancel')}
-          confirm={text.ui('actGoBankrupt')}
-          onCancel={() => setConfirmBust(false)}
-          onConfirm={() => {
-            setConfirmBust(false);
-            onIntent({ type: 'goBankrupt' });
-          }}
-        />
       )}
     </div>
   );

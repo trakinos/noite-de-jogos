@@ -135,5 +135,8 @@ export const en: BairroDictionary = {
     servicoNote: 'Rent is the dice total times {mult}; it doubles for whoever holds all 6 services',
     btnBuild: 'Build a puxadinho (-{amount})', btnBuildPredio: 'Build a prédio (-{amount})',
     btnSell: 'Sell a building (+{amount})', btnMortgage: 'Mortgage (+{amount})', btnUnmortgage: 'Pay off the mortgage (-{amount})',
+    waitPlaying: '{name} is playing', waitDebts: '{names} must pay their debts', waitTrade: '{name} is answering a trade', gameOver: 'Game over',
+    debtTitle: 'You owe money', debtOwesTo: 'to {to}', debtTotal: 'Total: {amount}', debtCash: 'Your cash: {amount}',
+    debtRaise: 'Raise money', debtRaiseNone: 'You have nothing left to sell or mortgage.', debtOpenHint: 'You have a debt to pay.',
   },
 };

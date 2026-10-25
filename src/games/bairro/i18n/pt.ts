@@ -135,5 +135,8 @@ export const pt: BairroDictionary = {
     servicoNote: 'O aluguel é o total dos dados vezes {mult}; dobra para quem tem os 6 serviços',
     btnBuild: 'Construir puxadinho (-{amount})', btnBuildPredio: 'Construir prédio (-{amount})',
     btnSell: 'Vender construção (+{amount})', btnMortgage: 'Hipotecar (+{amount})', btnUnmortgage: 'Pagar a hipoteca (-{amount})',
+    waitPlaying: '{name} está jogando', waitDebts: '{names} precisam pagar dívidas', waitTrade: '{name} está respondendo a uma troca', gameOver: 'Fim de jogo',
+    debtTitle: 'Você está devendo', debtOwesTo: 'para {to}', debtTotal: 'Total: {amount}', debtCash: 'Seu dinheiro: {amount}',
+    debtRaise: 'Levante dinheiro', debtRaiseNone: 'Você não tem mais nada para vender ou hipotecar.', debtOpenHint: 'Você tem uma dívida para pagar.',
   },
 };

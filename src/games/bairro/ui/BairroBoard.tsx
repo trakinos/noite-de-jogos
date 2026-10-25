@@ -9,6 +9,7 @@ import { playerColor } from '../../../ui/playerColor';
 import { BAIRRO_DICTIONARIES } from '../i18n';
 import type { BairroIntent } from '../types';
 import type { BairroView } from '../view';
+import { DebtDialog } from './DebtDialog';
 import { EscrituraDialog } from './EscrituraDialog';
 import { escrituraFor } from './escritura';
 import { MapBoard } from './MapBoard';
@@ -101,6 +102,8 @@ export function BairroBoard({ view, lobby, code, error, clock, awaiting, onInten
       {deedPos !== null && (
         <EscrituraDialog view={view} pos={deedPos} names={names} awaiting={awaiting} onIntent={onIntent} onClose={() => setDeedPos(null)} />
       )}
+
+      {view.pending === 'debt' && <DebtDialog view={view} names={names} awaiting={awaiting} onIntent={onIntent} />}
 
       {errorText && (
         <div className="toast bboard__toast" role="alert">
