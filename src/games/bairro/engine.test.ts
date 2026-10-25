@@ -351,7 +351,7 @@ describe('guards', () => {
 
   it('later-task intents are refused for now', () => {
     const s = game(2);
-    expect(apply(s, 0, { type: 'mortgage', pos: 1 })).toEqual({ ok: false, reason: 'notNow' });
+    expect(apply(s, 0, { type: 'payDebt' })).toEqual({ ok: false, reason: 'notNow' });
   });
 
   it('never throws on malformed input', () => {

@@ -1,7 +1,9 @@
 import { nextInt } from '../../engine/rng';
 import type { ApplyResult } from '../module';
+import { canBuild, canMortgage, canSell, canUnmortgage } from './assets';
 import { DECK } from './deck';
-import { BOARD, JAIL_FINE, JAIL_POS, PASS_START, RUAS } from './board';
+import { BOARD, JAIL_FINE, JAIL_POS, PASS_START, RUAS, unmortgageCost } from './board';
+import type { PontoSquare, ServicoSquare } from './board';
 import type { BairroIntent, BairroState } from './types';
 
 const ok = (): ApplyResult => ({ ok: true });
@@ -23,6 +25,10 @@ const HANDLERS: Partial<Record<IntentType, Handler>> = {
   endTurn: s => endTurn(s),
   payJailFine: s => payJailFine(s),
   useLawyer: s => useLawyer(s),
+  build: (s, player, i) => build(s, player, (i as { pos: number }).pos),
+  sellBuilding: (s, player, i) => sellBuilding(s, player, (i as { pos: number }).pos),
+  mortgage: (s, player, i) => mortgage(s, player, (i as { pos: number }).pos),
+  unmortgage: (s, player, i) => unmortgage(s, player, (i as { pos: number }).pos),
 };
 
 /** Applies one intent from `player` (a seat index), mutating `s`. Never throws on malformed input. */
@@ -260,6 +266,47 @@ function decline(s: BairroState): ApplyResult {
   if (s.phase.kind !== 'buy') return fail('notNow');
   log(s, s.current, 'declined', { pos: s.phase.square });
   afterBuyDecision(s);
+  return ok();
+}
+
+function build(s: BairroState, player: number, pos: number): ApplyResult {
+  const why = canBuild(s, player, pos);
+  if (why) return fail(why);
+  const sq = BOARD[pos] as PontoSquare;
+  s.players[player].cash -= sq.houseCost;
+  const own = s.owned[pos];
+  own.houses++;
+  log(s, player, own.houses === 5 ? 'builtPredio' : 'builtPuxadinho', { pos, cost: sq.houseCost });
+  return ok();
+}
+
+function sellBuilding(s: BairroState, player: number, pos: number): ApplyResult {
+  const why = canSell(s, player, pos);
+  if (why) return fail(why);
+  const refund = (BOARD[pos] as PontoSquare).houseCost / 2;
+  s.owned[pos].houses--;
+  credit(s, player, refund);
+  log(s, player, 'soldBuilding', { pos, amount: refund });
+  return ok();
+}
+
+function mortgage(s: BairroState, player: number, pos: number): ApplyResult {
+  const why = canMortgage(s, player, pos);
+  if (why) return fail(why);
+  const sq = BOARD[pos] as PontoSquare | ServicoSquare;
+  s.owned[pos].mortgaged = true;
+  credit(s, player, sq.mortgage);
+  log(s, player, 'mortgaged', { pos, amount: sq.mortgage });
+  return ok();
+}
+
+function unmortgage(s: BairroState, player: number, pos: number): ApplyResult {
+  const why = canUnmortgage(s, player, pos);
+  if (why) return fail(why);
+  const cost = unmortgageCost(BOARD[pos] as PontoSquare | ServicoSquare);
+  s.players[player].cash -= cost;
+  s.owned[pos].mortgaged = false;
+  log(s, player, 'unmortgaged', { pos, amount: cost });
   return ok();
 }
 
