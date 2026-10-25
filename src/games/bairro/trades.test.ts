@@ -128,11 +128,11 @@ describe('trades', () => {
     expect(propose(s, terms({ cash: 10 }, {}))).toEqual({ ok: true });
   });
 
-  it('voids an acceptance when the state changed, refusing with a reason', () => {
+  it('voids an acceptance when the state changed: ok, offer cleared, nothing moves', () => {
     const s = game(2);
     propose(s, terms({}, { cash: 1400 }));
     s.players[1].cash = 100;
-    expect(apply(s, 1, { type: 'answerTrade', accept: true })).toEqual(refused('notEnoughCash'));
+    expect(apply(s, 1, { type: 'answerTrade', accept: true })).toEqual({ ok: true });
     expect(s.offer).toBeNull();
     expect(s.players.map(p => p.cash)).toEqual([1500, 100]);
     expect(s.log.at(-1)?.key).toBe('tradeVoided');
@@ -143,8 +143,20 @@ describe('trades', () => {
     give(s, 0, 1);
     propose(s, terms({ assets: [1] }, {}));
     s.owned[3] = { owner: 0, houses: 1, mortgaged: false };
-    expect(apply(s, 1, { type: 'answerTrade', accept: true })).toEqual(refused('ruaHasBuildings'));
+    expect(apply(s, 1, { type: 'answerTrade', accept: true })).toEqual({ ok: true });
+    expect(s.offer).toBeNull();
     expect(s.owned[1].owner).toBe(0);
+    expect(s.log.at(-1)?.key).toBe('tradeVoided');
+  });
+
+  it('accepts only a boolean accept; anything else is badIntent and leaves the offer', () => {
+    const s = game(2);
+    propose(s, terms({ cash: 10 }, {}));
+    for (const accept of [undefined, 'false', 1, 0, null]) {
+      expect(apply(s, 1, { type: 'answerTrade', accept } as never)).toEqual(refused('badIntent'));
+      expect(s.offer).not.toBeNull();
+    }
+    expect(apply(s, 1, { type: 'answerTrade', accept: false })).toEqual({ ok: true });
   });
 
   it('blocks every other intent from everyone while an offer is open', () => {

@@ -73,15 +73,18 @@ export function answerTrade(s: BairroState, player: number, intent: BairroIntent
   const offer = s.offer;
   if (!offer) return fail('notNow');
   if (player !== offer.to) return fail('tradePending');
+  const accept = (intent as { accept?: unknown }).accept;
+  if (typeof accept !== 'boolean') return fail('badIntent');
   s.offer = null;
-  if (!(intent as { accept?: unknown }).accept) {
+  if (!accept) {
     log(s, player, 'tradeDeclined', { to: offer.from });
     return ok();
   }
   const why = validateOffer(s, offer);
   if (why) {
+    // The offer is gone, so this is a state change and must reach everyone: ok, with the log saying why.
     log(s, offer.from, 'tradeVoided', { to: offer.to });
-    return fail(why);
+    return ok();
   }
   const a = s.players[offer.from];
   const b = s.players[offer.to];
