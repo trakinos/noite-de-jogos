@@ -2,6 +2,20 @@
 
 What changed for players, newest first. Every push to `main` deploys to https://trakinos.github.io/noite-de-jogos/.
 
+## Unreleased — Dono do Bairro
+
+### Added
+- **Dono do Bairro is playable.** Pick "Criar" next to Dono do Bairro on the front page and send the code. It takes 2 to 6 players, each on their own device, in Portuguese or English.
+- **Classic rules.** Roll and walk the neighborhood, buy escrituras (no auctions), collect rent, draw Deu Bom / Deu Ruim cards, and get sent to the Xilindró. Build puxadinhos and a prédio once you hold a whole rua, mortgage when cash runs short, and trade escrituras, money and the Carta do Advogado on your turn. Whoever can't pay goes bust ("Faliu"), and the last one left is the Dono do Bairro.
+- **Two boards.** On a computer you see the whole neighborhood as a map, with the dice and your buttons in the pracinha in the middle. On a phone you see a small map on top and a strip of the squares around you, with players and the log one tap away.
+- **Escritura cards.** Tap any square to see its price, rents and owner, and to build, sell or mortgage it.
+- **Debts and trades in dialogs.** A debt opens a dialog that shows what you owe and lets you sell or mortgage until you can pay. A trade offer opens a dialog for the other player to accept or decline.
+- **Turn timer, refresh and rules.** The lobby's turn timer works here too: when it runs out, the game makes the careful move for you. Refreshing the page puts you back in your seat with the same dialog open. A Rules button explains everything.
+- **End screen** with everyone's place, and Play again.
+
+### Note
+- **The values are provisional.** Prices, rents and the other numbers on the board are working values and may change once they are checked against a real set.
+
 ## Unreleased — Noite de Jogos
 
 ### Added

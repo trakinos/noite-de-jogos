@@ -61,8 +61,10 @@ export function PlayersPanel({ view, names, colors, onOpenSquare }: Props) {
                 ) : (
                   <>
                     <span className="bplayer__cash">{money(tr.lang, p.cash)}</span>
-                    <span className="muted">{n === 1 ? text.ui('deedOne') : text.ui('deeds', { n })}</span>
-                    {p.jailTurns !== null && <span className="bplayer__tag">{text.square(JAIL_POS)}</span>}
+                    <span className="bplayer__meta">
+                      <span className="muted">{n === 1 ? text.ui('deedOne') : text.ui('deeds', { n })}</span>
+                      {p.jailTurns !== null && <span className="bplayer__tag">{text.square(JAIL_POS)}</span>}
+                    </span>
                   </>
                 )}
               </li>

@@ -15,7 +15,7 @@ export interface GameInfo {
 /** Games offered on the front page, in display order. */
 export const GAMES: readonly GameInfo[] = [
   { id: 'dominion', nameKey: 'gameDominionName', tagKey: 'gameDominionTag', minPlayers: 2, maxPlayers: 4, lengthKey: 'gameDominionLength', available: true },
-  { id: 'bairro', nameKey: 'gameBairroName', tagKey: 'gameBairroTag', minPlayers: 2, maxPlayers: 6, lengthKey: 'gameBairroLength', available: false },
+  { id: 'bairro', nameKey: 'gameBairroName', tagKey: 'gameBairroTag', minPlayers: 2, maxPlayers: 6, lengthKey: 'gameBairroLength', available: true },
 ];
 
 export function isGameId(x: unknown): x is GameId {

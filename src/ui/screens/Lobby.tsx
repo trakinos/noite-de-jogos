@@ -135,7 +135,8 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onLeave, o
             ) : (
               <b id="turn-timer">{lobby.turnTimer === null ? tr.t('timerOff') : tr.t('timerSeconds', { n: lobby.turnTimer })}</b>
             )}
-            {lobby.turnTimer !== null && <span className="zone__hint">{tr.t('timerHint')}</span>}
+            {/* Only Dominion has attack responses with their own clock. */}
+            {lobby.turnTimer !== null && lobby.game === 'dominion' && <span className="zone__hint">{tr.t('timerHint')}</span>}
           </div>
           {options}
         </section>
