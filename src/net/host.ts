@@ -1,17 +1,10 @@
-import { DEFAULT_KINGDOM, KINGDOM_IDS } from '../cards/registry';
-import { Game } from '../engine/game';
-import { createRng, shuffle } from '../engine/rng';
-import { answerAtRandom, finishTurn, openPrompts } from '../engine/timeout';
-import type { ApplyResult, CardId, Intent } from '../engine/types';
-import { viewFor } from '../engine/view';
+import type { ApplyResult, GameInstance, GameModule } from '../games/module';
 import { PLAYER_COLORS, type PlayerColorId } from '../theme/playerColors';
 import { createMemoryPair } from './memory';
 import { parseGuestMessage, type HostMessage, type LobbyState } from './protocol';
 import type { Connection } from './transport';
-import { realScheduler, TurnClock, type ClockKind, type Scheduler } from './turnClock';
+import { realScheduler, TurnClock, type Scheduler } from './turnClock';
 
-export const MIN_PLAYERS = 2;
-export const MAX_PLAYERS = 4;
 /** Each view carries only the recent log: keeps messages small (binary channels chunk large ones, but a whole-game log is wasteful). */
 export const MAX_LOG_ENTRIES = 150;
 /** Turn timer choices in seconds; `null` (no timer) is the default. */
@@ -44,13 +37,13 @@ function send(conn: Connection, msg: HostMessage): void {
   conn.send(msg);
 }
 
-/** Runs in the host's browser: owns the seats, the lobby and the game. */
+/** Runs in the host's browser: owns the seats, the lobby and the running game, whatever game the module plays. */
 export class HostSession {
   private seats: Seat[] = [];
   private hostSeatId: string | null = null;
   private nextSeat = 0;
-  private kingdom: CardId[];
-  private activeGame: Game | null = null;
+  private options: unknown;
+  private activeGame: GameInstance | null = null;
   private turnTimer: number | null = null;
   private clock: TurnClock | null = null;
   /** Colors of guests who left the lobby, by token: a refresh gets the same color back if it is still free. */
@@ -59,25 +52,35 @@ export class HostSession {
   private readonly makeToken: () => string;
   private readonly scheduler: Scheduler;
 
-  constructor(opts: HostOptions = {}) {
+  constructor(
+    private readonly module: GameModule,
+    opts: HostOptions = {},
+  ) {
     this.random = opts.random ?? Math.random;
     this.makeToken = opts.makeToken ?? randomToken;
     this.scheduler = opts.scheduler ?? realScheduler;
-    this.kingdom = [...DEFAULT_KINGDOM];
+    this.options = module.defaultOptions();
   }
 
-  get game(): Game | null {
+  /** The running game, if any. */
+  get instance(): GameInstance | null {
     return this.activeGame;
   }
 
   get lobby(): LobbyState {
+    const options = structuredClone(this.options);
+    const legacyKingdom = this.module.id === 'dominion' ? (options as { kingdom?: unknown }).kingdom : undefined;
     return {
-      game: 'dominion',
+      game: this.module.id,
       hostId: this.hostSeatId ?? '',
       players: this.seats.map((s) => ({ id: s.id, name: s.name, online: s.conn !== null, color: s.color })),
-      kingdom: [...this.kingdom],
+      options,
       inGame: this.activeGame !== null,
       turnTimer: this.turnTimer,
+      minPlayers: this.module.minPlayers,
+      maxPlayers: this.module.maxPlayers,
+      // Deploy-compat: old clients read the kingdom at the top level. Drop later.
+      ...(legacyKingdom === undefined ? {} : { kingdom: structuredClone(legacyKingdom) }),
     };
   }
 
@@ -108,26 +111,13 @@ export class HostSession {
     });
   }
 
-  setKingdom(kingdom: CardId[]): ApplyResult {
+  setOptions(raw: unknown): ApplyResult {
     if (this.activeGame) return fail('Game in progress');
-    const valid =
-      kingdom.length === 10 && new Set(kingdom).size === 10 && kingdom.every((id) => KINGDOM_IDS.includes(id));
-    if (!valid) return fail('Choose 10 different kingdom cards');
-    this.kingdom = [...kingdom];
+    const parsed = this.module.parseOptions(raw);
+    if (typeof parsed === 'object' && parsed !== null && 'error' in parsed) return fail((parsed as { error: string }).error);
+    this.options = parsed;
     this.broadcastLobby();
     return ok();
-  }
-
-  randomizeKingdom(): void {
-    if (this.activeGame) return;
-    this.kingdom = this.pickRandomKingdom();
-    this.broadcastLobby();
-  }
-
-  resetKingdom(): void {
-    if (this.activeGame) return;
-    this.kingdom = [...DEFAULT_KINGDOM];
-    this.broadcastLobby();
   }
 
   setTurnTimer(seconds: number | null): ApplyResult {
@@ -140,20 +130,28 @@ export class HostSession {
 
   start(): ApplyResult {
     if (this.activeGame) return fail('Game already started');
-    if (this.seats.length < MIN_PLAYERS) return fail('Need at least 2 players');
-    this.activeGame = Game.create({
-      players: this.seats.map((s) => ({ id: s.id, name: s.name })),
-      kingdom: this.kingdom,
-      seed: this.newSeed(),
-    });
-    this.clock = this.turnTimer === null ? null : new TurnClock(this.turnTimer * 1000, this.scheduler, (kind) => this.expire(kind));
+    if (this.seats.length < this.module.minPlayers) return fail(`Need at least ${this.module.minPlayers} players`);
+    this.activeGame = this.module.create(
+      this.seats.map((s) => ({ id: s.id, name: s.name })),
+      this.options,
+      this.newSeed(),
+    );
+    this.clock =
+      this.turnTimer === null
+        ? null
+        : new TurnClock(this.turnTimer * 1000, this.scheduler, (kind) => {
+            const game = this.activeGame;
+            if (!game || game.over) return;
+            game.expire(kind, this.newSeed());
+            this.gameChanged();
+          });
     this.broadcastLobby();
     this.gameChanged();
     return ok();
   }
 
   playAgain(): ApplyResult {
-    if (!this.activeGame?.state.result) return fail('The game is not over');
+    if (!this.activeGame?.over) return fail('The game is not over');
     this.clock?.stop();
     this.clock = null;
     this.activeGame = null;
@@ -178,11 +176,7 @@ export class HostSession {
 
   /** Call after every change to the game: keeps the clock in step, then sends fresh views. */
   gameChanged(): void {
-    const game = this.activeGame;
-    if (game && this.clock) {
-      const s = game.state;
-      this.clock.sync({ turn: s.turn, currentPlayer: s.turn.player, pending: s.pending, group: s.group, over: s.result !== null });
-    }
+    if (this.activeGame && this.clock) this.clock.sync(this.activeGame.clockInput());
     this.broadcastViews();
   }
 
@@ -198,7 +192,7 @@ export class HostSession {
       return existing;
     }
     if (this.activeGame) return this.reject(conn, 'Game in progress');
-    if (this.seats.length >= MAX_PLAYERS) return this.reject(conn, 'Room full');
+    if (this.seats.length >= this.module.maxPlayers) return this.reject(conn, 'Room full');
 
     const seat: Seat = { id: `p${this.nextSeat++}`, name, token: this.makeToken(), conn, color: this.freeColor(token) };
     this.seats.push(seat);
@@ -223,7 +217,7 @@ export class HostSession {
     this.broadcastLobby();
   }
 
-  private handleIntent(seat: Seat, conn: Connection, intent: Intent): void {
+  private handleIntent(seat: Seat, conn: Connection, intent: unknown): void {
     if (!this.activeGame) {
       send(conn, { type: 'error', reason: 'No game in progress' });
       return;
@@ -238,22 +232,6 @@ export class HostSession {
     if (!result.ok) {
       send(conn, { type: 'error', reason: result.reason });
       return;
-    }
-    this.gameChanged();
-  }
-
-  /** Time ran out: answer the pending prompt at random, or end the turn without playing or buying. */
-  private expire(kind: ClockKind): void {
-    const game = this.activeGame;
-    if (!game || game.state.result) return;
-    const s = game.state;
-    const rng = createRng(this.newSeed());
-    if (kind === 'response') {
-      for (const p of openPrompts(s)) game.note(p.player, 'timeout: random answer');
-      answerAtRandom(game, rng);
-    } else {
-      game.note(s.turn.player, 'timeout: turn ended');
-      finishTurn(game, rng);
     }
     this.gameChanged();
   }
@@ -289,16 +267,12 @@ export class HostSession {
 
   private sendView(seat: Seat): void {
     if (seat.conn && this.activeGame) {
-      const view = viewFor(this.activeGame.state, seat.id);
+      const view = this.activeGame.viewFor(seat.id);
       send(seat.conn, { type: 'view', view: { ...view, log: view.log.slice(-MAX_LOG_ENTRIES) }, clock: this.clock?.info() ?? null });
     }
   }
 
   private newSeed(): number {
     return Math.floor(this.random() * 2 ** 31);
-  }
-
-  private pickRandomKingdom(): CardId[] {
-    return shuffle(createRng(this.newSeed()), KINGDOM_IDS).slice(0, 10);
   }
 }

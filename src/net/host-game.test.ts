@@ -1,10 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
 import { HostSession } from './host';
+import { dominionModule } from '../games/dominion/module';
 import { flush } from './memory';
-import { join, seededHostOptions, type TestClient } from './testing';
+import { dominionGame, join, viewOf, seededHostOptions, type TestClient } from './testing';
 
 async function lobbyOf(names: string[]): Promise<{ host: HostSession; clients: TestClient[] }> {
-  const host = new HostSession(seededHostOptions());
+  const host = new HostSession(dominionModule, seededHostOptions());
   const clients = [await join(host, names[0], { local: true })];
   for (const name of names.slice(1)) clients.push(await join(host, name));
   return { host, clients };
@@ -18,7 +19,7 @@ async function started(names: string[]) {
 }
 
 function turnClient(host: HostSession, clients: TestClient[]): TestClient {
-  return clients[host.game!.state.turn.player];
+  return clients[dominionGame(host).state.turn.player];
 }
 
 describe('HostSession game flow', () => {
@@ -32,10 +33,10 @@ describe('HostSession game flow', () => {
     const [ana, bo] = clients;
     expect(ana.last('lobby')!.lobby.inGame).toBe(true);
     expect(bo.last('lobby')!.lobby.inGame).toBe(true);
-    expect(ana.last('view')!.view.you).toBe(0);
-    expect(bo.last('view')!.view.you).toBe(1);
-    expect(ana.last('view')!.view.hand).toEqual(host.game!.state.players[0].hand);
-    expect(bo.last('view')!.view.players[0]).not.toHaveProperty('hand');
+    expect(viewOf(ana).you).toBe(0);
+    expect(viewOf(bo).you).toBe(1);
+    expect(viewOf(ana).hand).toEqual(dominionGame(host).state.players[0].hand);
+    expect(viewOf(bo).players[0]).not.toHaveProperty('hand');
     expect(host.start()).toEqual({ ok: false, reason: 'Game already started' });
   });
 
@@ -43,12 +44,12 @@ describe('HostSession game flow', () => {
     const { host, clients } = await started(['Ana', 'Bo']);
     turnClient(host, clients).send({ type: 'intent', intent: { type: 'endPhase' } });
     await flush();
-    for (const c of clients) expect(c.last('view')!.view.turn.phase).toBe('buy');
+    for (const c of clients) expect(viewOf(c).turn.phase).toBe('buy');
   });
 
   it('sends refused moves back only to the sender', async () => {
     const { host, clients } = await started(['Ana', 'Bo']);
-    const waiting = clients[1 - host.game!.state.turn.player];
+    const waiting = clients[1 - dominionGame(host).state.turn.player];
     waiting.send({ type: 'intent', intent: { type: 'endPhase' } });
     await flush();
     expect(waiting.last('error')).toEqual({ type: 'error', reason: 'It is not your turn' });
@@ -79,7 +80,7 @@ describe('HostSession game flow', () => {
 
     const back = await join(host, 'Bo', { token });
     expect(back.last('welcome')).toMatchObject({ playerId: 'p1', token });
-    expect(back.last('view')!.view.you).toBe(1);
+    expect(viewOf(back).you).toBe(1);
     expect(ana.last('lobby')!.lobby.players[1].online).toBe(true);
   });
 
@@ -94,7 +95,7 @@ describe('HostSession game flow', () => {
 
   it('reports engine crashes as errors instead of throwing', async () => {
     const { host, clients } = await started(['Ana', 'Bo']);
-    vi.spyOn(host.game!, 'apply').mockImplementation(() => {
+    vi.spyOn(dominionGame(host), 'apply').mockImplementation(() => {
       throw new Error('boom');
     });
     const quiet = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -108,19 +109,19 @@ describe('HostSession game flow', () => {
   it('plays again with the same kingdom only after the game ends', async () => {
     const { host, clients } = await started(['Ana', 'Bo']);
     expect(host.playAgain()).toEqual({ ok: false, reason: 'The game is not over' });
-    const kingdom = host.game!.state.kingdom;
-    host.game!.state.supply.province = 0;
+    const kingdom = dominionGame(host).state.kingdom;
+    dominionGame(host).state.supply.province = 0;
     turnClient(host, clients).send({ type: 'intent', intent: { type: 'endPhase' } });
     await flush();
     turnClient(host, clients).send({ type: 'intent', intent: { type: 'endPhase' } });
     await flush();
-    expect(clients[0].last('view')!.view.result).not.toBeNull();
+    expect(viewOf(clients[0]).result).not.toBeNull();
 
     expect(host.playAgain()).toEqual({ ok: true });
     await flush();
-    expect(host.game!.state.result).toBeNull();
-    expect(host.game!.state.kingdom).toEqual(kingdom);
-    expect(clients[1].last('view')!.view.result).toBeNull();
+    expect(dominionGame(host).state.result).toBeNull();
+    expect(dominionGame(host).state.kingdom).toEqual(kingdom);
+    expect(viewOf(clients[1]).result).toBeNull();
   });
 
   it('goes back to the lobby and drops offline players', async () => {
@@ -132,7 +133,7 @@ describe('HostSession game flow', () => {
     const lobby = clients[0].last('lobby')!.lobby;
     expect(lobby.inGame).toBe(false);
     expect(lobby.players.map((p) => p.name)).toEqual(['Ana', 'Bo']);
-    expect(host.game).toBeNull();
+    expect(host.instance).toBeNull();
   });
 
   it('keeps a color on rejoin and locks colors during a game', async () => {

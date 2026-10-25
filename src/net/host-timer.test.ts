@@ -1,12 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { HostSession } from './host';
+import { dominionModule } from '../games/dominion/module';
 import { flush } from './memory';
 import { RESPONSE_MS } from './turnClock';
-import { fakeScheduler, join, seededHostOptions } from './testing';
+import { dominionGame, fakeScheduler, join, seededHostOptions } from './testing';
 
 async function timedGame(seconds: number | null) {
   const sched = fakeScheduler();
-  const host = new HostSession({ ...seededHostOptions(), scheduler: sched });
+  const host = new HostSession(dominionModule, { ...seededHostOptions(), scheduler: sched });
   const ana = await join(host, 'Ana', { local: true });
   const bo = await join(host, 'Bo');
   expect(host.setTurnTimer(seconds)).toEqual({ ok: true });
@@ -17,7 +18,7 @@ async function timedGame(seconds: number | null) {
 
 describe('HostSession turn timer', () => {
   it('validates and broadcasts the timer setting, and locks it in game', async () => {
-    const host = new HostSession(seededHostOptions());
+    const host = new HostSession(dominionModule, seededHostOptions());
     const ana = await join(host, 'Ana', { local: true });
     expect(host.lobby.turnTimer).toBeNull();
     expect(host.setTurnTimer(37)).toEqual({ ok: false, reason: 'Invalid timer' });
@@ -43,24 +44,24 @@ describe('HostSession turn timer', () => {
 
   it('ends the turn when time runs out and logs it', async () => {
     const { sched, host, bo } = await timedGame(45);
-    const first = host.game!.state.turn.player;
+    const first = dominionGame(host).state.turn.player;
     sched.advance(45_000);
     await flush();
-    expect(host.game!.state.turn.player).toBe(1 - first);
-    expect(host.game!.state.log.some((e) => e.text === 'timeout: turn ended' && e.player === first)).toBe(true);
+    expect(dominionGame(host).state.turn.player).toBe(1 - first);
+    expect(dominionGame(host).state.log.some((e) => e.text === 'timeout: turn ended' && e.player === first)).toBe(true);
     expect(bo.last('view')!.clock).toMatchObject({ kind: 'turn', remainingMs: 45_000 });
   });
 
   it('answers an attack at random after 30 s, then resumes the turn clock', async () => {
     const { sched, host } = await timedGame(45);
-    const s = host.game!.state;
+    const s = dominionGame(host).state;
     const cur = s.turn.player;
     const other = 1 - cur;
     s.players[cur].hand = ['militia', 'copper', 'copper', 'copper', 'copper'];
     s.players[other].hand = ['copper', 'copper', 'estate', 'estate', 'silver'];
     sched.advance(5_000);
     const curClient = cur === 0 ? 'p0' : 'p1';
-    expect(host.game!.apply(curClient, { type: 'playAction', handIndex: 0 }).ok).toBe(true);
+    expect(dominionGame(host).apply(curClient, { type: 'playAction', handIndex: 0 }).ok).toBe(true);
     host.gameChanged(); // applied straight to the engine above, so tell the host
     await flush();
     sched.advance(RESPONSE_MS);
@@ -79,6 +80,6 @@ describe('HostSession turn timer', () => {
     const { sched, host } = await timedGame(45);
     host.backToLobby();
     sched.advance(100_000);
-    expect(host.game).toBeNull();
+    expect(host.instance).toBeNull();
   });
 });

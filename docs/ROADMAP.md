@@ -29,16 +29,16 @@ Dominion must keep working and its tests must stay green after every step.
 
 ### B. Dono do Bairro (Banco Imobiliário rules)
 Classic rules, 2–6 players, playable on working values first. The user checks the board on screen and real values replace the working ones later.
-- [ ] Generic host: split the reusable host parts (lobby, seats, colors, rejoin, turn clock, per-player views) away from Dominion's engine, so a game module plugs in. Deferred from A until the second engine shows its real shape.
-- [ ] **Board data:** 40 squares, 22 pontos in 8 ruas, 6 serviços (companhias), and the Deu Bom / Deu Ruim deck. All of it is one data file with working values close to the classic edition, and the names live in a theme file (PT/EN).
-- [ ] **Engine:** rolling and moving, doubles (3 doubles = Xilindró), the Ponto de Ônibus pay ($200), buy or leave (no auction), rent (full street doubles it, puxadinhos/prédio, serviços = dice × multiplier, all 6 doubles it), Bolão and IPTU, the cards deck, the Carta do Advogado (Habeas Corpus).
-- [ ] **Building:** only on your own turn and only with the full rua, built evenly, up to 4 puxadinhos then a prédio, sold back at half price.
-- [ ] **Mortgage** at the printed value, paid off at +20%.
-- [ ] **Xilindró:** up to 3 turns; leave with doubles, the $50 fine or the Carta do Advogado.
-- [ ] **Trading on your own turn only:** pontos, money and Carta do Advogado in either direction, which the other player accepts or declines. It has its own short answer clock.
-- [ ] **Debts and bankruptcy:** sell and mortgage to pay (also off-turn, only to settle a debt), "Faliu", and the last player left wins.
-- [ ] **Turn timer and timeouts:** the cautious move (never spends money by choice).
-- [ ] Engine tests: unit tests, simulated games and fuzzed intents, the same as Dominion.
+- [x] Generic host: split the reusable host parts (lobby, seats, colors, rejoin, turn clock, per-player views) away from Dominion's engine, so a game module plugs in. Deferred from A until the second engine shows its real shape.
+- [x] **Board data:** 40 squares, 22 pontos in 8 ruas, 6 serviços (companhias), and the Deu Bom / Deu Ruim deck. All of it is one data file, and the names live in a theme file (PT/EN). The values are working values (classic geometry, Monopoly-proportioned prices and rents) until the user checks them.
+- [x] **Engine:** rolling and moving, doubles (3 doubles = Xilindró), the Ponto de Ônibus pay ($200), buy or leave (no auction), rent (full street doubles it, puxadinhos/prédio, serviços = dice × multiplier, all 6 doubles it), Bolão and IPTU, the cards deck, the Carta do Advogado (Habeas Corpus).
+- [x] **Building:** only on your own turn and only with the full rua, built evenly, up to 4 puxadinhos then a prédio, sold back at half price.
+- [x] **Mortgage** at the printed value, paid off at +20%.
+- [x] **Xilindró:** up to 3 turns; leave with doubles, the $50 fine or the Carta do Advogado.
+- [x] **Trading on your own turn only:** pontos, money and Carta do Advogado in either direction, which the other player accepts or declines. It has its own short answer clock.
+- [x] **Debts and bankruptcy:** sell and mortgage to pay (also off-turn, only to settle a debt), "Faliu", and the last player left wins.
+- [x] **Turn timer and timeouts:** the cautious move (never spends money by choice).
+- [x] Engine tests: unit tests, simulated games and fuzzed intents, the same as Dominion.
 - [ ] **Board mockups** (a neighborhood map around the pracinha) for the user to choose from, then the screens: lobby, board, your panel, opponents, trade dialog, animated dice and token, log, end screen, rules dialog. Phone first, dark mode.
 - [ ] **Partida rápida** (lobby options, all off by default, one switch turns on the bundle): a time limit (30/45/60/90 min, the round finishes, the richest player wins), prédio after 3 puxadinhos, deal out pontos at the start, leave the Xilindró early.
 - [ ] Playtest with friends on a call. **The user checks the board's names and values** against a real classic set and sends corrections. Only the data file changes.

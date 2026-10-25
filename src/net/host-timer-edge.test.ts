@@ -1,13 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import type { GameResult } from '../engine/types';
 import { HostSession } from './host';
+import { dominionModule } from '../games/dominion/module';
 import { flush } from './memory';
 import { RESPONSE_MS } from './turnClock';
-import { fakeScheduler, join, seededHostOptions } from './testing';
+import { dominionGame, fakeScheduler, join, seededHostOptions } from './testing';
 
 async function timedGame(seconds: number | null) {
   const sched = fakeScheduler();
-  const host = new HostSession({ ...seededHostOptions(), scheduler: sched });
+  const host = new HostSession(dominionModule, { ...seededHostOptions(), scheduler: sched });
   const ana = await join(host, 'Ana', { local: true });
   const bo = await join(host, 'Bo');
   expect(host.setTurnTimer(seconds)).toEqual({ ok: true });
@@ -18,15 +19,15 @@ async function timedGame(seconds: number | null) {
 
 /** Lets the clock run out until `player` (0 = Ana the host, 1 = Bo) is up. */
 async function untilTurnOf(player: number, ctx: Awaited<ReturnType<typeof timedGame>>) {
-  if (ctx.host.game!.state.turn.player !== player) ctx.sched.advance(45_000);
+  if (dominionGame(ctx.host).state.turn.player !== player) ctx.sched.advance(45_000);
   await flush();
-  expect(ctx.host.game!.state.turn.player).toBe(player);
+  expect(dominionGame(ctx.host).state.turn.player).toBe(player);
 }
 
 describe('HostSession turn timer edge cases', () => {
   it('turns the timer off again with setTurnTimer(null)', async () => {
     const sched = fakeScheduler();
-    const host = new HostSession({ ...seededHostOptions(), scheduler: sched });
+    const host = new HostSession(dominionModule, { ...seededHostOptions(), scheduler: sched });
     const ana = await join(host, 'Ana', { local: true });
     const bo = await join(host, 'Bo');
     expect(host.setTurnTimer(45)).toEqual({ ok: true });
@@ -37,13 +38,13 @@ describe('HostSession turn timer edge cases', () => {
     await flush();
     expect(ana.last('view')!.clock).toBeNull();
     expect(bo.last('view')!.clock).toBeNull();
-    const first = host.game!.state.turn.player;
+    const first = dominionGame(host).state.turn.player;
     sched.advance(10 * 60_000);
-    expect(host.game!.state.turn.player).toBe(first);
+    expect(dominionGame(host).state.turn.player).toBe(first);
   });
 
   it('broadcasts the timer setting to every guest', async () => {
-    const host = new HostSession(seededHostOptions());
+    const host = new HostSession(dominionModule, seededHostOptions());
     await join(host, 'Ana', { local: true });
     const bo = await join(host, 'Bo');
     const cy = await join(host, 'Cy');
@@ -54,7 +55,7 @@ describe('HostSession turn timer edge cases', () => {
   });
 
   it('accepts every listed option and rejects zero and negatives', () => {
-    const host = new HostSession(seededHostOptions());
+    const host = new HostSession(dominionModule, seededHostOptions());
     for (const s of [45, 60, 90, 120]) expect(host.setTurnTimer(s)).toEqual({ ok: true });
     expect(host.setTurnTimer(0)).toEqual({ ok: false, reason: 'Invalid timer' });
     expect(host.setTurnTimer(-45)).toEqual({ ok: false, reason: 'Invalid timer' });
@@ -63,11 +64,11 @@ describe('HostSession turn timer edge cases', () => {
 
   it('close() stops the clock: no more auto-moves after the host leaves', async () => {
     const { sched, host } = await timedGame(45);
-    const game = host.game!;
+    const game = dominionGame(host);
     const turn = game.state.turn;
     const logLength = game.state.log.length;
     host.close();
-    expect(host.game).toBeNull();
+    expect(host.instance).toBeNull();
     sched.advance(10 * 60_000);
     expect(game.state.turn).toBe(turn);
     expect(game.state.log.length).toBe(logLength);
@@ -78,7 +79,7 @@ describe('HostSession turn timer edge cases', () => {
     const { sched, host, ana } = ctx;
     sched.advance(20_000);
     const result: GameResult = { winners: ['p0'], scores: [] };
-    host.game!.state.result = result;
+    dominionGame(host).state.result = result;
     host.gameChanged();
     await flush();
     expect(ana.last('view')!.clock).toBeNull();
@@ -86,11 +87,11 @@ describe('HostSession turn timer edge cases', () => {
     expect(host.playAgain()).toEqual({ ok: true });
     await flush();
     expect(ana.last('view')!.clock).toEqual({ kind: 'turn', remainingMs: 45_000, totalMs: 45_000 });
-    const first = host.game!.state.turn.player;
+    const first = dominionGame(host).state.turn.player;
     sched.advance(45_000 - 1);
-    expect(host.game!.state.turn.player).toBe(first);
+    expect(dominionGame(host).state.turn.player).toBe(first);
     sched.advance(1);
-    expect(host.game!.state.turn.player).toBe(1 - first);
+    expect(dominionGame(host).state.turn.player).toBe(1 - first);
   });
 
   it('still ends the turn of a player who went offline', async () => {
@@ -101,15 +102,15 @@ describe('HostSession turn timer edge cases', () => {
     expect(ctx.host.lobby.players[1].online).toBe(false);
     ctx.sched.advance(45_000);
     await flush();
-    expect(ctx.host.game!.state.turn.player).toBe(0);
-    expect(ctx.host.game!.state.log.some((e) => e.text === 'timeout: turn ended' && e.player === 1)).toBe(true);
+    expect(dominionGame(ctx.host).state.turn.player).toBe(0);
+    expect(dominionGame(ctx.host).state.log.some((e) => e.text === 'timeout: turn ended' && e.player === 1)).toBe(true);
     expect(ctx.ana.last('view')!.clock).toMatchObject({ kind: 'turn', remainingMs: 45_000 });
   });
 
   it('answers at random for the host when the host owns the timed-out prompt', async () => {
     const ctx = await timedGame(45);
     await untilTurnOf(1, ctx);
-    const s = ctx.host.game!.state;
+    const s = dominionGame(ctx.host).state;
     s.players[1].hand = ['militia', 'copper', 'copper', 'copper', 'copper'];
     s.players[0].hand = ['copper', 'copper', 'estate', 'estate', 'silver'];
     ctx.bo.send({ type: 'intent', intent: { type: 'playAction', handIndex: 0 } });
@@ -127,17 +128,17 @@ describe('HostSession turn timer edge cases', () => {
 
   it('stops the clock once the game is over', async () => {
     const { sched, host } = await timedGame(45);
-    const first = host.game!.state.turn.player;
-    host.game!.state.result = { winners: ['p0'], scores: [] };
+    const first = dominionGame(host).state.turn.player;
+    dominionGame(host).state.result = { winners: ['p0'], scores: [] };
     host.gameChanged();
     sched.advance(10 * 60_000);
-    expect(host.game!.state.turn.player).toBe(first);
+    expect(dominionGame(host).state.turn.player).toBe(first);
   });
 });
 
 describe('HostSession colors edge cases', () => {
   it('gives four players four distinct colors', async () => {
-    const host = new HostSession(seededHostOptions());
+    const host = new HostSession(dominionModule, seededHostOptions());
     await join(host, 'Ana', { local: true });
     await join(host, 'Bo');
     await join(host, 'Cy');
@@ -148,7 +149,7 @@ describe('HostSession colors edge cases', () => {
   });
 
   it('treats picking your own color as a no-op, not an error', async () => {
-    const host = new HostSession(seededHostOptions());
+    const host = new HostSession(dominionModule, seededHostOptions());
     await join(host, 'Ana', { local: true });
     const bo = await join(host, 'Bo');
     const before = host.lobby.players.map((p) => p.color);
@@ -159,7 +160,7 @@ describe('HostSession colors edge cases', () => {
   });
 
   it('ignores an unknown color from a raw message', async () => {
-    const host = new HostSession(seededHostOptions());
+    const host = new HostSession(dominionModule, seededHostOptions());
     const ana = await join(host, 'Ana', { local: true });
     const bo = await join(host, 'Bo');
     const lobbies = ana.messages.filter((m) => m.type === 'lobby').length;
@@ -174,7 +175,7 @@ describe('HostSession colors edge cases', () => {
   });
 
   it('refuses a color change during a game', async () => {
-    const host = new HostSession(seededHostOptions());
+    const host = new HostSession(dominionModule, seededHostOptions());
     await join(host, 'Ana', { local: true });
     const bo = await join(host, 'Bo');
     host.start();
@@ -185,7 +186,7 @@ describe('HostSession colors edge cases', () => {
   });
 
   it('lets a new joiner take a color that someone freed by leaving', async () => {
-    const host = new HostSession(seededHostOptions());
+    const host = new HostSession(dominionModule, seededHostOptions());
     await join(host, 'Ana', { local: true });
     const bo = await join(host, 'Bo');
     bo.send({ type: 'setColor', color: 'green' });
@@ -200,7 +201,7 @@ describe('HostSession colors edge cases', () => {
   });
 
   it('ignores setColor before hello', async () => {
-    const host = new HostSession(seededHostOptions());
+    const host = new HostSession(dominionModule, seededHostOptions());
     await join(host, 'Ana', { local: true });
     const { connectClient } = await import('./testing');
     const stranger = connectClient(host);

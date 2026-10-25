@@ -1,7 +1,6 @@
-import type { CardId, Intent } from '../engine/types';
-import type { PlayerView } from '../engine/view';
+import type { Intent } from '../engine/types';
 import { isPlayerColor, type PlayerColorId } from '../theme/playerColors';
-import type { GameId } from '../games/catalog';
+import { GAMES, isGameId, type GameId } from '../games/catalog';
 import type { ClockInfo } from './turnClock';
 
 export interface LobbyPlayer {
@@ -15,9 +14,14 @@ export interface LobbyState {
   game: GameId;
   hostId: string;
   players: LobbyPlayer[];
-  kingdom: CardId[];
+  /** Game-specific settings; each game's lobby UI narrows this to its own options type. */
+  options: unknown;
   inGame: boolean;
   turnTimer: number | null;
+  minPlayers: number;
+  maxPlayers: number;
+  /** Deploy-compat: Dominion hosts also send options.kingdom here for already-open old clients. Drop later. */
+  kingdom?: unknown;
 }
 
 export type GuestMessage =
@@ -28,7 +32,7 @@ export type GuestMessage =
 export type HostMessage =
   | { type: 'welcome'; playerId: string; token: string }
   | { type: 'lobby'; lobby: LobbyState }
-  | { type: 'view'; view: PlayerView; clock: ClockInfo | null }
+  | { type: 'view'; view: unknown; clock: ClockInfo | null }
   | { type: 'error'; reason: string };
 
 export const MAX_NAME_LENGTH = 20;
@@ -57,6 +61,20 @@ export function parseGuestMessage(raw: unknown): GuestMessage | null {
   return null;
 }
 
+/** Fills in what a host from before the game/options/min/max fields left out; such a host only ever ran Dominion. */
+function parseLobby(raw: Record<string, unknown>): LobbyState {
+  const game: GameId = isGameId(raw.game) ? raw.game : 'dominion';
+  const info = GAMES.find((g) => g.id === game)!;
+  const options = 'options' in raw && raw.options !== undefined ? raw.options : Array.isArray(raw.kingdom) ? { kingdom: raw.kingdom } : raw.options;
+  return {
+    ...(raw as unknown as LobbyState),
+    game,
+    options,
+    minPlayers: typeof raw.minPlayers === 'number' ? raw.minPlayers : info.minPlayers,
+    maxPlayers: typeof raw.maxPlayers === 'number' ? raw.maxPlayers : info.maxPlayers,
+  };
+}
+
 export function parseHostMessage(raw: unknown): HostMessage | null {
   if (!isRecord(raw)) return null;
   switch (raw.type) {
@@ -65,9 +83,10 @@ export function parseHostMessage(raw: unknown): HostMessage | null {
         ? { type: 'welcome', playerId: raw.playerId, token: raw.token }
         : null;
     case 'lobby':
-      return isRecord(raw.lobby) ? { type: 'lobby', lobby: raw.lobby as unknown as LobbyState } : null;
+      if (!isRecord(raw.lobby)) return null;
+      return { type: 'lobby', lobby: parseLobby(raw.lobby) };
     case 'view':
-      return isRecord(raw.view) ? { type: 'view', view: raw.view as unknown as PlayerView, clock: parseClock(raw.clock) } : null;
+      return isRecord(raw.view) ? { type: 'view', view: raw.view, clock: parseClock(raw.clock) } : null;
     case 'error':
       return typeof raw.reason === 'string' ? { type: 'error', reason: raw.reason } : null;
     default:

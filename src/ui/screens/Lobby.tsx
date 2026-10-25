@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { DEFAULT_KINGDOM } from '../../cards/registry';
+import { KINGDOM_IDS } from '../../cards/registry';
+import { createRng, shuffle } from '../../engine/rng';
 import type { CardId } from '../../engine/types';
-import { MAX_PLAYERS, TURN_TIMER_OPTIONS, type HostSession } from '../../net/host';
+import { dominionModule, type DominionOptions } from '../../games/dominion/module';
+import { TURN_TIMER_OPTIONS, type HostSession } from '../../net/host';
 import type { LobbyState } from '../../net/protocol';
 import { useLang } from '../../i18n/LangProvider';
 import { colorHex, type PlayerColorId } from '../../theme/playerColors';
@@ -25,17 +27,18 @@ interface Props {
 
 export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onLeave }: Props) {
   const { tr } = useLang();
-  const [draft, setDraft] = useState<CardId[]>(lobby.kingdom);
+  const kingdom = (lobby.options as DominionOptions).kingdom;
+  const [draft, setDraft] = useState<CardId[]>(kingdom);
   const [startError, setStartError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [rules, setRules] = useState(false);
-  const kingdomKey = lobby.kingdom.join(',');
-  useEffect(() => setDraft(lobby.kingdom), [kingdomKey]);
+  const kingdomKey = kingdom.join(',');
+  useEffect(() => setDraft(kingdom), [kingdomKey]);
 
   function toggle(id: CardId) {
     const next = draft.includes(id) ? draft.filter((c) => c !== id) : draft.length < 10 ? [...draft, id] : draft;
     setDraft(next);
-    if (next.length === 10) host?.setKingdom(next);
+    if (next.length === 10) host?.setOptions({ kingdom: next });
   }
 
   async function copy() {
@@ -54,9 +57,9 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onLeave }:
     setStartError(result.ok ? null : result.reason);
   }
 
-  const enoughPlayers = lobby.players.length >= 2;
+  const enoughPlayers = lobby.players.length >= lobby.minPlayers;
   const canStart = enoughPlayers && draft.length === 10;
-  const openSeats = Math.max(0, MAX_PLAYERS - lobby.players.length);
+  const openSeats = Math.max(0, lobby.maxPlayers - lobby.players.length);
   return (
     <main className="screen lobby">
       <header className="lobby__header">
@@ -89,7 +92,7 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onLeave }:
             <div className="picker__bar" style={{ marginBottom: 0 }}>
               <h2>{tr.t('players')}</h2>
               <span className="picker__count" style={{ marginLeft: 'auto' }}>
-                {lobby.players.length}/{MAX_PLAYERS}
+                {lobby.players.length}/{lobby.maxPlayers}
               </span>
             </div>
             <ul className="seats">
@@ -148,11 +151,12 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onLeave }:
             <KingdomPicker
               selected={draft}
               onToggle={toggle}
-              onRandomize={() => host.randomizeKingdom()}
+              onRandomize={() => host.setOptions({ kingdom: shuffle(createRng(Math.floor(Math.random() * 2 ** 31)), KINGDOM_IDS).slice(0, 10) })}
               onReset={() => {
                 // the lobby may already hold the default while the draft is half-edited
-                setDraft(DEFAULT_KINGDOM);
-                host.resetKingdom();
+                const { kingdom: defaults } = dominionModule.defaultOptions();
+                setDraft(defaults);
+                host.setOptions({ kingdom: defaults });
               }}
             />
           ) : (
@@ -162,7 +166,7 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onLeave }:
                 <span className="zone__hint">{tr.t('kingdomByHost')}</span>
               </div>
               <div className="pile-grid">
-                {sortByCost(lobby.kingdom).map((id) => (
+                {sortByCost(kingdom).map((id) => (
                   <Pile key={id} id={id} showTypes />
                 ))}
               </div>

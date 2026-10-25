@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { botMove } from '../sim/bigMoney';
 import { HostSession, MAX_LOG_ENTRIES } from './host';
+import { asDominionView, dominionModule } from '../games/dominion/module';
 import { flush } from './memory';
-import { join, seededHostOptions } from './testing';
+import { dominionGame, join, seededHostOptions } from './testing';
 
 // PeerJS refuses JSON messages of 16300 bytes or more, so stay well under.
 const LIMIT = 16000;
@@ -10,12 +11,12 @@ const LIMIT = 16000;
 describe('message size', () => {
   for (const seed of [1, 2, 3]) {
     it(`keeps every message small in a full 4-player game (seed ${seed})`, async () => {
-      const host = new HostSession(seededHostOptions(seed));
+      const host = new HostSession(dominionModule, seededHostOptions(seed));
       const clients = [await join(host, 'A', { local: true })];
       for (const name of ['B', 'C', 'D']) clients.push(await join(host, name));
       expect(host.start()).toEqual({ ok: true });
       await flush();
-      const game = host.game!;
+      const game = dominionGame(host);
       for (let step = 0; step < 20000 && !game.state.result; step++) {
         const { playerId, intent } = botMove(game);
         clients[Number(playerId.slice(1))].send({ type: 'intent', intent });
@@ -28,7 +29,7 @@ describe('message size', () => {
           const size = JSON.stringify(m).length;
           max = Math.max(max, size);
           expect(size).toBeLessThan(LIMIT);
-          if (m.type === 'view') expect(m.view.log.length).toBeLessThanOrEqual(MAX_LOG_ENTRIES);
+          if (m.type === 'view') expect(asDominionView(m.view).log.length).toBeLessThanOrEqual(MAX_LOG_ENTRIES);
         }
       }
       expect(max).toBeGreaterThan(0);
