@@ -65,7 +65,7 @@ export const pt: BairroDictionary = {
     leftJailDoubles: 'tirou dupla e saiu do Xilindró',
     jailRollFailed: 'continua no Xilindró (tentativa {turns} de 3)',
     jailFineForced: 'pagou ${amount} de fiança forçada e saiu do Xilindró',
-    luckDrawn: 'tirou uma carta Deu Bom / Deu Ruim',
+    luck: 'tirou uma carta Deu Bom / Deu Ruim',
     owesBank: 'deve ${amount} à Prefeitura',
     owesPlayer: 'deve ${amount} a {to}',
   },

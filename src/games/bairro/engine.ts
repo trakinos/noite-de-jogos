@@ -1,5 +1,6 @@
 import { nextInt } from '../../engine/rng';
 import type { ApplyResult } from '../module';
+import { DECK } from './deck';
 import { BOARD, JAIL_FINE, JAIL_POS, PASS_START, RUAS } from './board';
 import type { BairroIntent, BairroState } from './types';
 
@@ -99,6 +100,47 @@ export function rentFor(s: BairroState, pos: number, diceSum: number): number {
   return sq.rent[0] * (monopoly ? 2 : 1);
 }
 
+/** lawyerCards is a count, so the card id is inferred: c01 unless it is already back in the deck. */
+function lawyerCardId(s: BairroState): string {
+  return s.deck.includes('c01') ? 'c02' : 'c01';
+}
+
+/** Takes the top card and applies it. Used cards go to the bottom; a lawyer card is kept by the drawer. */
+function drawLuck(s: BairroState, player: number): void {
+  const id = s.deck.shift();
+  if (id === undefined) return;
+  const effect = DECK.find(c => c.id === id)!.effect;
+  log(s, player, 'luck', { card: id });
+  const p = s.players[player];
+  if (effect.kind === 'lawyer') {
+    p.lawyerCards++;
+    return;
+  }
+  s.deck.push(id);
+  switch (effect.kind) {
+    case 'money':
+      if (effect.amount > 0) credit(s, player, effect.amount);
+      else charge(s, player, null, -effect.amount);
+      return;
+    case 'eachPlayer': {
+      const n = s.players.length;
+      for (let k = 1; k < n; k++) {
+        const other = (player + k) % n;
+        if (s.players[other].bankrupt) continue;
+        if (effect.amount > 0) charge(s, other, player, effect.amount);
+        else charge(s, player, other, -effect.amount);
+      }
+      return;
+    }
+    case 'advanceToStart':
+      moveBy(s, player, BOARD.length - p.pos);
+      return;
+    case 'goToJail':
+      sendToJail(s, player);
+      return;
+  }
+}
+
 /** Resolves the square the current player just reached. May set the phase (buy, jail). */
 function land(s: BairroState, player: number, diceSum: number, rollAgain: boolean): void {
   const pos = s.players[player].pos;
@@ -124,8 +166,7 @@ function land(s: BairroState, player: number, diceSum: number, rollAgain: boolea
       sendToJail(s, player);
       return;
     case 'luck':
-      // Task 7 draws and resolves the card.
-      log(s, player, 'luckDrawn');
+      drawLuck(s, player);
       return;
     case 'start':
     case 'jail':
@@ -190,8 +231,7 @@ function useLawyer(s: BairroState): ApplyResult {
   const p = s.players[s.current];
   if (s.phase.kind !== 'roll' || p.jailTurns === null || p.lawyerCards < 1) return fail('notNow');
   p.lawyerCards--;
-  // lawyerCards is a count, so the card id is inferred: c01 unless it is already back in the deck.
-  s.deck.push(s.deck.includes('c01') ? 'c02' : 'c01');
+  s.deck.push(lawyerCardId(s));
   leaveJail(s, 'usedLawyer');
   return ok();
 }

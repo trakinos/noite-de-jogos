@@ -186,10 +186,104 @@ describe('special squares', () => {
     expect(s.phase).toEqual({ kind: 'manage', rollAgain: false });
   });
 
-  it('luck logs a draw (cards come later)', () => {
+});
+
+describe('luck', () => {
+  /** Player 0 rolls [1,2] from pos 4 onto the luck square at 7, with `top` on top of the deck. */
+  function draw(top: string[]) {
     const s = game(2);
-    roll(s, [3, 4]);
-    expect(s.log.at(-1)).toMatchObject({ player: 0, key: 'luckDrawn' });
+    s.players[0].pos = 4;
+    s.deck = [...top, ...s.deck.filter(c => !top.includes(c))];
+    roll(s, [1, 2]);
+    return s;
+  }
+
+  it('money card pays from the bank, logs the card and goes to the bottom', () => {
+    const s = draw(['c07']);
+    expect(s.players[0].cash).toBe(START_MONEY + 200);
+    expect(s.log.at(-1)).toEqual({ player: 0, key: 'luck', params: { card: 'c07' } });
+    expect(s.deck.at(-1)).toBe('c07');
+    expect(s.deck).toHaveLength(30);
+    expect(s.phase).toEqual({ kind: 'manage', rollAgain: false });
+  });
+
+  it('negative money card pays the bank, or becomes a debt', () => {
+    expect(draw(['c15']).players[0].cash).toBe(START_MONEY - 200);
+    const s = game(2);
+    s.players[0].pos = 4; s.players[0].cash = 50;
+    s.deck = ['c15', ...s.deck.filter(c => c !== 'c15')];
+    roll(s, [1, 2]);
+    expect(s.debts).toEqual([{ debtor: 0, creditor: null, amount: 200 }]);
+  });
+
+  it('eachPlayer + collects from every solvent player, skipping bankrupt ones', () => {
+    const s = game(4);
+    s.players[0].pos = 4; s.players[2].bankrupt = true;
+    s.deck = ['c23', ...s.deck.filter(c => c !== 'c23')];
+    roll(s, [1, 2]);
+    expect(s.players.map(p => p.cash)).toEqual([START_MONEY + 100, START_MONEY - 50, START_MONEY, START_MONEY - 50]);
+  });
+
+  it('eachPlayer + leaves a debt for a payer who is short', () => {
+    const s = game(3);
+    s.players[0].pos = 4; s.players[1].cash = 10;
+    s.deck = ['c23', ...s.deck.filter(c => c !== 'c23')];
+    roll(s, [1, 2]);
+    expect(s.debts).toEqual([{ debtor: 1, creditor: 0, amount: 50 }]);
+    expect(s.players[0].cash).toBe(START_MONEY + 50);
+    expect(s.players[1].cash).toBe(10);
+  });
+
+  it('eachPlayer − pays every solvent player, skipping bankrupt ones', () => {
+    const s = game(4);
+    s.players[0].pos = 4; s.players[3].bankrupt = true;
+    s.deck = ['c25', ...s.deck.filter(c => c !== 'c25')];
+    roll(s, [1, 2]);
+    expect(s.players.map(p => p.cash)).toEqual([START_MONEY - 100, START_MONEY + 50, START_MONEY + 50, START_MONEY]);
+  });
+
+  it('eachPlayer − records debts when the drawer is short', () => {
+    const s = game(3);
+    s.players[0].pos = 4; s.players[0].cash = 60;
+    s.deck = ['c25', ...s.deck.filter(c => c !== 'c25')];
+    roll(s, [1, 2]);
+    expect(s.players[0].cash).toBe(10);
+    expect(s.players[1].cash).toBe(START_MONEY + 50);
+    expect(s.debts).toEqual([{ debtor: 0, creditor: 2, amount: 50 }]);
+  });
+
+  it('advanceToStart moves to 0 and collects $200, keeping the roll-again of doubles', () => {
+    const s = game(2);
+    s.players[0].pos = 5;
+    s.deck = ['c05', ...s.deck.filter(c => c !== 'c05')];
+    roll(s, [1, 1]);
+    expect(s.players[0]).toMatchObject({ pos: 0, cash: START_MONEY + 200 });
+    expect(s.phase).toEqual({ kind: 'manage', rollAgain: true });
+  });
+
+  it('goToJail jails with no extra roll even after doubles', () => {
+    const s = game(2);
+    s.players[0].pos = 5;
+    s.deck = ['c03', ...s.deck.filter(c => c !== 'c03')];
+    roll(s, [1, 1]);
+    expect(s.players[0]).toMatchObject({ pos: JAIL_POS, jailTurns: 0, cash: START_MONEY });
+    expect(s.phase).toEqual({ kind: 'manage', rollAgain: false });
+    expect(s.deck.at(-1)).toBe('c03');
+  });
+
+  it('a lawyer card is kept and leaves the deck', () => {
+    const s = draw(['c01']);
+    expect(s.players[0].lawyerCards).toBe(1);
+    expect(s.deck).toHaveLength(29);
+    expect(s.deck).not.toContain('c01');
+    expect(s.phase).toEqual({ kind: 'manage', rollAgain: false });
+  });
+
+  it('an empty deck does nothing', () => {
+    const s = game(2);
+    s.players[0].pos = 4; s.deck = [];
+    roll(s, [1, 2]);
+    expect(s.log.some(e => e.key === 'luck')).toBe(false);
     expect(s.phase).toEqual({ kind: 'manage', rollAgain: false });
   });
 });
