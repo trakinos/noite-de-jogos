@@ -23,3 +23,9 @@ export function stripWindow(center: number, size: number): number[] {
   const start = center - Math.floor(size / 2);
   return Array.from({ length: size }, (_, i) => (((start + i) % BOARD_SIZE) + BOARD_SIZE) % BOARD_SIZE);
 }
+
+/** `ringCell` as 1-based CSS grid lines, ready for an inline style. */
+export function ringGridArea(pos: number): { gridRow: number; gridColumn: number } {
+  const { row, col } = ringCell(pos);
+  return { gridRow: row + 1, gridColumn: col + 1 };
+}

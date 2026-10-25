@@ -117,6 +117,7 @@ export const en: BairroDictionary = {
     prefeitura: 'Prefeitura (city hall, the bank)', faliu: 'went bust', 'dono-do-bairro': 'Dono do Bairro',
   },
   ui: {
+    ownerFallback: 'owner',
     forSale: 'for sale', houses: '{n} puxadinhos', houseOne: '1 puxadinho', predio: 'prédio', mortgagedTag: 'mortgaged',
     underConstruction: 'Under construction',
   },
