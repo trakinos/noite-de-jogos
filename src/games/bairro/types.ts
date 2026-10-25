@@ -28,9 +28,13 @@ export interface BairroState {
   deck: string[];                            // card ids, top first; lawyer cards in hand are out of it
   doublesInRow: number; lastRoll: [number, number] | null;
   debts: Debt[]; offer: Offer | null;
+  /** Seats in the order they went bankrupt; empty at setup. */
+  bankruptOrder: number[];
   log: BairroLogEntry[]; rng: RngState; winner: number | null;
   /** +1 on every turn change. */
   turnNumber: number;
+  /** Trade proposals made this turn (cancelling or answering doesn't count); reset on every turn change. */
+  tradesThisTurn: number;
   /** Test hook: when non-empty, the next roll is taken from here instead of the rng. */
   riggedDice?: [number, number][];
 }

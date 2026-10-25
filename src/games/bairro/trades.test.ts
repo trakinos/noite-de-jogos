@@ -178,6 +178,32 @@ describe('trades', () => {
     expect(JSON.stringify(s)).toBe(before);
   });
 
+  it('refuses the 4th proposal in a turn and counts only proposals', () => {
+    const s = game(2);
+    s.phase = { kind: 'manage', rollAgain: false };
+    expect(s.tradesThisTurn).toBe(0);
+    for (let i = 0; i < 3; i++) {
+      expect(propose(s, terms({ cash: 10 }, {}))).toEqual({ ok: true });
+      expect(s.tradesThisTurn).toBe(i + 1);
+      // Answering or cancelling does not count.
+      apply(s, i === 0 ? 0 : 1, i === 0 ? { type: 'cancelTrade' } : { type: 'answerTrade', accept: false });
+      expect(s.tradesThisTurn).toBe(i + 1);
+    }
+    const before = JSON.stringify(s);
+    expect(propose(s, terms({ cash: 10 }, {}))).toEqual(refused('tooManyTrades'));
+    expect(JSON.stringify(s)).toBe(before);
+  });
+
+  it('resets the proposal count when the turn passes', () => {
+    const s = game(2);
+    s.phase = { kind: 'manage', rollAgain: false };
+    s.tradesThisTurn = 3;
+    expect(apply(s, 0, { type: 'endTurn' })).toEqual({ ok: true });
+    expect(s.tradesThisTurn).toBe(0);
+    s.phase = { kind: 'manage', rollAgain: false };
+    expect(propose(s, terms({ cash: 10 }, {}, 0), 1)).toEqual({ ok: true });
+  });
+
   it('validateOffer never throws on junk', () => {
     const s = game(2);
     expect(validateOffer(s, null as never)).toBe('badOffer');
@@ -188,7 +214,7 @@ describe('trades', () => {
     for (const lang of ['pt', 'en'] as const) {
       const d = BAIRRO_DICTIONARIES[lang];
       for (const k of ['tradeProposed', 'tradeAccepted', 'tradeDeclined', 'tradeCancelled', 'tradeVoided']) expect(d.log[k], k).toBeTruthy();
-      for (const k of ['tradePending', 'badOffer', 'badRecipient', 'emptyOffer', 'duplicateAsset', 'notEnoughLawyerCards']) expect(d.reasons[k], k).toBeTruthy();
+      for (const k of ['tradePending', 'badOffer', 'badRecipient', 'emptyOffer', 'duplicateAsset', 'notEnoughLawyerCards', 'tooManyTrades']) expect(d.reasons[k], k).toBeTruthy();
     }
   });
 });

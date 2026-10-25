@@ -3,10 +3,10 @@ import { DICTIONARIES } from '../i18n';
 import { GAMES, isGameId } from './catalog';
 
 describe('game catalog', () => {
-  it('lists Dominion first and playable, Dono do Bairro as coming soon', () => {
+  it('lists Dominion first, then Dono do Bairro, both playable', () => {
     expect(GAMES.map((g) => [g.id, g.available, g.minPlayers, g.maxPlayers])).toEqual([
       ['dominion', true, 2, 4],
-      ['bairro', false, 2, 6],
+      ['bairro', true, 2, 6],
     ]);
   });
 

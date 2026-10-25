@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { asBairroView } from '../games/bairro/module';
 import { asDominionView } from '../games/dominion/module';
 import { describePeerError } from '../net/errors';
 import { joinLink } from '../net/roomCode';
@@ -9,6 +10,9 @@ import { Board } from './screens/Board';
 import { EndScreen } from './screens/EndScreen';
 import { FrontPage } from './screens/FrontPage';
 import { Lobby } from './screens/Lobby';
+import { DominionLobby } from '../games/dominion/ui/DominionLobbyOptions';
+import { BairroLobby } from '../games/bairro/ui/BairroLobby';
+import { BairroScreens } from '../games/bairro/ui/BairroScreens';
 import { Icon } from './components/Icon';
 import { LangToggle } from './components/LangToggle';
 import { Loader } from './components/Loader';
@@ -180,9 +184,11 @@ export function App() {
       );
     }
 
+    const screens = screensFor(state.lobby.game);
     if (!state.lobby.inGame) {
+      const LobbyScreen = screens === 'dominion' ? DominionLobby : screens === 'bairro' ? BairroLobby : Lobby;
       return (
-        <Lobby
+        <LobbyScreen
           lobby={state.lobby}
           me={state.playerId}
           code={active.code}
@@ -200,6 +206,26 @@ export function App() {
           <Loader />
           <h2>{tr.t('startingGame')}</h2>
         </Centered>
+      );
+    }
+
+    if (screens === 'bairro') {
+      return (
+        <BairroScreens
+          view={asBairroView(state.view)}
+          lobby={state.lobby}
+          code={active.code}
+          error={state.error}
+          clock={state.clock}
+          awaiting={state.awaiting}
+          onIntent={(intent) => active.session.sendIntent(intent)}
+          onDismissError={() => active.session.dismissError()}
+          onEndGame={active.host ? () => active.host?.backToLobby() : undefined}
+          isHost={active.host !== null}
+          onPlayAgain={() => active.host?.playAgain()}
+          onBackToLobby={() => active.host?.backToLobby()}
+          onLeave={leave}
+        />
       );
     }
 

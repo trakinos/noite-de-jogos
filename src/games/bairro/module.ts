@@ -5,6 +5,7 @@ import { createBairro } from './setup';
 import { expire } from './timeout';
 import type { BairroIntent, BairroState } from './types';
 import { viewFor } from './view';
+import type { BairroView } from './view';
 
 /** Keeps one object per key, so the clock sees the same identity until the key changes. */
 class Identity<T extends object> {
@@ -74,6 +75,11 @@ export class BairroInstance implements GameInstance {
 
 /** The Dono do Bairro has no lobby options. */
 export type BairroOptions = Record<string, never>;
+
+/** The guest receives views as unknown; in a bairro room they are this game's views. */
+export function asBairroView(v: unknown): BairroView {
+  return v as BairroView;
+}
 
 export const bairroModule: GameModule<BairroOptions> = {
   id: 'bairro',

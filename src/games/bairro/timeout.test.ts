@@ -13,7 +13,7 @@ describe('turn timeout', () => {
     apply(s, 0, { type: 'roll' });
     expire(s, 'turn');
     expect(s.owned[3]).toBeUndefined();
-    expect(keys(s)).toEqual(['rolled', 'declined']);
+    expect(keys(s)).toEqual(['rolled', 'timedOut', 'declined', 'turnStarted']);
     expect(s.current).toBe(1);
     expect(s.turnNumber).toBe(1);
   });
@@ -22,7 +22,8 @@ describe('turn timeout', () => {
     const s = game(2);
     rig(s, [[1, 2]]);
     expire(s, 'turn');
-    expect(keys(s)).toEqual(['rolled', 'declined']);
+    expect(keys(s)).toEqual(['timedOut', 'rolled', 'declined', 'turnStarted']);
+    expect(s.log[0]).toEqual({ player: 0, key: 'timedOut' });
     expect(s.current).toBe(1);
   });
 
@@ -30,7 +31,7 @@ describe('turn timeout', () => {
     const s = game(2);
     rig(s, [[3, 3], [1, 2]]);
     expire(s, 'turn');
-    expect(keys(s)).toEqual(['rolled', 'declined', 'rolled', 'declined']);
+    expect(keys(s)).toEqual(['timedOut', 'rolled', 'declined', 'rolled', 'declined', 'turnStarted']);
     expect(s.players[0].pos).toBe(9);
     expect(s.current).toBe(1);
   });
@@ -43,7 +44,7 @@ describe('turn timeout', () => {
     s.deck.splice(s.deck.indexOf('c01'), 1);
     rig(s, [[1, 2]]);
     expire(s, 'turn');
-    expect(keys(s)).toEqual(['rolled', 'jailRollFailed']);
+    expect(keys(s)).toEqual(['timedOut', 'rolled', 'jailRollFailed', 'turnStarted']);
     expect(s.players[0]).toMatchObject({ jailTurns: 1, lawyerCards: 1, cash: 1500 });
     expect(s.current).toBe(1);
   });
@@ -61,7 +62,7 @@ describe('turn timeout', () => {
     expect(s.owned[3]).toMatchObject({ houses: 0, mortgaged: true });
     expect(s.players[0]).toMatchObject({ cash: 10, bankrupt: false });
     expect(s.debts).toEqual([]);
-    expect(keys(s).at(-1)).toBe('paidDebtBank');
+    expect(keys(s).at(-2)).toBe('paidDebtBank');
     expect(s.current).toBe(1);
   });
 
@@ -98,7 +99,7 @@ describe('turn timeout', () => {
     apply(s, 0, { type: 'proposeTrade', offer: { to: 1, give: { assets: [], cash: 5, lawyerCards: 0 }, get: { assets: [], cash: 0, lawyerCards: 0 } } });
     expire(s, 'turn');
     expect(s.offer).toBeNull();
-    expect(keys(s)).toEqual(['tradeProposed', 'tradeCancelled']);
+    expect(keys(s)).toEqual(['tradeProposed', 'timedOut', 'tradeCancelled', 'turnStarted']);
     expect(s.current).toBe(1);
   });
 
@@ -117,7 +118,7 @@ describe('response timeout', () => {
     apply(s, 0, { type: 'proposeTrade', offer: { to: 2, give: { assets: [], cash: 5, lawyerCards: 0 }, get: { assets: [], cash: 0, lawyerCards: 0 } } });
     expire(s, 'response');
     expect(s.offer).toBeNull();
-    expect(s.log.at(-1)).toMatchObject({ player: 2, key: 'tradeDeclined' });
+    expect(s.log.slice(-2)).toMatchObject([{ player: 2, key: 'timedOut' }, { player: 2, key: 'tradeDeclined' }]);
     expect(s.current).toBe(0);
     expect(s.phase).toEqual({ kind: 'roll' });
   });

@@ -1,6 +1,7 @@
 // Cautious forced moves when a clock runs out. Never buys, builds, unmortgages or proposes trades.
 import type { ClockKind } from '../../net/turnClock';
 import { apply, liquidate } from './engine';
+import { log } from './ops';
 import type { BairroIntent, BairroState } from './types';
 
 /** Safety net: no turn needs anywhere near this many forced moves. */
@@ -40,11 +41,15 @@ function turnMove(s: BairroState): BairroIntent {
 export function expire(s: BairroState, kind: ClockKind): void {
   if (s.winner !== null) return;
   if (kind === 'response') {
+    const late = new Set<number>(debtors(s, s.current));
+    if (s.offer) late.add(s.offer.to);
+    for (const p of late) log(s, p, 'timedOut');
     if (s.offer) apply(s, s.offer.to, { type: 'answerTrade', accept: false });
     for (const d of debtors(s, s.current)) if (s.winner === null) settle(s, d);
     return;
   }
   const turn = s.turnNumber;
+  log(s, s.current, 'timedOut');
   for (let i = 0; i < MAX_FORCED_MOVES && s.winner === null && s.turnNumber === turn; i++) {
     if (s.offer) {
       const { from, to } = s.offer;

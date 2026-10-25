@@ -96,7 +96,14 @@ export function FrontPage({ initialName, invitedCode, busy, error, onHost, onJoi
               {tr.t('createButton')}
             </button>
           ) : (
-            <span className="pill">{tr.t('comingSoon')}</span>
+            <>
+              <span className="pill">{tr.t('comingSoon')}</span>
+              {import.meta.env.DEV && (
+                <button type="button" disabled={busy} onClick={() => onHost(game.id, name)}>
+                  Criar (dev)
+                </button>
+              )}
+            </>
           )}
         </section>
       ))}

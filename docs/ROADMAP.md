@@ -39,7 +39,7 @@ Classic rules, 2–6 players, playable on working values first. The user checks 
 - [x] **Debts and bankruptcy:** sell and mortgage to pay (also off-turn, only to settle a debt), "Faliu", and the last player left wins.
 - [x] **Turn timer and timeouts:** the cautious move (never spends money by choice).
 - [x] Engine tests: unit tests, simulated games and fuzzed intents, the same as Dominion.
-- [ ] **Board mockups** (a neighborhood map around the pracinha) for the user to choose from, then the screens: lobby, board, your panel, opponents, trade dialog, animated dice and token, log, end screen, rules dialog. Phone first, dark mode.
+- [x] **Board mockups** (a neighborhood map around the pracinha) for the user to choose from, then the screens: lobby, board, your panel, opponents, trade dialog, animated dice and token, log, end screen, rules dialog. Phone first, dark mode.
 - [ ] **Partida rápida** (lobby options, all off by default, one switch turns on the bundle): a time limit (30/45/60/90 min, the round finishes, the richest player wins), prédio after 3 puxadinhos, deal out pontos at the start, leave the Xilindró early.
 - [ ] Playtest with friends on a call. **The user checks the board's names and values** against a real classic set and sends corrections. Only the data file changes.
 

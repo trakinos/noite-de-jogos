@@ -6,7 +6,7 @@ describe('screensFor', () => {
     expect(screensFor('dominion')).toBe('dominion');
   });
 
-  it('has no screens yet for bairro', () => {
-    expect(screensFor('bairro')).toBe('unsupported');
+  it('uses the Bairro screens for bairro', () => {
+    expect(screensFor('bairro')).toBe('bairro');
   });
 });

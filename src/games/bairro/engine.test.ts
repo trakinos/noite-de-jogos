@@ -321,6 +321,7 @@ describe('doubles and turns', () => {
     expect(s.phase).toEqual({ kind: 'roll' });
     expect(s.doublesInRow).toBe(0);
     expect(s.turnNumber).toBe(1);
+    expect(s.log.at(-1)).toEqual({ player: 2, key: 'turnStarted' });
     roll(s, [1, 2]);
     apply(s, 2, { type: 'decline' });
     apply(s, 2, { type: 'endTurn' });
@@ -629,7 +630,8 @@ describe('debts', () => {
     expect(s.deck.slice(-2).sort()).toEqual(['c01', 'c02']);
     expect(s.deck).toHaveLength(30);
     expect(s.players[1].cash).toBe(START_MONEY);
-    expect(s.log.at(-1)).toEqual({ player: 0, key: 'bankruptToBank' });
+    expect(s.log.at(-2)).toEqual({ player: 0, key: 'bankruptToBank' });
+    expect(s.log.at(-1)).toEqual({ player: 1, key: 'turnStarted' });
   });
 
   it('several creditors: bankrupt to the creditor of the oldest player-debt, others dropped', () => {
@@ -671,6 +673,20 @@ describe('debts', () => {
     expect(s.doublesInRow).toBe(0);
     expect(s.turnNumber).toBe(1);
     expect(s.winner).toBeNull();
+  });
+
+  it('appends each bankrupt seat to bankruptOrder, starting empty', () => {
+    const s = game(4);
+    expect(s.bankruptOrder).toEqual([]);
+    s.phase = { kind: 'manage', rollAgain: false };
+    s.players[2].cash = 0;
+    s.debts.push({ debtor: 2, creditor: null, amount: 100 });
+    expect(apply(s, 2, { type: 'goBankrupt' })).toEqual({ ok: true });
+    expect(s.bankruptOrder).toEqual([2]);
+    s.players[0].cash = 0;
+    s.debts.push({ debtor: 0, creditor: 1, amount: 100 });
+    expect(apply(s, 0, { type: 'goBankrupt' })).toEqual({ ok: true });
+    expect(s.bankruptOrder).toEqual([2, 0]);
   });
 
   it('the last solvent player wins and everything is refused', () => {

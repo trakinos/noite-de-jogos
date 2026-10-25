@@ -952,3 +952,199 @@ button.link:hover { color: var(--text); }
   .pile-out__card { transition: none; }
   .pile-out__count, .group__list li.is-done .group__status .ico { animation: none; }
 }
+
+/* Dono do Bairro */
+.bsq {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  white-space: normal; gap: 2px; min-width: 0; min-height: 0; padding: 0 2px 2px; overflow: hidden;
+  background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: calc(var(--radius) / 3);
+  font-size: 0.6rem; line-height: 1.1; text-align: center; cursor: pointer;
+}
+.bsq--strip { min-width: 4.5rem; min-height: 6rem; padding: 0 4px 4px; font-size: 0.75rem; }
+.bsq__awning { align-self: stretch; height: 6px; margin: 0 -2px; flex: none;
+  background-image: repeating-linear-gradient(90deg, transparent 0 5px, rgb(255 255 255 / 0.45) 5px 10px); }
+.bsq--strip .bsq__awning { height: 10px; }
+.bsq__name { overflow-wrap: anywhere; hyphens: auto; font-weight: 600; }
+.bsq__icon { font-size: 1.1em; }
+.bsq--strip .bsq__icon { font-size: 1.6em; }
+.bsq__price { color: var(--muted); }
+.bsq__owner { align-self: stretch; height: 4px; margin: auto -2px 0; flex: none; }
+.bsq__houses { font-size: 0.8em; letter-spacing: -0.1em; }
+/* Mortgaged: striped and faded, but the text stays at full contrast. */
+.bsq--mortgaged { background-color: var(--surface-2); background-image: repeating-linear-gradient(135deg, transparent 0 6px, var(--border) 6px 8px); }
+.bsq--mortgaged .bsq__awning, .bsq--mortgaged .bsq__icon, .bsq--mortgaged .bsq__owner { opacity: 0.45; }
+.bsq__tokens { position: absolute; right: 2px; bottom: 6px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px; max-width: 70%; }
+.bsq__token { width: 0.7em; height: 0.7em; border-radius: 50%; border: 1px solid var(--surface); box-shadow: 0 0 0 1px var(--text); }
+.bsq--strip .bsq__token { width: 1em; height: 1em; }
+
+/* Bairro map colors: grass, road and the Pracinha's lawn. */
+:root { --bairro-grass: #7a8a6a; --bairro-road: #55524c; --bairro-lawn: #9cc27a; --bairro-lawn-edge: #8ab066; --bairro-path: #cdbb97; }
+@media (prefers-color-scheme: dark) {
+  :root { --bairro-grass: #3a4433; --bairro-road: #1f1d1a; --bairro-lawn: #4d6a3a; --bairro-lawn-edge: #425c31; --bairro-path: #5a4d36; }
+}
+.bboard { display: grid; gap: 12px; padding: 0 24px 24px; max-width: 1280px; margin: 0 auto; }
+.bboard__top { grid-area: auto; }
+.bboard__top .timer { min-width: 160px; }
+.bboard__toast { bottom: 24px; z-index: 60; } /* above the dialogs (.overlay is 50) so refusals show over them */
+.bmap { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; align-items: start; }
+.bboard--narrow .bmap { grid-template-columns: minmax(0, 1fr); }
+.bmap__ring {
+  display: grid; grid-template-columns: 1.5fr repeat(9, 1fr) 1.5fr; grid-template-rows: 1.5fr repeat(9, 1fr) 1.5fr;
+  gap: 3px; aspect-ratio: 1; width: min(100%, calc(100vh - 110px)); min-width: 0; margin: 0 auto; padding: 8px;
+  background: var(--bairro-grass); border-radius: var(--r-lg); outline: 6px solid var(--bairro-road); outline-offset: -3px;
+}
+.bmap__cell { display: grid; min-width: 0; min-height: 0; }
+.bmap__ring .bsq { font-size: 0.66rem; border: 0; border-radius: 6px 6px 2px 2px; box-shadow: 0 1px 0 rgb(0 0 0 / 0.15); }
+.bmap__ring .bsq__awning { height: 22%; }
+.bmap__park {
+  grid-row: 2 / 11; grid-column: 2 / 11; display: grid; place-items: center; margin: 10px; min-height: 0;
+  border-radius: 50%; box-shadow: inset 0 0 0 6px var(--bairro-path);
+  background: radial-gradient(circle, var(--bairro-lawn) 0 45%, var(--bairro-lawn-edge) 46% 60%, var(--bairro-path) 61%);
+}
+.pracinha {
+  display: grid; justify-items: center; gap: 8px; max-width: 70%; padding: 14px 18px; text-align: center;
+  background: color-mix(in srgb, var(--surface) 88%, transparent); border-radius: var(--r-lg); box-shadow: var(--e1);
+}
+.pracinha__title { margin: 0; font-size: 20px; }
+.pracinha__turn { margin: 0; font-weight: 800; }
+.pracinha__log { margin: 0; font-size: 13px; color: var(--muted); font-weight: 600; }
+.pracinha__dice { display: flex; gap: 8px; }
+.bdie {
+  width: 40px; height: 40px; display: grid; place-items: center; border-radius: var(--r-sm);
+  background: var(--surface); color: var(--text); border: 2px solid var(--border); box-shadow: var(--e1);
+  font-family: var(--font-display); font-weight: 800; font-size: 20px;
+}
+.pracinha__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.bpanel { display: grid; gap: 12px; }
+.bpanel__box { padding: 14px 16px; }
+.bpanel__box h2 { margin: 0 0 8px; }
+.bpanel__box p { margin: 0; }
+.bpanel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.bplayer { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; padding: 4px 6px; border-radius: var(--r-sm); font-size: 14px; }
+.bplayer.is-current { background: var(--surface-2); }
+.bplayer.is-bankrupt { color: var(--muted); text-decoration: line-through; }
+.bplayer__name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+/* Deeds and status on their own line under the name, so a narrow panel never squeezes the name. */
+.bplayer__meta { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding-left: 20px; font-size: 13px; }
+.bplayer__cash { font-weight: 800; }
+.bplayer__tag { font-size: 12px; font-weight: 800; padding: 1px 6px; border-radius: 99px; background: var(--surface-2); color: var(--muted); }
+.bdot { width: 12px; height: 12px; flex: none; border-radius: 50%; background: var(--player); }
+.bswatch { width: 12px; height: 12px; flex: none; border-radius: 2px; display: inline-block; }
+.bdeeds + .bdeeds { margin-top: 8px; }
+.bdeeds h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 4px; font-size: 13px; }
+.bdeeds__whole { color: var(--online); }
+.bdeed { width: 100%; min-height: 36px; padding: 0 10px; justify-content: flex-start; gap: 8px; font-size: 13px; border-width: 1px; }
+.bdeed__houses { font-size: 12px; }
+.bdeed--mortgaged { background-image: repeating-linear-gradient(135deg, transparent 0 6px, var(--border) 6px 7px); }
+
+/* Dono do Bairro: street in focus (phones) */
+.bboard--narrow { padding: 0 12px 16px; }
+.bstreet { display: grid; gap: 10px; min-width: 0; }
+.bmini {
+  display: grid; grid-template-columns: repeat(11, 1fr); grid-template-rows: repeat(11, 1fr); gap: 2px;
+  aspect-ratio: 1; width: min(100%, 220px); margin: 0 auto; padding: 4px;
+  background: var(--bairro-grass); border-radius: var(--r-md);
+}
+.bmini__cell {
+  position: relative; min-width: 0; min-height: 0; width: auto; height: auto; padding: 0; border: 0; border-radius: 3px;
+  background: var(--surface-2); box-shadow: none;
+}
+.bmini__cell--plain { background: var(--bairro-road); }
+.bmini__cell.is-you { outline: 3px solid var(--text); outline-offset: 1px; z-index: 1; }
+.bmini__dot { position: absolute; inset: 25%; border-radius: 50%; box-shadow: 0 0 0 1px var(--text); }
+.bstrip {
+  display: flex; gap: 6px; overflow-x: auto; overscroll-behavior-x: contain; position: relative;
+  scroll-snap-type: x mandatory; padding: 4px calc(50% - 2.75rem) 8px; min-width: 0; scrollbar-width: none;
+}
+.bstrip::-webkit-scrollbar { display: none; }
+.bstrip .bsq { flex: none; scroll-snap-align: center; width: 5.5rem; min-height: 8rem; }
+.pracinha--compact { max-width: none; width: 100%; box-sizing: border-box; padding: 10px 12px; gap: 6px; }
+.pracinha--compact .pracinha__actions { width: 100%; }
+.pracinha--compact .pracinha__actions button { flex: 1 1 8rem; min-height: 48px; }
+.bsummary {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; min-height: 48px; padding: 6px 14px;
+  justify-content: flex-start; font-size: 14px; text-align: left;
+}
+.bsummary .ico { margin-left: auto; }
+.bsummary__me b { font-size: 16px; }
+.bsummary__other { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-weight: 700; }
+.bsummary__other.is-bankrupt { text-decoration: line-through; }
+.bsheet { max-width: 480px; }
+.bsheet__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.bsheet__head h2 { margin: 0; }
+.bsheet__head button { min-width: 44px; min-height: 44px; }
+.bsheet .bpanel__box h2 { font-size: 15px; }
+.bsheet .bpanel__box:first-child h2 { display: none; }
+.besc { max-width: 420px; }
+.besc__awning { height: 10px; border-radius: 99px; }
+.besc__meta { margin: 0; display: flex; flex-wrap: wrap; gap: 2px 14px; font-weight: 700; }
+.besc__note { margin: 0; }
+.besc__rent { width: 100%; border-collapse: collapse; }
+.besc__rent caption { text-align: left; font-weight: 800; padding-bottom: 4px; }
+.besc__rent th { text-align: left; font-weight: 600; }
+.besc__rent td { text-align: right; font-variant-numeric: tabular-nums; }
+.besc__rent th, .besc__rent td { padding: 4px 8px; border-top: 1px solid var(--border); }
+.besc__rent tr.is-current { background: var(--surface-2); font-weight: 800; }
+.besc__now { color: var(--accent); font-size: 0.85em; }
+.besc__actions { display: grid; gap: 10px; }
+.besc__action { display: grid; gap: 4px; }
+.besc__action button { min-height: 48px; width: 100%; }
+.besc__reason { color: var(--muted); }
+
+/* Debt dialog */
+.bdebt__list, .bdebt__assets { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.bdebt__sub { margin: 4px 0 0; font-size: 15px; }
+.bdebt__assets li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; }
+.bdebt__name { flex: 1 1 8rem; min-width: 0; font-weight: 700; overflow-wrap: anywhere; }
+.bdebt__assets button { min-height: 44px; flex: 0 1 auto; }
+
+/* Trade dialogs */
+.btrade { max-width: 560px; }
+.btrade__who { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.btrade__who select { min-height: 44px; padding: 4px 10px; border-radius: var(--r-md); border: 2px solid var(--border); background: var(--surface); color: var(--text); font: inherit; }
+.btrade__cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.btrade__col { min-width: 0; display: grid; align-content: start; gap: 8px; }
+.btrade__col h3 { margin: 0; font-size: 15px; }
+.btrade__assets, .btrade__lines { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.btrade__lines li { padding: 6px 8px; border-radius: var(--r-md); background: var(--surface-2); font-weight: 700; overflow-wrap: anywhere; }
+.btrade__assets label { display: flex; align-items: flex-start; gap: 8px; min-height: 44px; padding: 6px 8px; border-radius: var(--r-md); border: 1px solid var(--border); cursor: pointer; }
+.btrade__assets label.is-off { opacity: 0.6; cursor: default; }
+.btrade__assets input { flex: none; width: 20px; height: 20px; min-height: 0; margin: 2px 0 0; padding: 0; }
+.btrade__assets span { min-width: 0; display: grid; overflow-wrap: anywhere; }
+.btrade__cash { display: grid; gap: 2px; font-weight: 700; }
+.btrade__cash input { width: 100%; min-height: 44px; }
+.btrade__cards { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; font-weight: 700; }
+.btrade__cards span { flex: 1 1 100%; }
+.btrade__cards button { min-width: 44px; min-height: 44px; padding: 0; }
+.btrade__cards b { min-width: 1.5em; text-align: center; font-variant-numeric: tabular-nums; }
+.btrade__summary { margin: 0; font-weight: 800; }
+.btrade__used { margin: 0; }
+@media (max-width: 479px) {
+  .btrade__cols { grid-template-columns: 1fr; }
+}
+.bmap__side { display: grid; gap: 12px; min-width: 0; }
+.blog {
+  list-style: none; margin: 0; padding: 0 4px 0 0; max-height: 280px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 6px; font-size: 13px; line-height: 1.4;
+}
+.bsheet .blog { max-height: 60vh; }
+.blog li:last-child { background: color-mix(in srgb, var(--accent) 12%, transparent); border-radius: 8px; padding: 2px 6px; margin: 0 -6px; }
+.bline { display: flex; gap: 8px; align-items: stretch; }
+.bline .bsummary { flex: 1; min-width: 0; }
+.blog-btn { flex: none; min-width: 48px; min-height: 48px; display: grid; place-items: center; }
+@keyframes bdie-shake {
+  0%, 100% { transform: translate(0) rotate(0); }
+  20% { transform: translate(-3px, 2px) rotate(-12deg); }
+  40% { transform: translate(3px, -2px) rotate(10deg); }
+  60% { transform: translate(-2px, -3px) rotate(-8deg); }
+  80% { transform: translate(2px, 3px) rotate(8deg); }
+}
+.bdie--shake { animation: bdie-shake 160ms linear infinite; }
+
+/* Dono do Bairro: rulebook and end screen */
+.brules { max-width: 560px; max-height: calc(100dvh - 32px); overflow-y: auto; display: grid; gap: 14px; }
+.bend__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; width: 100%; max-width: 520px; text-align: left; }
+.bend__row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 14px; background: var(--surface); border: 2px solid var(--border); border-radius: var(--r-md); font-weight: 800; }
+.bend__row.is-winner { background: color-mix(in srgb, var(--t-treasure) 22%, var(--surface)); border-color: var(--coin-edge); }
+.bend__place { font-family: var(--font-display); font-weight: 800; font-size: 22px; width: 32px; text-align: center; }
+.bend__name { flex: 1 1 6rem; min-width: 0; overflow-wrap: anywhere; }

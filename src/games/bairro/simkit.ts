@@ -24,6 +24,10 @@ export function invariantViolations(s: BairroState): string[] {
     const houses = ruaPositions(rua).map(i => s.owned[i]?.houses ?? 0);
     if (Math.max(...houses) - Math.min(...houses) > 1) out.push(`rua ${rua} uneven: ${houses.join(',')}`);
   }
+  const broke = s.players.flatMap((p, i) => (p.bankrupt ? [i] : []));
+  if (s.bankruptOrder.length !== broke.length || broke.some(i => !s.bankruptOrder.includes(i)) || new Set(s.bankruptOrder).size !== s.bankruptOrder.length) {
+    out.push(`bankruptOrder [${s.bankruptOrder.join(',')}] != bankrupt seats [${broke.join(',')}]`);
+  }
   const lawyers = s.players.reduce((n, p) => n + p.lawyerCards, 0);
   if (lawyers + s.deck.length !== DECK.length) out.push(`lawyer cards ${lawyers} + deck ${s.deck.length} != ${DECK.length}`);
   return out;
@@ -33,12 +37,14 @@ export interface RunStats {
   games: number;
   winners: number;
   logKeys: Set<string>;
+  /** Every param name any log entry carried. */
+  logParams: Set<string>;
   reasons: Set<string>;
   violations: string[];
 }
 
 const seats = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `p${i}`, name: `P${i}` }));
-const newStats = (): RunStats => ({ games: 0, winners: 0, logKeys: new Set(), reasons: new Set(), violations: [] });
+const newStats = (): RunStats => ({ games: 0, winners: 0, logKeys: new Set(), logParams: new Set(), reasons: new Set(), violations: [] });
 
 /** A state's fingerprint, without the log's contents (only its length) to keep it cheap. */
 const fingerprint = (s: BairroState) => JSON.stringify({ ...s, log: s.log.length });
@@ -57,7 +63,10 @@ function step(s: BairroState, player: number, intent: unknown, stats: RunStats, 
 function finish(s: BairroState, stats: RunStats): void {
   stats.games++;
   if (s.winner !== null) stats.winners++;
-  for (const e of s.log) stats.logKeys.add(e.key);
+  for (const e of s.log) {
+    stats.logKeys.add(e.key);
+    for (const k of Object.keys(e.params ?? {})) stats.logParams.add(k);
+  }
 }
 
 /** Bot-only games, `seeds` of them with 2–6 players, each until a winner or `maxTurns` turns. */

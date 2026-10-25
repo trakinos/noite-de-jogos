@@ -1,4 +1,3 @@
-import type { Intent } from '../engine/types';
 import { isPlayerColor, type PlayerColorId } from '../theme/playerColors';
 import { GAMES, isGameId, type GameId } from '../games/catalog';
 import type { ClockInfo } from './turnClock';
@@ -26,7 +25,7 @@ export interface LobbyState {
 
 export type GuestMessage =
   | { type: 'hello'; name: string; token: string | null }
-  | { type: 'intent'; intent: Intent }
+  | { type: 'intent'; intent: unknown }
   | { type: 'setColor'; color: PlayerColorId };
 
 export type HostMessage =
@@ -55,7 +54,7 @@ export function parseGuestMessage(raw: unknown): GuestMessage | null {
     return { type: 'hello', name: cleanName(raw.name), token };
   }
   if (raw.type === 'intent' && isRecord(raw.intent) && typeof raw.intent.type === 'string') {
-    return { type: 'intent', intent: raw.intent as unknown as Intent };
+    return { type: 'intent', intent: raw.intent };
   }
   if (raw.type === 'setColor' && isPlayerColor(raw.color)) return { type: 'setColor', color: raw.color };
   return null;

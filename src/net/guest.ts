@@ -1,4 +1,3 @@
-import type { Intent } from '../engine/types';
 import type { PlayerColorId } from '../theme/playerColors';
 import { parseHostMessage, type GuestMessage, type HostMessage, type LobbyState } from './protocol';
 import type { Connection } from './transport';
@@ -64,7 +63,7 @@ export class GuestSession {
     };
   }
 
-  sendIntent(intent: Intent): void {
+  sendIntent(intent: unknown): void {
     if (this.state.status !== 'joined' || this.state.awaiting) return;
     this.update({ error: null, awaiting: true });
     const msg: GuestMessage = { type: 'intent', intent };

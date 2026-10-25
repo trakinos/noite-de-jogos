@@ -3,6 +3,7 @@ import { canBuild, canUnmortgage, liquidationValue, ruaPositions } from './asset
 import { BOARD, JAIL_FINE, RUAS, unmortgageCost } from './board';
 import type { PontoSquare, RuaId, ServicoSquare } from './board';
 import { liquidate } from './engine';
+import { MAX_TRADES_PER_TURN } from './trades';
 import type { BairroIntent, BairroState, Offer, OfferSide, OfferTerms } from './types';
 
 /** Cash a bot keeps after buying a square. */
@@ -77,7 +78,7 @@ export function botMove(s: BairroState): { player: number; intent: BairroIntent 
     if (p.jailTurns !== null && p.cash >= FINE_RESERVE + JAIL_FINE) return act({ type: 'payJailFine' });
     return act({ type: 'roll' });
   }
-  const offer = completingTrade(s, player);
+  const offer = s.tradesThisTurn < MAX_TRADES_PER_TURN ? completingTrade(s, player) : null;
   if (offer) return act({ type: 'proposeTrade', offer });
   for (const pos of assetsOf(s, player)) {
     const sq = BOARD[pos] as PontoSquare | ServicoSquare;

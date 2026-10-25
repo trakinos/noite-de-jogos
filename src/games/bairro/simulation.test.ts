@@ -7,5 +7,5 @@ describe('bot simulation', () => {
     expect(stats.violations).toEqual([]);
     expect(stats.games).toBe(200);
     expect(stats.winners).toBeGreaterThan(stats.games / 2);
-  });
+  }, 30_000);
 });

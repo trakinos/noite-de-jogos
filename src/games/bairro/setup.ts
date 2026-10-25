@@ -14,6 +14,6 @@ export function createBairro(seats: SeatInfo[], seed: number): BairroState {
     owned: {}, deck: shuffle(rng, DECK.map(c => c.id)),
     doublesInRow: 0, lastRoll: null,
     debts: [], offer: null,
-    log: [], rng, winner: null, turnNumber: 0,
+    bankruptOrder: [], log: [], rng, winner: null, turnNumber: 0, tradesThisTurn: 0,
   };
 }

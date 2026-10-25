@@ -6,6 +6,8 @@ export type BairroPending = 'roll' | 'buy' | 'manage' | 'debt' | 'tradeAnswer' |
 /** The state as one player sees it: everything but the deck order, the rng and the test dice. */
 export interface BairroView extends Omit<BairroState, 'deck' | 'rng' | 'riggedDice'> {
   deckCount: number;
+  /** The full log length: the host may send only the latest entries, so this is how views are diffed. */
+  logTotal: number;
   you: number;
   pending: BairroPending;
 }
@@ -22,5 +24,5 @@ export function pendingFor(s: BairroState, player: number): BairroPending {
 /** A copy, so the host can send or keep it without touching the state. */
 export function viewFor(s: BairroState, player: number): BairroView {
   const { deck, rng: _rng, riggedDice: _dice, ...rest } = s;
-  return { ...structuredClone(rest), deckCount: deck.length, you: player, pending: pendingFor(s, player) };
+  return { ...structuredClone(rest), deckCount: deck.length, logTotal: s.log.length, you: player, pending: pendingFor(s, player) };
 }
