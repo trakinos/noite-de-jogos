@@ -44,10 +44,10 @@ describe('escrituraFor', () => {
     give(s, 1, 5);
     let e = escrituraFor(viewFor(s, 0), 5)!;
     expect(e.rentRows).toEqual([]);
-    expect(e.servico).toEqual({ multiplier: 8, doubled: false });
+    expect(e.servico).toEqual({ multiplier: 8, doubled: false, current: true });
     for (const p of [5, 12, 15, 25, 28, 35]) give(s, 1, p);
     e = escrituraFor(viewFor(s, 0), 5)!;
-    expect(e.servico).toEqual({ multiplier: 8, doubled: true });
+    expect(e.servico).toEqual({ multiplier: 8, doubled: true, current: true });
   });
 
   it('enables building on an owned whole rua', () => {
@@ -91,5 +91,31 @@ describe('escrituraFor', () => {
     expect(btn(e, 'sell')).toMatchObject({ enabled: true, reason: null });
     expect(btn(e, 'build')).toMatchObject({ enabled: false, reason: 'debtOpen' });
     expect(btn(e, 'mortgage')).toMatchObject({ enabled: false, reason: 'ruaHasBuildings' });
+  });
+
+  it('marks no rent row current on a mortgaged ponto or serviço', () => {
+    const s = game(2);
+    give(s, 1, 1, { houses: 0, mortgaged: true }); give(s, 1, 5, { mortgaged: true });
+    expect(current(escrituraFor(viewFor(s, 0), 1)!)).toEqual([]);
+    expect(escrituraFor(viewFor(s, 0), 5)!.servico).toMatchObject({ current: false });
+  });
+
+  it('marks no rent row current when the owner is bankrupt', () => {
+    const s = game(3);
+    give(s, 1, 1, { houses: 2 }); give(s, 1, 5);
+    s.players[1]!.bankrupt = true;
+    expect(current(escrituraFor(viewFor(s, 0), 1)!)).toEqual([]);
+    expect(escrituraFor(viewFor(s, 0), 5)!.servico).toMatchObject({ current: false });
+  });
+
+  it('hides the buttons when the game is over or the viewer is bankrupt', () => {
+    const s = game(3);
+    give(s, 0, 1);
+    expect(escrituraFor(viewFor(s, 0), 1)!.buttons.length).toBeGreaterThan(0);
+    s.players[0]!.bankrupt = true;
+    expect(escrituraFor(viewFor(s, 0), 1)!.buttons).toEqual([]);
+    s.players[0]!.bankrupt = false;
+    s.winner = 1;
+    expect(escrituraFor(viewFor(s, 0), 1)!.buttons).toEqual([]);
   });
 });

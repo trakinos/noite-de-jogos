@@ -8,37 +8,68 @@ interface Props {
   onClose(): void;
   children: ReactNode;
   className?: string;
+  /** Where focus goes on close; defaults to whatever had focus when the dialog opened. */
+  returnFocus?: HTMLElement | null;
+  /** False: Escape, the backdrop and the close button do nothing, and the button is not shown. */
+  dismissable?: boolean;
 }
 
+/** Open dialogs, oldest first: only the last one answers Escape. */
+const open: symbol[] = [];
+/** The element focus was last handed back to: the fallback when an opener has unmounted (deed button in a closing sheet). */
+let lastRestored: HTMLElement | null = null;
+
+const focusable = (el: Element | null | undefined): el is HTMLElement => el instanceof HTMLElement && el.isConnected;
+
 /** The shared Bairro dialog: overlay, labelled title, Escape and the close button, focus back to the opener on close. */
-export function BairroDialog({ title, onClose, children, className = '' }: Props) {
+export function BairroDialog({ title, onClose, children, className = '', returnFocus, dismissable = true }: Props) {
   const { tr } = useLang();
   const titleId = useId();
   // Read while rendering, before the dialog takes focus.
-  const opener = useRef<Element | null>(typeof document === 'undefined' ? null : document.activeElement);
+  const opener = useRef<Element | null>(returnFocus ?? (typeof document === 'undefined' ? null : document.activeElement));
   const closeButton = useRef<HTMLButtonElement>(null);
-  const close = useRef(onClose);
-  close.current = onClose;
+  const pressedBackdrop = useRef(false);
+  const latest = useRef({ onClose, dismissable });
+  latest.current = { onClose, dismissable };
 
   useEffect(() => {
+    const me = Symbol('dialog');
+    open.push(me);
     closeButton.current?.focus();
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close.current();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && open.at(-1) === me && latest.current.dismissable) latest.current.onClose();
+    };
     addEventListener('keydown', onKey);
     return () => {
       removeEventListener('keydown', onKey);
-      const el = opener.current;
-      if (el instanceof HTMLElement && el.isConnected) el.focus();
+      open.splice(open.indexOf(me), 1);
+      const target = [opener.current, lastRestored, document.querySelector('main')].find(focusable);
+      if (target) {
+        target.focus();
+        if (target === opener.current) lastRestored = target;
+      }
     };
   }, []);
 
+  const onBackdrop = (down: boolean) => (e: { target: unknown; currentTarget: unknown }) => {
+    if (down) pressedBackdrop.current = e.target === e.currentTarget;
+    else {
+      const hit = pressedBackdrop.current && e.target === e.currentTarget;
+      pressedBackdrop.current = false;
+      if (hit && latest.current.dismissable) latest.current.onClose();
+    }
+  };
+
   return (
-    <div className="overlay" role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={onClose}>
-      <div className={`prompt panel bsheet ${className}`} onClick={e => e.stopPropagation()}>
+    <div className="overlay" role="dialog" aria-modal="true" aria-labelledby={titleId} onMouseDown={onBackdrop(true)} onClick={onBackdrop(false)}>
+      <div className={`prompt panel bsheet ${className}`}>
         <div className="bsheet__head">
           <h2 id={titleId}>{title}</h2>
-          <button type="button" ref={closeButton} onClick={onClose} aria-label={tr.t('close')}>
-            <Icon name="x" />
-          </button>
+          {dismissable && (
+            <button type="button" ref={closeButton} onClick={onClose} aria-label={tr.t('close')}>
+              <Icon name="x" />
+            </button>
+          )}
         </div>
         {children}
       </div>

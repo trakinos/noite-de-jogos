@@ -55,13 +55,13 @@ export function EscrituraDialog({ view, pos, names, awaiting, onIntent, onClose 
           <table className="besc__rent">
             <caption>{text.ui('escRent')}</caption>
             <tbody>
-              <tr className={e.owner !== null && !e.servico.doubled ? 'is-current' : ''}>
+              <tr className={e.servico.current && !e.servico.doubled ? 'is-current' : ''}>
                 <th scope="row">{text.ui('servicoRule', { mult: e.servico.multiplier })}</th>
-                <td>{e.owner !== null && !e.servico.doubled ? text.ui('escNow') : ''}</td>
+                <td>{e.servico.current && !e.servico.doubled ? text.ui('escNow') : ''}</td>
               </tr>
-              <tr className={e.servico.doubled ? 'is-current' : ''}>
+              <tr className={e.servico.current && e.servico.doubled ? 'is-current' : ''}>
                 <th scope="row">{text.ui('servicoDouble')}</th>
-                <td>{e.servico.doubled ? text.ui('escNow') : ''}</td>
+                <td>{e.servico.current && e.servico.doubled ? text.ui('escNow') : ''}</td>
               </tr>
             </tbody>
           </table>

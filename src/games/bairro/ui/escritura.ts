@@ -31,8 +31,8 @@ export interface Escritura {
   price: number;
   /** Empty for a serviço. */
   rentRows: RentRow[];
-  /** Serviços only: rent is the dice total times `multiplier`, doubled when one owner holds all six. */
-  servico: { multiplier: number; doubled: boolean } | null;
+  /** Serviços only: `current` is false when no rent is charged; rent is the dice total times `multiplier`, doubled when one owner holds all six. */
+  servico: { multiplier: number; doubled: boolean; current: boolean } | null;
   houseCost: number | null;
   mortgage: number;
   unmortgageCost: number;
@@ -53,6 +53,9 @@ export function escrituraFor(view: BairroView, pos: number): Escritura | null {
   const houses = own?.houses ?? 0;
   const mortgaged = own?.mortgaged ?? false;
   const mine = owner === view.you;
+  // The engine charges no rent on a mortgaged asset or one whose owner went bust.
+  const rentsNow = owner !== null && !mortgaged && !view.players[owner]?.bankrupt;
+  const live = view.winner === null && !view.players[view.you]?.bankrupt;
 
   let rentRows: RentRow[] = [];
   let servico: Escritura['servico'] = null;
@@ -62,16 +65,16 @@ export function escrituraFor(view: BairroView, pos: number): Escritura | null {
     rentRows = LABELS.map((label, level) => ({
       label,
       amount: level === 0 && doubled ? sq.rent[0] * 2 : sq.rent[level]!,
-      current: owner !== null && level === houses,
+      current: rentsNow && level === houses,
       ...(level === 0 ? { doubled } : {}),
     }));
   } else {
     const all = owner !== null && BOARD.every((x, i) => x.kind !== 'servico' || view.owned[i]?.owner === owner);
-    servico = { multiplier: sq.multiplier, doubled: all };
+    servico = { multiplier: sq.multiplier, doubled: all, current: rentsNow };
   }
 
   const buttons: EscrituraButton[] = [];
-  if (mine) {
+  if (mine && live) {
     const add = (id: EscrituraButtonId, reason: string | null, amount: number) =>
       buttons.push({ id, enabled: reason === null, reason, amount });
     if (mortgaged) {
