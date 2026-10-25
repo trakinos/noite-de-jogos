@@ -54,7 +54,8 @@ export class BairroInstance implements GameInstance {
       pending = this.prompts.of(`offer ${s.turnNumber} ${JSON.stringify(s.offer)}`, () => ({ player: to }));
     } else if (!over) {
       const offTurn = [...new Set(s.debts.map(d => d.debtor))].filter(d => d !== s.current);
-      const key = `debts ${s.turnNumber} ${JSON.stringify(s.debts)}`;
+      // Group identity ignores amounts, so paying one debt does not restart the window for the others.
+      const key = `debts ${s.turnNumber} ${[...offTurn].sort((a, b) => a - b).join(',')}`;
       if (offTurn.length === 1) pending = this.prompts.of(key, () => ({ player: offTurn[0] }));
       else if (offTurn.length > 1) group = this.groups.of(key, () => ({}));
     }

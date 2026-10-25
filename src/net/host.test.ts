@@ -3,6 +3,7 @@ import { DEFAULT_KINGDOM, KINGDOM_IDS } from '../cards/registry';
 import { HostSession } from './host';
 import type { DominionOptions } from '../games/dominion/module';
 import { dominionModule } from '../games/dominion/module';
+import { bairroModule } from '../games/bairro/module';
 import { flush } from './memory';
 import { connectClient, join, seededHostOptions } from './testing';
 
@@ -152,5 +153,14 @@ describe('HostSession lobby', () => {
 
   it('starts with the First Game kingdom', () => {
     expect((new HostSession(dominionModule, seededHostOptions()).lobby.options as DominionOptions).kingdom).toEqual(DEFAULT_KINGDOM);
+  });
+});
+
+describe('HostSession lobby deploy-compat', () => {
+  it('also sends the legacy top-level kingdom for Dominion rooms only', () => {
+    const lobby = new HostSession(dominionModule, seededHostOptions()).lobby;
+    expect(lobby.kingdom).toEqual((lobby.options as DominionOptions).kingdom);
+    expect(lobby.kingdom).not.toBe((lobby.options as DominionOptions).kingdom);
+    expect('kingdom' in new HostSession(bairroModule, seededHostOptions()).lobby).toBe(false);
   });
 });

@@ -68,15 +68,19 @@ export class HostSession {
   }
 
   get lobby(): LobbyState {
+    const options = structuredClone(this.options);
+    const legacyKingdom = this.module.id === 'dominion' ? (options as { kingdom?: unknown }).kingdom : undefined;
     return {
       game: this.module.id,
       hostId: this.hostSeatId ?? '',
       players: this.seats.map((s) => ({ id: s.id, name: s.name, online: s.conn !== null, color: s.color })),
-      options: structuredClone(this.options),
+      options,
       inGame: this.activeGame !== null,
       turnTimer: this.turnTimer,
       minPlayers: this.module.minPlayers,
       maxPlayers: this.module.maxPlayers,
+      // Deploy-compat: old clients read the kingdom at the top level. Drop later.
+      ...(legacyKingdom === undefined ? {} : { kingdom: structuredClone(legacyKingdom) }),
     };
   }
 

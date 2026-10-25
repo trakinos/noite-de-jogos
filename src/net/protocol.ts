@@ -1,6 +1,6 @@
 import type { Intent } from '../engine/types';
 import { isPlayerColor, type PlayerColorId } from '../theme/playerColors';
-import { isGameId, type GameId } from '../games/catalog';
+import { GAMES, isGameId, type GameId } from '../games/catalog';
 import type { ClockInfo } from './turnClock';
 
 export interface LobbyPlayer {
@@ -20,6 +20,8 @@ export interface LobbyState {
   turnTimer: number | null;
   minPlayers: number;
   maxPlayers: number;
+  /** Deploy-compat: Dominion hosts also send options.kingdom here for already-open old clients. Drop later. */
+  kingdom?: unknown;
 }
 
 export type GuestMessage =
@@ -59,6 +61,20 @@ export function parseGuestMessage(raw: unknown): GuestMessage | null {
   return null;
 }
 
+/** Fills in what a host from before the game/options/min/max fields left out; such a host only ever ran Dominion. */
+function parseLobby(raw: Record<string, unknown>): LobbyState {
+  const game: GameId = isGameId(raw.game) ? raw.game : 'dominion';
+  const info = GAMES.find((g) => g.id === game)!;
+  const options = 'options' in raw && raw.options !== undefined ? raw.options : Array.isArray(raw.kingdom) ? { kingdom: raw.kingdom } : raw.options;
+  return {
+    ...(raw as unknown as LobbyState),
+    game,
+    options,
+    minPlayers: typeof raw.minPlayers === 'number' ? raw.minPlayers : info.minPlayers,
+    maxPlayers: typeof raw.maxPlayers === 'number' ? raw.maxPlayers : info.maxPlayers,
+  };
+}
+
 export function parseHostMessage(raw: unknown): HostMessage | null {
   if (!isRecord(raw)) return null;
   switch (raw.type) {
@@ -68,8 +84,7 @@ export function parseHostMessage(raw: unknown): HostMessage | null {
         : null;
     case 'lobby':
       if (!isRecord(raw.lobby)) return null;
-      // A host from before the game field existed only ever ran Dominion.
-      return { type: 'lobby', lobby: { ...(raw.lobby as unknown as LobbyState), game: isGameId(raw.lobby.game) ? raw.lobby.game : 'dominion' } };
+      return { type: 'lobby', lobby: parseLobby(raw.lobby) };
     case 'view':
       return isRecord(raw.view) ? { type: 'view', view: raw.view, clock: parseClock(raw.clock) } : null;
     case 'error':

@@ -66,3 +66,22 @@ describe('parseHostMessage', () => {
     }
   });
 });
+
+describe('parseHostMessage legacy lobbies', () => {
+  const kingdom = ['village', 'smithy'];
+
+  it('derives options and the player range from a lobby that only had a kingdom', () => {
+    const msg = parseHostMessage({ type: 'lobby', lobby: { hostId: 'p0', kingdom } });
+    expect(msg?.type === 'lobby' && msg.lobby).toMatchObject({ game: 'dominion', options: { kingdom }, minPlayers: 2, maxPlayers: 4 });
+  });
+
+  it('takes the player range from the catalog entry of the lobby game', () => {
+    const msg = parseHostMessage({ type: 'lobby', lobby: { game: 'bairro', hostId: 'p0', options: {} } });
+    expect(msg?.type === 'lobby' && msg.lobby).toMatchObject({ options: {}, minPlayers: 2, maxPlayers: 6 });
+  });
+
+  it('keeps new-style fields untouched', () => {
+    const msg = parseHostMessage({ type: 'lobby', lobby: { game: 'dominion', hostId: 'p0', options: { kingdom: ['x'] }, minPlayers: 3, maxPlayers: 3 } });
+    expect(msg?.type === 'lobby' && msg.lobby).toMatchObject({ options: { kingdom: ['x'] }, minPlayers: 3, maxPlayers: 3 });
+  });
+});

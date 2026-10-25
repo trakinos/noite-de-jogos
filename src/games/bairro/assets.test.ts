@@ -142,6 +142,27 @@ describe('mortgages', () => {
   });
 });
 
+describe('raising cash in the buy phase', () => {
+  it('lets the mover mortgage, then buy a ponto they could not afford', () => {
+    const s = game(2);
+    give(s, 0, KOMBI);
+    s.players[0].cash = 10;
+    s.phase = { kind: 'buy', square: B, rollAgain: false };
+    expect(apply(s, 0, { type: 'buy' })).toEqual({ ok: false, reason: 'notEnoughCash' });
+    expect(apply(s, 0, { type: 'mortgage', pos: KOMBI })).toEqual({ ok: true });
+    expect(s.phase.kind).toBe('buy');
+    expect(apply(s, 0, { type: 'buy' })).toEqual({ ok: true });
+    expect(s.owned[B].owner).toBe(0);
+  });
+
+  it('still refuses spending in the buy phase, and refuses other players', () => {
+    const s = r1();
+    s.phase = { kind: 'buy', square: pos('lava-jato'), rollAgain: false };
+    expect(canBuild(s, 0, B)).toBe('notNow');
+    expect(canSell(s, 1, B)).toBe('notYourTurn');
+  });
+});
+
 describe('liquidationValue', () => {
   it('counts cash, half the building cost and unmortgaged mortgage values', () => {
     const s = game(2);

@@ -18,11 +18,12 @@ export function ownsWholeRua(s: BairroState, player: number, rua: RuaId): boolea
 /**
  * Phase gate shared by build/sell/mortgage/unmortgage: null = allowed, else a reason key.
  * A player who owes may raise money (sell, mortgage) in any phase, on or off turn, but not spend it.
+ * On their own turn, raising is also allowed in `buy`, to fund the purchase.
  */
 export function canManageAssets(s: BairroState, player: number, raising: boolean): string | null {
   if (s.debts.some(d => d.debtor === player)) return raising ? null : 'debtOpen';
   if (player !== s.current) return 'notYourTurn';
-  if (s.phase.kind !== 'roll' && s.phase.kind !== 'manage') return 'notNow';
+  if (s.phase.kind !== 'roll' && s.phase.kind !== 'manage' && !(raising && s.phase.kind === 'buy')) return 'notNow';
   if (s.offer !== null) return 'notNow';
   if (s.debts.length > 0) return 'debtOpen';
   return null;
