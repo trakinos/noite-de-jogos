@@ -259,6 +259,22 @@ The visual design of the board is the builder's call. Make mockups first and sho
 
 The user's decision (2026-10-24): **build and ship on the working values now.** The user checks the board on screen and supplies corrections afterwards, and only the data file changes. The working values should be close to the classic edition (prices and rents in classic proportions). The rules dialog and the changelog should mention that the values are provisional. Later, check these against a physical classic copy or a trustworthy scan: the square names and order, prices, rent tables, house costs, mortgage values, company multipliers, starting money, the Lucros ou Dividendos and Imposto de Renda amounts, the jail fine, the Sorte ou Revés card list, and whether the full-group double rent exists in this edition. Until then, use the working values above.
 
+### Engine notes (2026-10-24)
+
+Working values chosen in the engine (all in the one data file):
+- Classic board geometry: start, 2 cheap pontos, IPTU at 4, serviços at 5/12/15/25/28/35, Deu Bom/Deu Ruim at 2/7/17/22/33/36, Xilindró 10, Pracinha 20, Vá pro Xilindró 30, Bolão at 38.
+- Prices and rent tables in Monopoly proportions. Start with $1,500, $200 for passing start, $50 fine.
+- Serviço rent is the dice times 5 (price 150) or times 8 (price 200). IPTU and Bolão are $200. The deck has 30 cards.
+
+Engine rulings worth knowing:
+- Mortgaged assets still count for a full rua and for all 6 serviços.
+- While debts are open, only debtors can act.
+- If several creditors are owed in a bankruptcy, the assets go to the oldest player-creditor and the other debts are dropped.
+- Debts owed to a player who goes bankrupt are dropped.
+- A trade acceptance that has become void is logged, not treated as an error.
+
+Simulation finding: with bots that never trade, only 87 of 200 games finished, because split ruas stall the game. With one simple rua-completing trade, 200 of 200 finished. So trading and the Partida rápida time limit matter for real games.
+
 ## 9. Constraints
 - React + TypeScript + Vite, static GitHub Pages deploy, PeerJS host-in-browser. No game server.
 - Engines are pure and deterministic with a seeded RNG, and tested the same way Dominion is (unit tests, simulated games, fuzzed intents).
