@@ -15,8 +15,12 @@ export function ownsWholeRua(s: BairroState, player: number, rua: RuaId): boolea
   return ruaPositions(rua).every(i => s.owned[i]?.owner === player);
 }
 
-/** Phase gate shared by build/sell/mortgage/unmortgage: null = allowed, else a reason key. */
-export function canManageAssets(s: BairroState, player: number): string | null {
+/**
+ * Phase gate shared by build/sell/mortgage/unmortgage: null = allowed, else a reason key.
+ * A player who owes may raise money (sell, mortgage) in any phase, on or off turn, but not spend it.
+ */
+export function canManageAssets(s: BairroState, player: number, raising: boolean): string | null {
+  if (s.debts.some(d => d.debtor === player)) return raising ? null : 'debtOpen';
   if (player !== s.current) return 'notYourTurn';
   if (s.phase.kind !== 'roll' && s.phase.kind !== 'manage') return 'notNow';
   if (s.offer !== null) return 'notNow';
@@ -38,7 +42,7 @@ function pontoAt(s: BairroState, player: number, pos: unknown): { sq: PontoSquar
 const housesOf = (s: BairroState, positions: number[]) => positions.map(i => s.owned[i]?.houses ?? 0);
 
 export function canBuild(s: BairroState, player: number, pos: number): string | null {
-  const gate = canManageAssets(s, player);
+  const gate = canManageAssets(s, player, false);
   if (gate) return gate;
   const t = pontoAt(s, player, pos);
   if (typeof t === 'string') return t;
@@ -53,7 +57,7 @@ export function canBuild(s: BairroState, player: number, pos: number): string | 
 }
 
 export function canSell(s: BairroState, player: number, pos: number): string | null {
-  const gate = canManageAssets(s, player);
+  const gate = canManageAssets(s, player, true);
   if (gate) return gate;
   const t = pontoAt(s, player, pos);
   if (typeof t === 'string') return t;
@@ -64,7 +68,7 @@ export function canSell(s: BairroState, player: number, pos: number): string | n
 }
 
 export function canMortgage(s: BairroState, player: number, pos: number): string | null {
-  const gate = canManageAssets(s, player);
+  const gate = canManageAssets(s, player, true);
   if (gate) return gate;
   const sq = squareAt(pos);
   if (!sq || (sq.kind !== 'ponto' && sq.kind !== 'servico')) return 'notAPonto';
@@ -75,7 +79,7 @@ export function canMortgage(s: BairroState, player: number, pos: number): string
 }
 
 export function canUnmortgage(s: BairroState, player: number, pos: number): string | null {
-  const gate = canManageAssets(s, player);
+  const gate = canManageAssets(s, player, false);
   if (gate) return gate;
   const sq = squareAt(pos);
   if (!sq || (sq.kind !== 'ponto' && sq.kind !== 'servico')) return 'notAPonto';

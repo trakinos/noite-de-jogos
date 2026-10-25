@@ -73,6 +73,11 @@ export const pt: BairroDictionary = {
     soldBuilding: 'vendeu uma construção em {pos} por ${amount}',
     mortgaged: 'hipotecou {pos} e recebeu ${amount}',
     unmortgaged: 'resgatou {pos} por ${amount}',
+    paidDebtBank: 'pagou os ${amount} que devia à Prefeitura',
+    paidDebtPlayer: 'pagou os ${amount} que devia a {to}',
+    bankruptToBank: 'faliu com a Prefeitura',
+    bankruptToPlayer: 'faliu e tudo ficou com {to}',
+    won: 'é o Dono do Bairro!',
   },
   reasons: {
     badIntent: 'Jogada inválida',
@@ -92,6 +97,9 @@ export const pt: BairroDictionary = {
     alreadyMortgaged: 'Já está hipotecada',
     notMortgaged: 'Não está hipotecada',
     ruaHasBuildings: 'Venda as construções da rua antes',
+    waitingForDebts: 'Esperando as dívidas serem acertadas',
+    canStillPay: 'Ainda dá pra levantar o dinheiro',
+    bankrupt: 'Você faliu',
   },
   terms: {
     puxadinho: 'puxadinho', predio: 'prédio', escritura: 'escritura', prefeitura: 'Prefeitura',

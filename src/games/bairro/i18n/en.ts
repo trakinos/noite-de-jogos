@@ -73,6 +73,11 @@ export const en: BairroDictionary = {
     soldBuilding: 'sold a building on {pos} for ${amount}',
     mortgaged: 'mortgaged {pos} and received ${amount}',
     unmortgaged: 'redeemed {pos} for ${amount}',
+    paidDebtBank: 'paid the ${amount} owed to the Prefeitura',
+    paidDebtPlayer: 'paid the ${amount} owed to {to}',
+    bankruptToBank: 'went bust to the Prefeitura',
+    bankruptToPlayer: 'went bust and everything went to {to}',
+    won: 'is the Dono do Bairro!',
   },
   reasons: {
     badIntent: 'That move is not valid',
@@ -92,6 +97,9 @@ export const en: BairroDictionary = {
     alreadyMortgaged: 'Already mortgaged',
     notMortgaged: 'Not mortgaged',
     ruaHasBuildings: 'Sell the buildings on the street first',
+    waitingForDebts: 'Waiting for the debts to be settled',
+    canStillPay: 'You can still raise enough to pay',
+    bankrupt: 'You went bust',
   },
   terms: {
     puxadinho: 'puxadinho (ramshackle add-on)', predio: 'prédio (building)', escritura: 'escritura (deed)',

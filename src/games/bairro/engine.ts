@@ -1,9 +1,9 @@
 import { nextInt } from '../../engine/rng';
 import type { ApplyResult } from '../module';
-import { canBuild, canMortgage, canSell, canUnmortgage } from './assets';
+import { canBuild, canMortgage, canSell, canUnmortgage, liquidationValue, ruaPositions } from './assets';
 import { DECK } from './deck';
 import { BOARD, JAIL_FINE, JAIL_POS, PASS_START, RUAS, unmortgageCost } from './board';
-import type { PontoSquare, ServicoSquare } from './board';
+import type { PontoSquare, RuaId, ServicoSquare } from './board';
 import type { BairroIntent, BairroState } from './types';
 
 const ok = (): ApplyResult => ({ ok: true });
@@ -29,14 +29,22 @@ const HANDLERS: Partial<Record<IntentType, Handler>> = {
   sellBuilding: (s, player, i) => sellBuilding(s, player, (i as { pos: number }).pos),
   mortgage: (s, player, i) => mortgage(s, player, (i as { pos: number }).pos),
   unmortgage: (s, player, i) => unmortgage(s, player, (i as { pos: number }).pos),
+  payDebt: (s, player) => payDebt(s, player),
+  goBankrupt: (s, player) => goBankrupt(s, player),
 };
+
+/** While any debt is open, these are the only intents accepted, and only from a debtor, on or off turn. */
+const DEBT_INTENTS: ReadonlySet<IntentType> = new Set<IntentType>(['sellBuilding', 'mortgage', 'payDebt', 'goBankrupt']);
 
 /** Applies one intent from `player` (a seat index), mutating `s`. Never throws on malformed input. */
 export function apply(s: BairroState, player: number, intent: BairroIntent): ApplyResult {
   if (s.winner !== null) return fail('gameOver');
   const type: unknown = intent && typeof intent === 'object' ? (intent as { type?: unknown }).type : undefined;
   if (typeof type !== 'string' || !INTENT_TYPES.has(type)) return fail('badIntent');
-  if (player !== s.current) return fail('notYourTurn');
+  if (s.players[player]?.bankrupt) return fail('bankrupt');
+  if (s.debts.length > 0) {
+    if (!DEBT_INTENTS.has(type as IntentType) || !s.debts.some(d => d.debtor === player)) return fail('waitingForDebts');
+  } else if (player !== s.current) return fail('notYourTurn');
   const handler = HANDLERS[type as IntentType];
   return handler ? handler(s, player, intent) : fail('notNow');
 }
@@ -283,21 +291,31 @@ function build(s: BairroState, player: number, pos: number): ApplyResult {
 function sellBuilding(s: BairroState, player: number, pos: number): ApplyResult {
   const why = canSell(s, player, pos);
   if (why) return fail(why);
+  sellOne(s, player, pos);
+  return ok();
+}
+
+/** Sells one building on `pos` to the bank at half cost. The caller checks the even rule. */
+function sellOne(s: BairroState, player: number, pos: number): void {
   const refund = (BOARD[pos] as PontoSquare).houseCost / 2;
   s.owned[pos].houses--;
   credit(s, player, refund);
   log(s, player, 'soldBuilding', { pos, amount: refund });
-  return ok();
 }
 
 function mortgage(s: BairroState, player: number, pos: number): ApplyResult {
   const why = canMortgage(s, player, pos);
   if (why) return fail(why);
+  mortgageOne(s, player, pos);
+  return ok();
+}
+
+/** Mortgages `pos` for its mortgage value. The caller checks the rua has no buildings. */
+function mortgageOne(s: BairroState, player: number, pos: number): void {
   const sq = BOARD[pos] as PontoSquare | ServicoSquare;
   s.owned[pos].mortgaged = true;
   credit(s, player, sq.mortgage);
   log(s, player, 'mortgaged', { pos, amount: sq.mortgage });
-  return ok();
 }
 
 function unmortgage(s: BairroState, player: number, pos: number): ApplyResult {
@@ -312,7 +330,12 @@ function unmortgage(s: BairroState, player: number, pos: number): ApplyResult {
 
 function endTurn(s: BairroState): ApplyResult {
   if (s.phase.kind !== 'manage' || s.phase.rollAgain) return fail('notNow');
-  if (s.debts.length > 0) return fail('debtOpen');
+  passTurn(s);
+  return ok();
+}
+
+/** Hands the turn to the next solvent player. */
+function passTurn(s: BairroState): void {
   const n = s.players.length;
   let next = s.current;
   for (let k = 1; k <= n; k++) {
@@ -323,5 +346,90 @@ function endTurn(s: BairroState): ApplyResult {
   s.phase = { kind: 'roll' };
   s.doublesInRow = 0;
   s.turnNumber++;
+}
+
+// ---- debts and bankruptcy ----
+
+const debtsOf = (s: BairroState, player: number) => s.debts.filter(d => d.debtor === player);
+
+/** Pays the player's oldest open debt in full. */
+function payDebt(s: BairroState, player: number): ApplyResult {
+  const debt = s.debts.find(d => d.debtor === player);
+  if (!debt) return fail('notNow');
+  const p = s.players[player];
+  if (p.cash < debt.amount) return fail('notEnoughCash');
+  p.cash -= debt.amount;
+  s.debts.splice(s.debts.indexOf(debt), 1);
+  if (debt.creditor === null) log(s, player, 'paidDebtBank', { amount: debt.amount });
+  else {
+    credit(s, debt.creditor, debt.amount);
+    log(s, player, 'paidDebtPlayer', { to: debt.creditor, amount: debt.amount });
+  }
   return ok();
+}
+
+/**
+ * Settles all of the player's debts by bankruptcy, allowed only when liquidating everything can't cover them.
+ * Goes to the bank when every debt is to the bank, else to the creditor of the oldest debt to a player;
+ * the other creditors get nothing.
+ */
+function goBankrupt(s: BairroState, player: number): ApplyResult {
+  const mine = debtsOf(s, player);
+  if (mine.length === 0) return fail('notNow');
+  if (liquidationValue(s, player) >= mine.reduce((sum, d) => sum + d.amount, 0)) return fail('canStillPay');
+  const creditor = mine.find(d => d.creditor !== null)?.creditor ?? null;
+  const p = s.players[player];
+  const assets = Object.keys(s.owned).map(Number).filter(i => s.owned[i].owner === player);
+  if (creditor === null) {
+    for (const i of assets) delete s.owned[i];
+    for (; p.lawyerCards > 0; p.lawyerCards--) s.deck.push(lawyerCardId(s));
+    log(s, player, 'bankruptToBank');
+  } else {
+    let proceeds = 0;
+    for (const i of assets) {
+      const own = s.owned[i];
+      if (own.houses > 0) proceeds += (own.houses * (BOARD[i] as PontoSquare).houseCost) / 2;
+      own.houses = 0;
+      own.owner = creditor;
+    }
+    credit(s, creditor, p.cash + proceeds);
+    s.players[creditor].lawyerCards += p.lawyerCards;
+    p.lawyerCards = 0;
+    log(s, player, 'bankruptToPlayer', { to: creditor });
+  }
+  p.cash = 0;
+  p.bankrupt = true;
+  // A bankrupt player neither pays nor collects.
+  s.debts = s.debts.filter(d => d.debtor !== player && d.creditor !== player);
+  const solvent = s.players.flatMap((x, i) => (x.bankrupt ? [] : [i]));
+  if (solvent.length === 1) {
+    s.winner = solvent[0];
+    log(s, s.winner, 'won');
+  } else if (player === s.current) passTurn(s);
+  return ok();
+}
+
+/**
+ * Raises the player's cash up to `target`, stopping as soon as it is reached. Sells buildings first,
+ * most expensive rua first and always from a rua's highest building (even selling), then mortgages
+ * the cheapest unmortgaged assets first. Also used by the timeout.
+ */
+export function liquidate(s: BairroState, player: number, target: number): void {
+  const p = s.players[player];
+  for (const rua of (Object.keys(RUAS) as RuaId[]).reverse()) {
+    // Most expensive ponto first among those tied at the top.
+    const mine = ruaPositions(rua).reverse().filter(i => s.owned[i]?.owner === player);
+    while (p.cash < target) {
+      const top = Math.max(0, ...mine.map(i => s.owned[i].houses));
+      if (top === 0) break;
+      sellOne(s, player, mine.find(i => s.owned[i].houses === top)!);
+    }
+  }
+  const unmortgaged = Object.keys(s.owned).map(Number)
+    .filter(i => s.owned[i].owner === player && !s.owned[i].mortgaged)
+    .sort((a, b) => (BOARD[a] as PontoSquare | ServicoSquare).mortgage - (BOARD[b] as PontoSquare | ServicoSquare).mortgage || a - b);
+  for (const i of unmortgaged) {
+    if (p.cash >= target) return;
+    mortgageOne(s, player, i);
+  }
 }

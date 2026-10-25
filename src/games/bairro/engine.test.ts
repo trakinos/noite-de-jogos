@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { BOARD, JAIL_POS, START_MONEY } from './board';
-import { apply } from './engine';
+import { apply, liquidate } from './engine';
+import { canBuild, canUnmortgage, liquidationValue } from './assets';
 import { createBairro } from './setup';
 import { game, give, rig } from './testkit';
 import type { BairroIntent, BairroState } from './types';
@@ -331,7 +332,7 @@ describe('doubles and turns', () => {
     const s = game(2);
     s.players[0].cash = 100;
     roll(s, [1, 3]);
-    expect(apply(s, 0, { type: 'endTurn' })).toEqual({ ok: false, reason: 'debtOpen' });
+    expect(apply(s, 0, { type: 'endTurn' })).toEqual({ ok: false, reason: 'waitingForDebts' });
   });
 });
 
@@ -351,7 +352,7 @@ describe('guards', () => {
 
   it('later-task intents are refused for now', () => {
     const s = game(2);
-    expect(apply(s, 0, { type: 'payDebt' })).toEqual({ ok: false, reason: 'notNow' });
+    expect(apply(s, 0, { type: 'proposeTrade', offer: { to: 1, give: { assets: [], cash: 0, lawyerCards: 0 }, get: { assets: [], cash: 0, lawyerCards: 0 } } })).toEqual({ ok: false, reason: 'notNow' });
   });
 
   it('never throws on malformed input', () => {
@@ -502,5 +503,275 @@ describe('jail', () => {
     }
     const keys = s.log.map(e => e.key);
     for (const k of ['usedLawyer', 'paidJailFine', 'jailRollFailed', 'jailFineForced', 'leftJailDoubles']) expect(keys, k).toContain(k);
+  });
+});
+
+describe('debts', () => {
+  const B = 1, L = 3; // r1: borracharia, lava-jato (houseCost 50, mortgage 30)
+
+  /** Player 0 lands on L (owned by 1, one puxadinho → rent 20) holding only $10. */
+  function shortOnRent() {
+    const s = game(2);
+    give(s, 1, L, { houses: 1 });
+    s.players[0].cash = 10;
+    roll(s, [1, 2]);
+    return s;
+  }
+
+  it('an unpaid rent waits: roll, endTurn and other intents are refused', () => {
+    const s = shortOnRent();
+    expect(s.debts).toEqual([{ debtor: 0, creditor: 1, amount: 20 }]);
+    s.phase = { kind: 'manage', rollAgain: true };
+    expect(apply(s, 0, { type: 'roll' })).toEqual({ ok: false, reason: 'waitingForDebts' });
+    s.phase = { kind: 'manage', rollAgain: false };
+    expect(apply(s, 0, { type: 'endTurn' })).toEqual({ ok: false, reason: 'waitingForDebts' });
+    expect(apply(s, 0, { type: 'build', pos: B })).toEqual({ ok: false, reason: 'waitingForDebts' });
+    expect(apply(s, 1, { type: 'endTurn' })).toEqual({ ok: false, reason: 'waitingForDebts' });
+    expect(apply(s, 1, { type: 'payDebt' })).toEqual({ ok: false, reason: 'waitingForDebts' });
+  });
+
+  it('payDebt needs the cash, then pays the creditor and clears the debt', () => {
+    const s = shortOnRent();
+    give(s, 0, 5); // Kombi, mortgage 100
+    expect(apply(s, 0, { type: 'payDebt' })).toEqual({ ok: false, reason: 'notEnoughCash' });
+    expect(apply(s, 0, { type: 'mortgage', pos: 5 })).toEqual({ ok: true });
+    expect(apply(s, 0, { type: 'payDebt' })).toEqual({ ok: true });
+    expect(s.debts).toEqual([]);
+    expect(s.players[0].cash).toBe(10 + 100 - 20);
+    expect(s.players[1].cash).toBe(START_MONEY + 20);
+    expect(s.log.at(-1)).toEqual({ player: 0, key: 'paidDebtPlayer', params: { to: 1, amount: 20 } });
+    expect(apply(s, 0, { type: 'endTurn' })).toEqual({ ok: true });
+  });
+
+  it('a debtor may sell buildings in any phase but not build or unmortgage', () => {
+    const s = game(2);
+    give(s, 0, B, { houses: 1 }); give(s, 0, L, { houses: 1 });
+    give(s, 0, 5, { mortgaged: true });
+    s.phase = { kind: 'buy', square: 6, rollAgain: false };
+    s.debts.push({ debtor: 0, creditor: null, amount: 100 });
+    expect(apply(s, 0, { type: 'sellBuilding', pos: L })).toEqual({ ok: true });
+    expect(apply(s, 0, { type: 'unmortgage', pos: 5 })).toEqual({ ok: false, reason: 'waitingForDebts' });
+    expect(apply(s, 0, { type: 'buy' })).toEqual({ ok: false, reason: 'waitingForDebts' });
+    expect(canBuild(s, 0, L)).toBe('debtOpen');
+    expect(canUnmortgage(s, 0, 5)).toBe('debtOpen');
+  });
+
+  it('payDebt pays the oldest debt first', () => {
+    const s = game(3);
+    s.phase = { kind: 'manage', rollAgain: false };
+    s.debts.push({ debtor: 0, creditor: 2, amount: 50 }, { debtor: 0, creditor: null, amount: 30 });
+    s.players[0].cash = 60;
+    expect(apply(s, 0, { type: 'payDebt' })).toEqual({ ok: true });
+    expect(s.debts).toEqual([{ debtor: 0, creditor: null, amount: 30 }]);
+    expect(s.players[2].cash).toBe(START_MONEY + 50);
+    expect(apply(s, 0, { type: 'payDebt' })).toEqual({ ok: false, reason: 'notEnoughCash' });
+  });
+
+  it('an off-turn eachPlayer debtor acts on another player\'s turn while the current player waits', () => {
+    const s = game(3);
+    s.players[0].pos = 4; s.players[1].cash = 10;
+    give(s, 1, B);
+    s.deck = ['c23', ...s.deck.filter(c => c !== 'c23')];
+    roll(s, [1, 2]);
+    expect(s.debts).toEqual([{ debtor: 1, creditor: 0, amount: 50 }]);
+    expect(apply(s, 0, { type: 'endTurn' })).toEqual({ ok: false, reason: 'waitingForDebts' });
+    expect(apply(s, 2, { type: 'mortgage', pos: B })).toEqual({ ok: false, reason: 'waitingForDebts' });
+    expect(apply(s, 1, { type: 'mortgage', pos: B })).toEqual({ ok: true });
+    expect(apply(s, 1, { type: 'payDebt' })).toEqual({ ok: false, reason: 'notEnoughCash' });
+    expect(apply(s, 1, { type: 'goBankrupt' })).toEqual({ ok: true });
+    expect(s.players[1].bankrupt).toBe(true);
+    expect(s.current).toBe(0);
+    expect(s.phase).toEqual({ kind: 'manage', rollAgain: false });
+    expect(apply(s, 0, { type: 'endTurn' })).toEqual({ ok: true });
+    expect(s.current).toBe(2);
+  });
+
+  it('goBankrupt is refused while the liquidation value covers the debt, and without a debt', () => {
+    const s = shortOnRent();
+    expect(apply(s, 1, { type: 'goBankrupt' })).toEqual({ ok: false, reason: 'waitingForDebts' });
+    give(s, 0, B); // mortgage 30 → 40 ≥ 20
+    expect(apply(s, 0, { type: 'goBankrupt' })).toEqual({ ok: false, reason: 'canStillPay' });
+    expect(s.players[0].bankrupt).toBe(false);
+    const t = game(2);
+    expect(apply(t, 0, { type: 'goBankrupt' })).toEqual({ ok: false, reason: 'notNow' });
+    expect(apply(t, 0, { type: 'payDebt' })).toEqual({ ok: false, reason: 'notNow' });
+  });
+
+  it('bankruptcy to a player sells buildings to the bank and hands over cash, assets and lawyer cards', () => {
+    const s = game(3);
+    s.phase = { kind: 'manage', rollAgain: false };
+    s.current = 1;
+    give(s, 0, B, { houses: 2 }); give(s, 0, L, { houses: 2 }); // 4 × 25 = 100 to the creditor
+    give(s, 0, 5, { mortgaged: true });
+    s.players[0].cash = 10; s.players[0].lawyerCards = 1;
+    s.players[1].lawyerCards = 1;
+    s.debts.push({ debtor: 0, creditor: 1, amount: 500 });
+    expect(apply(s, 0, { type: 'goBankrupt' })).toEqual({ ok: true });
+    expect(s.players[0]).toMatchObject({ bankrupt: true, cash: 0, lawyerCards: 0 });
+    expect(s.players[1]).toMatchObject({ cash: START_MONEY + 110, lawyerCards: 2 });
+    expect(s.owned[B]).toEqual({ owner: 1, houses: 0, mortgaged: false });
+    expect(s.owned[L]).toEqual({ owner: 1, houses: 0, mortgaged: false });
+    expect(s.owned[5]).toEqual({ owner: 1, houses: 0, mortgaged: true });
+    expect(s.debts).toEqual([]);
+    expect(s.log.at(-1)).toEqual({ player: 0, key: 'bankruptToPlayer', params: { to: 1 } });
+    expect(s.winner).toBeNull();
+    expect(s.current).toBe(1);
+  });
+
+  it('bankruptcy to the bank resets the assets and returns lawyer cards to the deck', () => {
+    const s = game(3);
+    s.phase = { kind: 'manage', rollAgain: false };
+    give(s, 0, B, { houses: 3 }); give(s, 0, L, { houses: 3 });
+    give(s, 0, 5, { mortgaged: true });
+    s.players[0].cash = 10; s.players[0].lawyerCards = 2;
+    s.deck = s.deck.filter(c => c !== 'c01' && c !== 'c02');
+    s.debts.push({ debtor: 0, creditor: null, amount: 1000 });
+    expect(apply(s, 0, { type: 'goBankrupt' })).toEqual({ ok: true });
+    expect(s.owned[B]).toBeUndefined();
+    expect(s.owned[L]).toBeUndefined();
+    expect(s.owned[5]).toBeUndefined();
+    expect(s.players[0]).toMatchObject({ bankrupt: true, cash: 0, lawyerCards: 0 });
+    expect(s.deck.slice(-2).sort()).toEqual(['c01', 'c02']);
+    expect(s.deck).toHaveLength(30);
+    expect(s.players[1].cash).toBe(START_MONEY);
+    expect(s.log.at(-1)).toEqual({ player: 0, key: 'bankruptToBank' });
+  });
+
+  it('several creditors: bankrupt to the creditor of the oldest player-debt, others dropped', () => {
+    const s = game(4);
+    s.phase = { kind: 'manage', rollAgain: false };
+    give(s, 0, 5);
+    s.players[0].cash = 0;
+    s.debts.push(
+      { debtor: 0, creditor: null, amount: 100 },
+      { debtor: 0, creditor: 2, amount: 100 },
+      { debtor: 0, creditor: 1, amount: 100 },
+      { debtor: 3, creditor: 1, amount: 5000 },
+    );
+    expect(apply(s, 0, { type: 'goBankrupt' })).toEqual({ ok: true });
+    expect(s.owned[5].owner).toBe(2);
+    expect(s.debts).toEqual([{ debtor: 3, creditor: 1, amount: 5000 }]);
+    expect(s.players[1].cash).toBe(START_MONEY);
+  });
+
+  it('debts owed to a player who goes bankrupt are dropped', () => {
+    const s = game(3);
+    s.phase = { kind: 'manage', rollAgain: false };
+    s.players[1].cash = 0;
+    s.debts.push({ debtor: 1, creditor: 2, amount: 100 }, { debtor: 0, creditor: 1, amount: 9999 });
+    expect(apply(s, 1, { type: 'goBankrupt' })).toEqual({ ok: true });
+    expect(s.debts).toEqual([]);
+  });
+
+  it('the current player going bankrupt passes the turn', () => {
+    const s = game(4);
+    s.players[1].bankrupt = true;
+    s.doublesInRow = 2;
+    s.phase = { kind: 'manage', rollAgain: true };
+    s.players[0].cash = 0;
+    s.debts.push({ debtor: 0, creditor: null, amount: 100 });
+    expect(apply(s, 0, { type: 'goBankrupt' })).toEqual({ ok: true });
+    expect(s.current).toBe(2);
+    expect(s.phase).toEqual({ kind: 'roll' });
+    expect(s.doublesInRow).toBe(0);
+    expect(s.turnNumber).toBe(1);
+    expect(s.winner).toBeNull();
+  });
+
+  it('the last solvent player wins and everything is refused', () => {
+    const s = shortOnRent();
+    expect(apply(s, 0, { type: 'goBankrupt' })).toEqual({ ok: true });
+    expect(s.winner).toBe(1);
+    expect(s.players[1].cash).toBe(START_MONEY + 10);
+    expect(s.log.at(-1)).toEqual({ player: 1, key: 'won' });
+    expect(apply(s, 1, { type: 'roll' })).toEqual({ ok: false, reason: 'gameOver' });
+    expect(apply(s, 0, { type: 'endTurn' })).toEqual({ ok: false, reason: 'gameOver' });
+  });
+
+  it('a bankrupt seat is skipped in turn order and refused when it acts', () => {
+    const s = game(3);
+    s.players[1].bankrupt = true;
+    expect(apply(s, 1, { type: 'roll' })).toEqual({ ok: false, reason: 'bankrupt' });
+    s.debts.push({ debtor: 0, creditor: null, amount: 100 });
+    expect(apply(s, 1, { type: 'payDebt' })).toEqual({ ok: false, reason: 'bankrupt' });
+    s.debts = [];
+    roll(s, [1, 2]);
+    apply(s, 0, { type: 'decline' });
+    apply(s, 0, { type: 'endTurn' });
+    expect(s.current).toBe(2);
+  });
+
+  it('debt log keys and reasons have text in both dictionaries', () => {
+    for (const lang of ['pt', 'en'] as const) {
+      const d = BAIRRO_DICTIONARIES[lang];
+      for (const k of ['paidDebtPlayer', 'paidDebtBank', 'bankruptToPlayer', 'bankruptToBank', 'won']) expect(d.log[k], `${lang} log ${k}`).toBeTruthy();
+      for (const r of ['waitingForDebts', 'canStillPay', 'bankrupt']) expect(d.reasons[r], `${lang} reason ${r}`).toBeTruthy();
+    }
+  });
+});
+
+describe('liquidate', () => {
+  const pos = (id: string) => BOARD.findIndex(x => x.id === id);
+  const r3 = ['quitanda', 'acougue', 'peixaria'].map(pos); // houseCost 100
+  const r8 = ['academia', 'supermercado'].map(pos);        // houseCost 200
+  const KOMBI = pos('kombi'), MOTO = pos('mototaxi');
+
+  /** Every owned rua keeps max − min ≤ 1 buildings. */
+  function even(s: BairroState) {
+    for (const rua of [r3, r8]) {
+      const h = rua.map(i => s.owned[i]?.houses ?? 0);
+      expect(Math.max(...h) - Math.min(...h), `rua ${rua}`).toBeLessThanOrEqual(1);
+    }
+  }
+
+  function rich() {
+    const s = game(2);
+    s.players[0].cash = 0;
+    for (const i of r3) give(s, 0, i, { houses: 3 });
+    give(s, 0, r3[2], { houses: 4 });
+    for (const i of r8) give(s, 0, i, { houses: 2 });
+    give(s, 0, KOMBI); give(s, 0, MOTO);
+    return s;
+  }
+
+  it('sells from the most expensive rua first, evenly, and stops at the target', () => {
+    const s = rich();
+    liquidate(s, 0, 150);
+    expect(s.players[0].cash).toBe(200);
+    expect(r8.map(i => s.owned[i].houses)).toEqual([1, 1]);
+    expect(r3.map(i => s.owned[i].houses)).toEqual([3, 3, 4]);
+    even(s);
+  });
+
+  it('keeps every rua even at each step, then mortgages the cheapest first', () => {
+    for (let target = 0; target <= 2000; target += 50) {
+      const s = rich();
+      liquidate(s, 0, target);
+      even(s);
+      for (const i of [...r3, ...r8]) if (s.owned[i].mortgaged) expect(s.owned[i].houses).toBe(0);
+    }
+    const s = rich();
+    // all buildings: r8 4×100 = 400, r3 10×50 = 500 → 900; then quitanda (70), the cheapest, and stop
+    liquidate(s, 0, 950);
+    expect([...r3, ...r8].every(i => s.owned[i].houses === 0)).toBe(true);
+    expect(s.players[0].cash).toBe(970);
+    expect([...r3, MOTO, KOMBI, ...r8].map(i => s.owned[i].mortgaged)).toEqual([true, false, false, false, false, false, false]);
+  });
+
+  it('raises everything it can when the target is out of reach', () => {
+    const s = rich();
+    const all = liquidationValue(s, 0);
+    liquidate(s, 0, 1e9);
+    expect(s.players[0].cash).toBe(all);
+    expect(liquidationValue(s, 0)).toBe(all);
+    for (const i of [...r3, ...r8, KOMBI, MOTO]) expect(s.owned[i]).toMatchObject({ houses: 0, mortgaged: true });
+  });
+
+  it('does nothing when cash already covers the target', () => {
+    const s = rich();
+    s.players[0].cash = 100;
+    const before = JSON.stringify(s.owned);
+    liquidate(s, 0, 100);
+    expect(JSON.stringify(s.owned)).toBe(before);
   });
 });
