@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { beforeAll, describe, it, expect } from 'vitest';
 import { BOARD, RUAS } from '../board';
 import { DECK } from '../deck';
+import { runFuzz, runSimulation } from '../simkit';
 import { BAIRRO_DICTIONARIES } from './index';
 
 describe.each(['pt', 'en'] as const)('bairro dictionary %s', lang => {
@@ -16,5 +17,41 @@ describe.each(['pt', 'en'] as const)('bairro dictionary %s', lang => {
   });
   it('has the theme terms', () => {
     for (const t of ['puxadinho', 'predio', 'escritura', 'prefeitura', 'faliu', 'dono-do-bairro']) expect(d.terms[t], t).toBeTruthy();
+  });
+});
+
+describe('bairro log and reason keys', () => {
+  let logKeys = new Set<string>();
+  let reasons = new Set<string>();
+  beforeAll(() => {
+    const sim = runSimulation(200, 5000);
+    const fuzz = runFuzz(50, 3000);
+    logKeys = new Set([...sim.logKeys, ...fuzz.logKeys]);
+    reasons = new Set([...sim.reasons, ...fuzz.reasons]);
+  });
+
+  /** Dictionary keys the runs can't reach, each with why. */
+  const UNREACHED_LOG: Record<string, string> = {
+    tradeVoided: 'nothing can change while an offer is open, so an accepted offer is always still valid; covered in trades.test.ts',
+  };
+  const UNREACHED_REASONS: Record<string, string> = {
+    debtOpen: 'the debt gate in apply answers waitingForDebts before any asset rule runs; covered in engine.test.ts via canBuild',
+  };
+
+  it.each(['pt', 'en'] as const)('every key produced exists in %s', lang => {
+    const d = BAIRRO_DICTIONARIES[lang];
+    for (const k of logKeys) expect(d.log, k).toHaveProperty(k);
+    for (const k of reasons) expect(d.reasons, k).toHaveProperty(k);
+  });
+
+  it.each(['pt', 'en'] as const)('every %s log and reason key is produced or allowlisted with a reason', lang => {
+    const d = BAIRRO_DICTIONARIES[lang];
+    expect(Object.keys(d.log).filter(k => !logKeys.has(k) && !UNREACHED_LOG[k])).toEqual([]);
+    expect(Object.keys(d.reasons).filter(k => !reasons.has(k) && !UNREACHED_REASONS[k])).toEqual([]);
+  });
+
+  it('the allowlists name only keys that really are unreached', () => {
+    for (const k of Object.keys(UNREACHED_LOG)) expect(logKeys.has(k), k).toBe(false);
+    for (const k of Object.keys(UNREACHED_REASONS)) expect(reasons.has(k), k).toBe(false);
   });
 });

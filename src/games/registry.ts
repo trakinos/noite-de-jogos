@@ -1,9 +1,10 @@
 import type { GameId } from './catalog';
+import { bairroModule } from './bairro/module';
 import { dominionModule } from './dominion/module';
 import type { GameModule } from './module';
 
 /** Every game the host can run; a game without a module is not playable yet. */
-export const MODULES: Partial<Record<GameId, GameModule>> = { dominion: dominionModule };
+export const MODULES: Partial<Record<GameId, GameModule>> = { dominion: dominionModule, bairro: bairroModule };
 
 export function moduleFor(id: GameId): GameModule {
   const module = MODULES[id];
