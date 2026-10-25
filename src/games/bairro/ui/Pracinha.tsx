@@ -15,12 +15,14 @@ interface Props {
   names: string[];
   awaiting: boolean;
   onIntent(intent: BairroIntent): void;
+  /** The Trade button opens the trade dialog. */
+  onTrade(): void;
   /** Phones: no title, smaller dice, full-width buttons. */
   compact?: boolean;
 }
 
 /** The middle of the board: whose turn, the dice, the last move and your buttons. */
-export function Pracinha({ view, names, awaiting, onIntent, compact = false }: Props) {
+export function Pracinha({ view, names, awaiting, onIntent, onTrade, compact = false }: Props) {
   const { tr } = useLang();
   const text = useBairroText();
   // The debt dialog owns Pay and Faliu while you owe.
@@ -54,7 +56,7 @@ export function Pracinha({ view, names, awaiting, onIntent, compact = false }: P
               type="button"
               className={i === 0 ? 'primary' : ''}
               disabled={!a.enabled}
-              onClick={() => a.intent && onIntent(a.intent)}
+              onClick={() => (a.id === 'trade' ? onTrade() : a.intent && onIntent(a.intent))}
             >
               {label(a)}
             </button>

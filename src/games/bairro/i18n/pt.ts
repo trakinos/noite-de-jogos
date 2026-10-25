@@ -111,6 +111,7 @@ export const pt: BairroDictionary = {
     emptyOffer: 'Troca vazia',
     duplicateAsset: 'Propriedade repetida na troca',
     notEnoughLawyerCards: 'Cartas de advogado insuficientes',
+    tooManyTrades: 'Chega de propostas de troca neste turno',
   },
   terms: {
     puxadinho: 'puxadinho', predio: 'prédio', escritura: 'escritura', prefeitura: 'Prefeitura',
@@ -138,5 +139,13 @@ export const pt: BairroDictionary = {
     waitPlaying: '{name} está jogando', waitDebts: '{names} precisam pagar dívidas', waitTrade: '{name} está respondendo a uma troca', gameOver: 'Fim de jogo',
     debtTitle: 'Você está devendo', debtOwesTo: 'para {to}', debtTotal: 'Total: {amount}', debtCash: 'Seu dinheiro: {amount}',
     debtRaise: 'Levante dinheiro', debtRaiseNone: 'Você não tem mais nada para vender ou hipotecar.', debtOpenHint: 'Você tem uma dívida para pagar.',
+    actTrade: 'Propor troca',
+    tradeTitle: 'Troca', tradeWith: 'Trocar com', tradeIGive: 'Eu dou', tradeIGet: 'Eu recebo',
+    tradeCash: 'Dinheiro (máx. {max})', tradeCards: 'Cartas de advogado', tradeCardsPlus: 'Mais uma carta de advogado', tradeCardsMinus: 'Menos uma carta de advogado',
+    tradeCardsOne: '1 carta de advogado', tradeCardsMany: '{n} cartas de advogado', tradeNothing: 'nada', tradeNoAssets: 'Nenhuma escritura',
+    tradeSummary: 'Você dá {give} e recebe {get}.', tradeUsed: '{n} de {max} propostas usadas neste turno',
+    tradeSend: 'Enviar proposta', tradeWaiting: 'Esperando {name} responder…', tradeCancel: 'Cancelar proposta',
+    answerTitle: 'Proposta de troca', answerIntro: '{name} propõe uma troca', answerYouGet: 'Você recebe', answerYouGive: 'Você dá',
+    answerAccept: 'Aceitar', answerDecline: 'Recusar',
   },
 };

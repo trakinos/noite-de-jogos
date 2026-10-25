@@ -46,6 +46,9 @@ export function validateOffer(s: BairroState, offer: Offer): string | null {
   return validateSide(s, offer.from, give) ?? validateSide(s, offer.to, get);
 }
 
+/** Proposals allowed per turn. */
+export const MAX_TRADES_PER_TURN = 3;
+
 export function proposeTrade(s: BairroState, player: number, intent: BairroIntent): ApplyResult {
   if (s.phase.kind !== 'roll' && s.phase.kind !== 'manage') return fail('notNow');
   const terms = (intent as { offer?: Partial<Offer> }).offer;
@@ -55,6 +58,8 @@ export function proposeTrade(s: BairroState, player: number, intent: BairroInten
   const offer: Offer = { from: player, to: terms.to, give, get };
   const why = validateOffer(s, offer);
   if (why) return fail(why);
+  if (s.tradesThisTurn >= MAX_TRADES_PER_TURN) return fail('tooManyTrades');
+  s.tradesThisTurn++;
   s.offer = offer;
   log(s, player, 'tradeProposed', { to: offer.to });
   return ok();

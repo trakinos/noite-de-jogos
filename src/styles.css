@@ -1088,3 +1088,35 @@ button.link:hover { color: var(--text); }
 .besc__action { display: grid; gap: 4px; }
 .besc__action button { min-height: 48px; width: 100%; }
 .besc__reason { color: var(--muted); }
+
+/* Debt dialog */
+.bdebt__list, .bdebt__assets { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.bdebt__sub { margin: 4px 0 0; font-size: 15px; }
+.bdebt__assets li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; }
+.bdebt__name { flex: 1 1 8rem; min-width: 0; font-weight: 700; overflow-wrap: anywhere; }
+.bdebt__assets button { min-height: 44px; flex: 0 1 auto; }
+
+/* Trade dialogs */
+.btrade { max-width: 560px; }
+.btrade__who { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.btrade__who select { min-height: 44px; padding: 4px 10px; border-radius: var(--r-md); border: 2px solid var(--border); background: var(--surface); color: var(--text); font: inherit; }
+.btrade__cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.btrade__col { min-width: 0; display: grid; align-content: start; gap: 8px; }
+.btrade__col h3 { margin: 0; font-size: 15px; }
+.btrade__assets, .btrade__lines { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.btrade__lines li { padding: 6px 8px; border-radius: var(--r-md); background: var(--surface-2); font-weight: 700; overflow-wrap: anywhere; }
+.btrade__assets label { display: flex; align-items: flex-start; gap: 8px; min-height: 44px; padding: 6px 8px; border-radius: var(--r-md); border: 1px solid var(--border); cursor: pointer; }
+.btrade__assets label.is-off { opacity: 0.6; cursor: default; }
+.btrade__assets input { flex: none; width: 20px; height: 20px; min-height: 0; margin: 2px 0 0; padding: 0; }
+.btrade__assets span { min-width: 0; display: grid; overflow-wrap: anywhere; }
+.btrade__cash { display: grid; gap: 2px; font-weight: 700; }
+.btrade__cash input { width: 100%; min-height: 44px; }
+.btrade__cards { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; font-weight: 700; }
+.btrade__cards span { flex: 1 1 100%; }
+.btrade__cards button { min-width: 44px; min-height: 44px; padding: 0; }
+.btrade__cards b { min-width: 1.5em; text-align: center; font-variant-numeric: tabular-nums; }
+.btrade__summary { margin: 0; font-weight: 800; }
+.btrade__used { margin: 0; }
+@media (max-width: 479px) {
+  .btrade__cols { grid-template-columns: 1fr; }
+}

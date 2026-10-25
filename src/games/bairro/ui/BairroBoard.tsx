@@ -14,6 +14,8 @@ import { EscrituraDialog } from './EscrituraDialog';
 import { escrituraFor } from './escritura';
 import { MapBoard } from './MapBoard';
 import { StreetBoard } from './StreetBoard';
+import { TradeAnswerDialog } from './TradeAnswerDialog';
+import { TradeDialog } from './TradeDialog';
 import { useMediaQuery } from './useMediaQuery';
 
 /** Computers get the neighborhood map; narrower screens get the street in focus. */
@@ -51,6 +53,11 @@ export function BairroBoard({ view, lobby, code, error, clock, awaiting, onInten
     if (escrituraFor(view, pos)) setDeedPos(pos);
   };
 
+  // The trade dialog follows the turn: it can't stay open once you can no longer propose, and it turns into a wait while your offer stands.
+  const [tradeOpen, setTradeOpen] = useState(false);
+  const proposing = view.pending === 'roll' || view.pending === 'manage';
+  const myOffer = view.offer?.from === view.you;
+
   useEffect(() => {
     if (!error) return;
     const timer = setTimeout(onDismissError, TOAST_MS);
@@ -59,7 +66,7 @@ export function BairroBoard({ view, lobby, code, error, clock, awaiting, onInten
 
   const reasons = BAIRRO_DICTIONARIES[lang].reasons;
   const errorText = error && (Object.hasOwn(reasons, error) ? reasons[error] : tr.reason(error));
-  const layout = { view, names, colors, awaiting, onIntent, onOpenSquare };
+  const layout = { view, names, colors, awaiting, onIntent, onOpenSquare, onTrade: () => setTradeOpen(true) };
 
   return (
     <main className={`bboard ${wide ? 'bboard--wide' : 'bboard--narrow'}`}>
@@ -104,6 +111,12 @@ export function BairroBoard({ view, lobby, code, error, clock, awaiting, onInten
       )}
 
       {view.pending === 'debt' && <DebtDialog view={view} names={names} awaiting={awaiting} onIntent={onIntent} />}
+
+      {((tradeOpen && proposing) || myOffer) && (
+        <TradeDialog view={view} names={names} awaiting={awaiting} onIntent={onIntent} onClose={() => setTradeOpen(false)} />
+      )}
+
+      {view.pending === 'tradeAnswer' && <TradeAnswerDialog view={view} names={names} clock={clock} awaiting={awaiting} onIntent={onIntent} />}
 
       {errorText && (
         <div className="toast bboard__toast" role="alert">

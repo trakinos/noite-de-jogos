@@ -104,7 +104,10 @@ export function DebtDialog({ view, names, awaiting, onIntent }: Props) {
           body={text.ui('bankruptBody')}
           cancel={text.ui('bankruptCancel')}
           confirm={text.ui('actGoBankrupt')}
-          onCancel={() => setConfirmBust(false)}
+          onCancel={() => {
+            setConfirmBust(false);
+            bustButton.current?.focus();
+          }}
           onConfirm={() => {
             setConfirmBust(false);
             onIntent({ type: 'goBankrupt' });

@@ -111,6 +111,7 @@ export const en: BairroDictionary = {
     emptyOffer: 'Empty trade',
     duplicateAsset: 'Duplicate property in the trade',
     notEnoughLawyerCards: 'Not enough lawyer cards',
+    tooManyTrades: 'No more trade offers this turn',
   },
   terms: {
     puxadinho: 'puxadinho (ramshackle add-on)', predio: 'prédio (building)', escritura: 'escritura (deed)',
@@ -138,5 +139,13 @@ export const en: BairroDictionary = {
     waitPlaying: '{name} is playing', waitDebts: '{names} must pay their debts', waitTrade: '{name} is answering a trade', gameOver: 'Game over',
     debtTitle: 'You owe money', debtOwesTo: 'to {to}', debtTotal: 'Total: {amount}', debtCash: 'Your cash: {amount}',
     debtRaise: 'Raise money', debtRaiseNone: 'You have nothing left to sell or mortgage.', debtOpenHint: 'You have a debt to pay.',
+    actTrade: 'Propose a trade',
+    tradeTitle: 'Trade', tradeWith: 'Trade with', tradeIGive: 'I give', tradeIGet: 'I get',
+    tradeCash: 'Cash (max {max})', tradeCards: 'Lawyer cards', tradeCardsPlus: 'One more lawyer card', tradeCardsMinus: 'One fewer lawyer card',
+    tradeCardsOne: '1 lawyer card', tradeCardsMany: '{n} lawyer cards', tradeNothing: 'nothing', tradeNoAssets: 'No escrituras',
+    tradeSummary: 'You give {give} and get {get}.', tradeUsed: '{n} of {max} offers used this turn',
+    tradeSend: 'Send offer', tradeWaiting: 'Waiting for {name} to answer…', tradeCancel: 'Cancel offer',
+    answerTitle: 'Trade offer', answerIntro: '{name} proposes a trade', answerYouGet: 'You get', answerYouGive: 'You give',
+    answerAccept: 'Accept', answerDecline: 'Decline',
   },
 };

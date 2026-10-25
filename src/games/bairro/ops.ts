@@ -58,4 +58,5 @@ export function passTurn(s: BairroState): void {
   s.phase = { kind: 'roll' };
   s.doublesInRow = 0;
   s.turnNumber++;
+  s.tradesThisTurn = 0;
 }

@@ -16,10 +16,11 @@ export interface LayoutProps {
   awaiting: boolean;
   onIntent(intent: BairroIntent): void;
   onOpenSquare(pos: number): void;
+  onTrade(): void;
 }
 
 /** The computer board: the bairro seen from above, a road around the ring and the Pracinha in the middle. */
-export function MapBoard({ view, names, colors, awaiting, onIntent, onOpenSquare }: LayoutProps) {
+export function MapBoard({ view, names, colors, awaiting, onIntent, onOpenSquare, onTrade }: LayoutProps) {
   return (
     <div className="bmap">
       <div className="bmap__ring">
@@ -29,7 +30,7 @@ export function MapBoard({ view, names, colors, awaiting, onIntent, onOpenSquare
           </div>
         ))}
         <div className="bmap__park">
-          <Pracinha view={view} names={names} awaiting={awaiting} onIntent={onIntent} />
+          <Pracinha view={view} names={names} awaiting={awaiting} onIntent={onIntent} onTrade={onTrade} />
         </div>
       </div>
       <PlayersPanel view={view} names={names} colors={colors} onOpenSquare={onOpenSquare} />
