@@ -126,7 +126,7 @@ export const pt: BairroDictionary = {
     bankruptCancel: 'Ainda não',
     yourTurn: 'Sua vez', turnOf: 'Vez de {name}', dice: 'Dados: {d1} e {d2}', noRollYet: 'Ninguém rolou ainda',
     players: 'Jogadores', youTag: 'você', deeds: '{n} escrituras', deedOne: '1 escritura',
-    streetMap: 'Mapa do bairro', streetStrip: 'Ruas do bairro', playersSheet: 'Ver jogadores e escrituras', bankruptTag: 'faliu',
+    streetStrip: 'Ruas do bairro', playersSheet: 'Ver jogadores e escrituras', bankruptTag: 'faliu',
     yourDeeds: 'Suas escrituras', noDeeds: 'Nenhuma ainda', servicos: 'Serviços', wholeRua: 'rua completa',
   },
 };

@@ -126,7 +126,7 @@ export const en: BairroDictionary = {
     bankruptCancel: 'Not yet',
     yourTurn: 'Your turn', turnOf: '{name}\'s turn', dice: 'Dice: {d1} and {d2}', noRollYet: 'Nobody has rolled yet',
     players: 'Players', youTag: 'you', deeds: '{n} deeds', deedOne: '1 deed',
-    streetMap: 'Neighborhood map', streetStrip: 'Neighborhood streets', playersSheet: 'See players and deeds', bankruptTag: 'bust',
+    streetStrip: 'Neighborhood streets', playersSheet: 'See players and deeds', bankruptTag: 'bust',
     yourDeeds: 'Your escrituras', noDeeds: 'None yet', servicos: 'Services', wholeRua: 'whole street',
   },
 };
