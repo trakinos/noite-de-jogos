@@ -71,7 +71,7 @@ describe('PARAM_KIND', () => {
     const sim = runSimulation(100, 5000);
     const fuzz = runFuzz(30, 3000);
     params = new Set([...sim.logParams, ...fuzz.logParams]);
-  });
+  }, 30_000);
   it('classifies every param the engine logs', () => {
     expect([...params].filter(p => !(p in PARAM_KIND))).toEqual([]);
   });

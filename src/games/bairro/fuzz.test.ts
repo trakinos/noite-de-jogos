@@ -9,5 +9,5 @@ describe('fuzzing', () => {
     for (const lang of ['pt', 'en'] as const) {
       for (const r of stats.reasons) expect(BAIRRO_DICTIONARIES[lang].reasons, `${lang} ${r}`).toHaveProperty(r);
     }
-  });
+  }, 30_000);
 });

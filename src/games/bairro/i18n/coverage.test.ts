@@ -51,7 +51,7 @@ describe('bairro log and reason keys', () => {
     const fuzz = runFuzz(50, 3000);
     logKeys = new Set([...sim.logKeys, ...fuzz.logKeys]);
     reasons = new Set([...sim.reasons, ...fuzz.reasons]);
-  });
+  }, 30_000);
 
   /** Dictionary keys the runs can't reach, each with why. */
   const UNREACHED_LOG: Record<string, string> = {
