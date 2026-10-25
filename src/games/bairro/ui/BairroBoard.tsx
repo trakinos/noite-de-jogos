@@ -50,6 +50,8 @@ export function BairroBoard({ view, lobby, code, error, clock, awaiting, onInten
   const colors = view.players.map(p => playerColor(lobby, p.id));
   // Tapping a square or an escritura opens its escritura; squares that are not deeds do nothing.
   const [deedPos, setDeedPos] = useState<number | null>(null);
+  // An escritura left open is closed by the next turn.
+  useEffect(() => setDeedPos(null), [view.turnNumber]);
   const onOpenSquare = (pos: number) => {
     if (escrituraFor(view, pos)) setDeedPos(pos);
   };

@@ -129,9 +129,10 @@ describe('trade action', () => {
   it('is absent with nobody left to trade with, and disabled once the 3 proposals are used', () => {
     const s = game(3);
     s.tradesThisTurn = 3;
-    expect(actionsFor(viewFor(s, 0), false).find(a => a.id === 'trade')?.enabled).toBe(false);
+    expect(actionsFor(viewFor(s, 0), false).find(a => a.id === 'trade')).toMatchObject({ enabled: false, reason: 'tooManyTrades' });
+    expect(actionsFor(viewFor(s, 0), true).find(a => a.id === 'trade')?.reason).toBe('tooManyTrades');
     s.tradesThisTurn = 2;
-    expect(actionsFor(viewFor(s, 0), false).find(a => a.id === 'trade')?.enabled).toBe(true);
+    expect(actionsFor(viewFor(s, 0), false).find(a => a.id === 'trade')).toEqual({ id: 'trade', intent: null, enabled: true, label: 'actTrade' });
     s.players[1]!.bankrupt = true;
     s.players[2]!.bankrupt = true;
     expect(ids(viewFor(s, 0))).not.toContain('trade');

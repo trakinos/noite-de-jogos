@@ -44,7 +44,7 @@ export function MapBoard({ view, names, colors, awaiting, onIntent, onOpenSquare
         <PlayersPanel view={view} names={names} colors={colors} onOpenSquare={onOpenSquare} />
         <section className="panel bpanel__box" aria-label={text.ui('log')}>
           <h2>{text.ui('log')}</h2>
-          <BairroLog entries={view.log} names={names} />
+          <BairroLog entries={view.log} total={view.logTotal} names={names} />
         </section>
       </div>
     </div>

@@ -90,7 +90,7 @@ export function StreetBoard({ view, names, colors, awaiting, onIntent, onOpenSqu
       )}
       {logSheet && (
         <BairroDialog title={text.ui('log')} onClose={() => setLogSheet(false)}>
-          <BairroLog entries={view.log} names={names} />
+          <BairroLog entries={view.log} total={view.logTotal} names={names} />
         </BairroDialog>
       )}
     </div>

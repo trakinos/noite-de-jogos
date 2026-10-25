@@ -8,24 +8,32 @@ export const LOG_SHOWN = 50;
 
 interface Props {
   entries: BairroLogEntry[];
+  /** `view.logTotal`: every entry ever logged, which keeps counting once the wire caps `entries`. */
+  total: number;
   names: string[];
 }
 
+/** The latest rows with their absolute log index, a stable key even when the wire log is capped. */
+export function logRows(entries: BairroLogEntry[], total: number, limit = LOG_SHOWN): { index: number; entry: BairroLogEntry }[] {
+  const shown = entries.slice(-limit);
+  const first = total - shown.length;
+  return shown.map((entry, i) => ({ index: first + i, entry }));
+}
+
 /** The last moves in words, newest at the bottom like Dominion's log; it scrolls to the newest. */
-export function BairroLog({ entries, names }: Props) {
+export function BairroLog({ entries, total, names }: Props) {
   const { tr } = useLang();
   const text = useBairroText();
   const ref = useRef<HTMLOListElement>(null);
-  const shown = entries.slice(-LOG_SHOWN);
-  const first = entries.length - shown.length;
+  const rows = logRows(entries, total);
   useEffect(() => {
     const el = ref.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [entries.length]);
+  }, [total]);
   return (
     <ol className="blog" ref={ref} aria-label={tr.t('gameLog')} aria-live="polite">
-      {shown.map((entry, i) => (
-        <li key={first + i}>{text.logLine(entry, names)}</li>
+      {rows.map(({ index, entry }) => (
+        <li key={index}>{text.logLine(entry, names)}</li>
       ))}
     </ol>
   );

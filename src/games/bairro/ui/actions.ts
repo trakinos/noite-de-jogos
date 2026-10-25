@@ -14,6 +14,8 @@ export interface Action {
   /** A key of the bairro `ui` strings; `amount`, when set, fills its `{amount}`. */
   label: string;
   amount?: number;
+  /** A key of the bairro `reasons`, when disabled for a reason the player can fix or wait out. */
+  reason?: string;
 }
 
 const act = (id: ActionId, label: string, enabled = true, amount?: number): Action => ({
@@ -21,8 +23,11 @@ const act = (id: ActionId, label: string, enabled = true, amount?: number): Acti
 });
 
 /** Trading is open on your own turn before and after the move, with someone to trade with; disabled once the turn's proposals are used. */
-const tradeAction = (view: BairroView): Action[] =>
-  tradePartners(view).length === 0 ? [] : [{ id: 'trade', intent: null, enabled: tradesLeft(view) > 0, label: 'actTrade' }];
+const tradeAction = (view: BairroView): Action[] => {
+  if (tradePartners(view).length === 0) return [];
+  const enabled = tradesLeft(view) > 0;
+  return [{ id: 'trade', intent: null, enabled, label: 'actTrade', ...(enabled ? {} : { reason: 'tooManyTrades' }) }];
+};
 
 /** The main buttons for this player now. */
 function available(view: BairroView): Action[] {

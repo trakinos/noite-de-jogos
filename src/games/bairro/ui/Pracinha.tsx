@@ -63,6 +63,7 @@ export function Pracinha({ view, names, awaiting, onIntent, onTrade, compact = f
               {label(a)}
             </button>
           ))}
+          {actions.map(a => a.reason && <small key={a.id} className="besc__reason">{text.reason(a.reason)}</small>)}
         </div>
       )}
     </div>
