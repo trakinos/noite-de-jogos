@@ -119,6 +119,13 @@ export const pt: BairroDictionary = {
   ui: {
     ownerFallback: 'dono',
     forSale: 'à venda', houses: '{n} puxadinhos', houseOne: '1 puxadinho', predio: 'prédio', mortgagedTag: 'hipotecado',
-    underConstruction: 'Em construção',
+    actRoll: 'Rolar os dados', actRollAgain: 'Rolar de novo', actBuy: 'Comprar por {amount}', actDecline: 'Deixar pra lá',
+    actEndTurn: 'Encerrar vez', actPayJailFine: 'Pagar fiança de {amount}', actUseLawyer: 'Usar Carta do Advogado',
+    actPayDebt: 'Pagar {amount}', actGoBankrupt: 'Faliu',
+    bankruptTitle: 'Declarar que faliu?', bankruptBody: 'Você sai do jogo e suas escrituras vão para quem você deve. Não dá para desfazer.',
+    bankruptCancel: 'Ainda não',
+    yourTurn: 'Sua vez', turnOf: 'Vez de {name}', dice: 'Dados: {d1} e {d2}', noRollYet: 'Ninguém rolou ainda',
+    players: 'Jogadores', youTag: 'você', pontos: '{n} pontos', pontoOne: '1 ponto', bankruptTag: 'faliu',
+    yourDeeds: 'Suas escrituras', noDeeds: 'Nenhuma ainda', servicos: 'Serviços', wholeRua: 'rua completa',
   },
 };

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { asBairroView } from '../games/bairro/module';
 import { asDominionView } from '../games/dominion/module';
 import { describePeerError } from '../net/errors';
 import { joinLink } from '../net/roomCode';
@@ -207,7 +208,21 @@ export function App() {
       );
     }
 
-    if (screens === 'bairro') return <BairroScreens onLeave={leave} />;
+    if (screens === 'bairro') {
+      return (
+        <BairroScreens
+          view={asBairroView(state.view)}
+          lobby={state.lobby}
+          code={active.code}
+          error={state.error}
+          clock={state.clock}
+          awaiting={state.awaiting}
+          onIntent={(intent) => active.session.sendIntent(intent)}
+          onDismissError={() => active.session.dismissError()}
+          onEndGame={active.host ? () => active.host?.backToLobby() : undefined}
+        />
+      );
+    }
 
     const view = asDominionView(state.view);
     if (view.result) {

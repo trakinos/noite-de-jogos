@@ -964,13 +964,73 @@ button.link:hover { color: var(--text); }
 .bsq__awning { align-self: stretch; height: 6px; margin: 0 -2px; flex: none;
   background-image: repeating-linear-gradient(90deg, transparent 0 5px, rgb(255 255 255 / 0.45) 5px 10px); }
 .bsq--strip .bsq__awning { height: 10px; }
-.bsq__name { overflow-wrap: anywhere; font-weight: 600; }
+.bsq__name { overflow-wrap: anywhere; hyphens: auto; font-weight: 600; }
 .bsq__icon { font-size: 1.1em; }
 .bsq--strip .bsq__icon { font-size: 1.6em; }
 .bsq__price { color: var(--muted); }
 .bsq__owner { align-self: stretch; height: 4px; margin: auto -2px 0; flex: none; }
 .bsq__houses { font-size: 0.8em; letter-spacing: -0.1em; }
-.bsq--mortgaged { opacity: 0.55; background-image: repeating-linear-gradient(135deg, transparent 0 6px, var(--border) 6px 7px); }
+/* Mortgaged: striped and faded, but the text stays at full contrast. */
+.bsq--mortgaged { background-color: var(--surface-2); background-image: repeating-linear-gradient(135deg, transparent 0 6px, var(--border) 6px 8px); }
+.bsq--mortgaged .bsq__awning, .bsq--mortgaged .bsq__icon, .bsq--mortgaged .bsq__owner { opacity: 0.45; }
 .bsq__tokens { position: absolute; right: 2px; bottom: 6px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px; max-width: 70%; }
 .bsq__token { width: 0.7em; height: 0.7em; border-radius: 50%; border: 1px solid var(--surface); box-shadow: 0 0 0 1px var(--text); }
 .bsq--strip .bsq__token { width: 1em; height: 1em; }
+
+/* Bairro map colors: grass, road and the Pracinha's lawn. */
+:root { --bairro-grass: #7a8a6a; --bairro-road: #55524c; --bairro-lawn: #9cc27a; --bairro-lawn-edge: #8ab066; --bairro-path: #cdbb97; }
+@media (prefers-color-scheme: dark) {
+  :root { --bairro-grass: #3a4433; --bairro-road: #1f1d1a; --bairro-lawn: #4d6a3a; --bairro-lawn-edge: #425c31; --bairro-path: #5a4d36; }
+}
+.bboard { display: grid; gap: 12px; padding: 0 24px 24px; max-width: 1280px; margin: 0 auto; }
+.bboard__top { grid-area: auto; }
+.bboard__top .timer { min-width: 160px; }
+.bboard__toast { bottom: 24px; }
+.bmap { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; align-items: start; }
+.bboard--narrow .bmap { grid-template-columns: minmax(0, 1fr); }
+.bmap__ring {
+  display: grid; grid-template-columns: 1.5fr repeat(9, 1fr) 1.5fr; grid-template-rows: 1.5fr repeat(9, 1fr) 1.5fr;
+  gap: 3px; aspect-ratio: 1; width: min(100%, calc(100vh - 110px)); min-width: 0; margin: 0 auto; padding: 8px;
+  background: var(--bairro-grass); border-radius: var(--r-lg); outline: 6px solid var(--bairro-road); outline-offset: -3px;
+}
+.bmap__cell { display: grid; min-width: 0; min-height: 0; }
+.bmap__ring .bsq { font-size: 0.66rem; border: 0; border-radius: 6px 6px 2px 2px; box-shadow: 0 1px 0 rgb(0 0 0 / 0.15); }
+.bmap__ring .bsq__awning { height: 22%; }
+.bmap__park {
+  grid-row: 2 / 11; grid-column: 2 / 11; display: grid; place-items: center; margin: 10px; min-height: 0;
+  border-radius: 50%; box-shadow: inset 0 0 0 6px var(--bairro-path);
+  background: radial-gradient(circle, var(--bairro-lawn) 0 45%, var(--bairro-lawn-edge) 46% 60%, var(--bairro-path) 61%);
+}
+.pracinha {
+  display: grid; justify-items: center; gap: 8px; max-width: 70%; padding: 14px 18px; text-align: center;
+  background: color-mix(in srgb, var(--surface) 88%, transparent); border-radius: var(--r-lg); box-shadow: var(--e1);
+}
+.pracinha__title { margin: 0; font-size: 20px; }
+.pracinha__turn { margin: 0; font-weight: 800; }
+.pracinha__log { margin: 0; font-size: 13px; color: var(--muted); font-weight: 600; }
+.pracinha__dice { display: flex; gap: 8px; }
+.bdie {
+  width: 40px; height: 40px; display: grid; place-items: center; border-radius: var(--r-sm);
+  background: var(--surface); color: var(--text); border: 2px solid var(--border); box-shadow: var(--e1);
+  font-family: var(--font-display); font-weight: 800; font-size: 20px;
+}
+.pracinha__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.bpanel { display: grid; gap: 12px; }
+.bpanel__box { padding: 14px 16px; }
+.bpanel__box h2 { margin: 0 0 8px; }
+.bpanel__box p { margin: 0; }
+.bpanel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.bplayer { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; padding: 4px 6px; border-radius: var(--r-sm); font-size: 14px; }
+.bplayer.is-current { background: var(--surface-2); }
+.bplayer.is-bankrupt { color: var(--muted); text-decoration: line-through; }
+.bplayer__name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.bplayer__cash { font-weight: 800; }
+.bplayer__tag { font-size: 12px; font-weight: 800; padding: 1px 6px; border-radius: 99px; background: var(--surface-2); color: var(--muted); }
+.bdot { width: 12px; height: 12px; flex: none; border-radius: 50%; background: var(--player); }
+.bswatch { width: 12px; height: 12px; flex: none; border-radius: 2px; display: inline-block; }
+.bdeeds + .bdeeds { margin-top: 8px; }
+.bdeeds h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 4px; font-size: 13px; }
+.bdeeds__whole { color: var(--online); }
+.bdeed { width: 100%; min-height: 36px; padding: 0 10px; justify-content: flex-start; gap: 8px; font-size: 13px; border-width: 1px; }
+.bdeed__houses { font-size: 12px; }
+.bdeed--mortgaged { background-image: repeating-linear-gradient(135deg, transparent 0 6px, var(--border) 6px 7px); }

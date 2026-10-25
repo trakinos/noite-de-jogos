@@ -119,6 +119,13 @@ export const en: BairroDictionary = {
   ui: {
     ownerFallback: 'owner',
     forSale: 'for sale', houses: '{n} puxadinhos', houseOne: '1 puxadinho', predio: 'prédio', mortgagedTag: 'mortgaged',
-    underConstruction: 'Under construction',
+    actRoll: 'Roll the dice', actRollAgain: 'Roll again', actBuy: 'Buy for {amount}', actDecline: 'Leave it',
+    actEndTurn: 'End turn', actPayJailFine: 'Pay {amount} bail', actUseLawyer: 'Use the lawyer card',
+    actPayDebt: 'Pay {amount}', actGoBankrupt: 'Go bust',
+    bankruptTitle: 'Go bust?', bankruptBody: 'You leave the game and your escrituras go to whoever you owe. This can\'t be undone.',
+    bankruptCancel: 'Not yet',
+    yourTurn: 'Your turn', turnOf: '{name}\'s turn', dice: 'Dice: {d1} and {d2}', noRollYet: 'Nobody has rolled yet',
+    players: 'Players', youTag: 'you', pontos: '{n} pontos', pontoOne: '1 ponto', bankruptTag: 'bust',
+    yourDeeds: 'Your escrituras', noDeeds: 'None yet', servicos: 'Services', wholeRua: 'whole street',
   },
 };

@@ -3,6 +3,9 @@ import { BOARD, RUAS, unmortgageCost } from './board';
 import type { PontoSquare, RuaId } from './board';
 import type { BairroState } from './types';
 
+/** The part of the state these rules read, so a player's view works too. */
+export type AssetState = Pick<BairroState, 'players' | 'owned' | 'phase' | 'current' | 'offer' | 'debts'>;
+
 /** A prédio is the fifth level. */
 export const MAX_LEVEL = 5;
 
@@ -11,7 +14,7 @@ export function ruaPositions(rua: RuaId): number[] {
   return RUAS[rua].map(id => BOARD.findIndex(x => x.id === id));
 }
 
-export function ownsWholeRua(s: BairroState, player: number, rua: RuaId): boolean {
+export function ownsWholeRua(s: AssetState, player: number, rua: RuaId): boolean {
   return ruaPositions(rua).every(i => s.owned[i]?.owner === player);
 }
 
@@ -20,7 +23,7 @@ export function ownsWholeRua(s: BairroState, player: number, rua: RuaId): boolea
  * A player who owes may raise money (sell, mortgage) in any phase, on or off turn, but not spend it.
  * On their own turn, raising is also allowed in `buy`, to fund the purchase.
  */
-export function canManageAssets(s: BairroState, player: number, raising: boolean): string | null {
+export function canManageAssets(s: AssetState, player: number, raising: boolean): string | null {
   if (s.debts.some(d => d.debtor === player)) return raising ? null : 'debtOpen';
   if (player !== s.current) return 'notYourTurn';
   if (s.phase.kind !== 'roll' && s.phase.kind !== 'manage' && !(raising && s.phase.kind === 'buy')) return 'notNow';
@@ -33,16 +36,16 @@ function squareAt(pos: unknown) {
   return Number.isInteger(pos) && (pos as number) >= 0 && (pos as number) < BOARD.length ? BOARD[pos as number] : undefined;
 }
 
-function pontoAt(s: BairroState, player: number, pos: unknown): { sq: PontoSquare; pos: number } | string {
+function pontoAt(s: AssetState, player: number, pos: unknown): { sq: PontoSquare; pos: number } | string {
   const sq = squareAt(pos);
   if (!sq || sq.kind !== 'ponto') return 'notAPonto';
   if (s.owned[pos as number]?.owner !== player) return 'notOwner';
   return { sq, pos: pos as number };
 }
 
-const housesOf = (s: BairroState, positions: number[]) => positions.map(i => s.owned[i]?.houses ?? 0);
+const housesOf = (s: AssetState, positions: number[]) => positions.map(i => s.owned[i]?.houses ?? 0);
 
-export function canBuild(s: BairroState, player: number, pos: number): string | null {
+export function canBuild(s: AssetState, player: number, pos: number): string | null {
   const gate = canManageAssets(s, player, false);
   if (gate) return gate;
   const t = pontoAt(s, player, pos);
@@ -57,7 +60,7 @@ export function canBuild(s: BairroState, player: number, pos: number): string | 
   return null;
 }
 
-export function canSell(s: BairroState, player: number, pos: number): string | null {
+export function canSell(s: AssetState, player: number, pos: number): string | null {
   const gate = canManageAssets(s, player, true);
   if (gate) return gate;
   const t = pontoAt(s, player, pos);
@@ -68,7 +71,7 @@ export function canSell(s: BairroState, player: number, pos: number): string | n
   return null;
 }
 
-export function canMortgage(s: BairroState, player: number, pos: number): string | null {
+export function canMortgage(s: AssetState, player: number, pos: number): string | null {
   const gate = canManageAssets(s, player, true);
   if (gate) return gate;
   const sq = squareAt(pos);
@@ -79,7 +82,7 @@ export function canMortgage(s: BairroState, player: number, pos: number): string
   return null;
 }
 
-export function canUnmortgage(s: BairroState, player: number, pos: number): string | null {
+export function canUnmortgage(s: AssetState, player: number, pos: number): string | null {
   const gate = canManageAssets(s, player, false);
   if (gate) return gate;
   const sq = squareAt(pos);
@@ -91,7 +94,7 @@ export function canUnmortgage(s: BairroState, player: number, pos: number): stri
 }
 
 /** Cash a player could raise: cash + half the cost of every building + mortgage value of every unmortgaged asset. */
-export function liquidationValue(s: BairroState, player: number): number {
+export function liquidationValue(s: AssetState, player: number): number {
   let total = s.players[player].cash;
   for (const [key, own] of Object.entries(s.owned)) {
     if (own.owner !== player) continue;
