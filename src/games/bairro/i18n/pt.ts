@@ -117,6 +117,7 @@ export const pt: BairroDictionary = {
     faliu: 'faliu', 'dono-do-bairro': 'Dono do Bairro',
   },
   ui: {
+    forSale: 'à venda', houses: '{n} puxadinhos', houseOne: '1 puxadinho', predio: 'prédio', mortgagedTag: 'hipotecado',
     underConstruction: 'Em construção',
   },
 };

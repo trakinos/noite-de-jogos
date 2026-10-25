@@ -952,3 +952,25 @@ button.link:hover { color: var(--text); }
   .pile-out__card { transition: none; }
   .pile-out__count, .group__list li.is-done .group__status .ico { animation: none; }
 }
+
+/* Dono do Bairro */
+.bsq {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  gap: 2px; min-width: 0; min-height: 0; padding: 0 2px 2px; overflow: hidden;
+  background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: calc(var(--radius) / 3);
+  font-size: 0.6rem; line-height: 1.1; text-align: center; cursor: pointer;
+}
+.bsq--strip { min-width: 4.5rem; min-height: 6rem; padding: 0 4px 4px; font-size: 0.75rem; }
+.bsq__awning { align-self: stretch; height: 6px; margin: 0 -2px; flex: none;
+  background-image: repeating-linear-gradient(90deg, transparent 0 5px, rgb(255 255 255 / 0.45) 5px 10px); }
+.bsq--strip .bsq__awning { height: 10px; }
+.bsq__name { overflow-wrap: anywhere; font-weight: 600; }
+.bsq__icon { font-size: 1.1em; }
+.bsq--strip .bsq__icon { font-size: 1.6em; }
+.bsq__price { color: var(--muted); }
+.bsq__owner { align-self: stretch; height: 4px; margin: auto -2px 0; flex: none; }
+.bsq__houses { font-size: 0.8em; letter-spacing: -0.1em; }
+.bsq--mortgaged { opacity: 0.55; background-image: repeating-linear-gradient(135deg, transparent 0 6px, var(--border) 6px 7px); }
+.bsq__tokens { position: absolute; right: 2px; bottom: 6px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px; max-width: 70%; }
+.bsq__token { width: 0.7em; height: 0.7em; border-radius: 50%; border: 1px solid var(--surface); box-shadow: 0 0 0 1px var(--text); }
+.bsq--strip .bsq__token { width: 1em; height: 1em; }

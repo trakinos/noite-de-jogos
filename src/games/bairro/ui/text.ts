@@ -36,6 +36,8 @@ export function bairroText(lang: Lang) {
     card,
     reason: (key: string): string => own(d.reasons, key) ?? key,
     term: (key: string): string => own(d.terms, key) ?? key,
+    /** A `ui` string with its `{params}` filled. */
+    ui: (key: string, params?: Record<string, string | number>): string => interpolate(own(d.ui, key) ?? key, params ?? {}),
     /** The templates own the wording, `{player}` included; this only fills the params. */
     logLine(entry: BairroLogEntry, names: string[]): string {
       const template = own(d.log, entry.key);
