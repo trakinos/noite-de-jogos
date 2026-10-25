@@ -350,11 +350,6 @@ describe('guards', () => {
     expect(apply(s, 0, { type: 'roll' })).toEqual({ ok: false, reason: 'notNow' });
   });
 
-  it('later-task intents are refused for now', () => {
-    const s = game(2);
-    expect(apply(s, 0, { type: 'proposeTrade', offer: { to: 1, give: { assets: [], cash: 0, lawyerCards: 0 }, get: { assets: [], cash: 0, lawyerCards: 0 } } })).toEqual({ ok: false, reason: 'notNow' });
-  });
-
   it('never throws on malformed input', () => {
     const s = game(2);
     const junk: unknown[] = [null, undefined, 3, 'roll', {}, { type: 'fly' }, { type: 7 }, []];
