@@ -1034,3 +1034,42 @@ button.link:hover { color: var(--text); }
 .bdeed { width: 100%; min-height: 36px; padding: 0 10px; justify-content: flex-start; gap: 8px; font-size: 13px; border-width: 1px; }
 .bdeed__houses { font-size: 12px; }
 .bdeed--mortgaged { background-image: repeating-linear-gradient(135deg, transparent 0 6px, var(--border) 6px 7px); }
+
+/* Dono do Bairro: street in focus (phones) */
+.bboard--narrow { padding: 0 12px 16px; }
+.bstreet { display: grid; gap: 10px; min-width: 0; }
+.bmini {
+  display: grid; grid-template-columns: repeat(11, 1fr); grid-template-rows: repeat(11, 1fr); gap: 2px;
+  aspect-ratio: 1; width: min(100%, 220px); margin: 0 auto; padding: 4px;
+  background: var(--bairro-grass); border-radius: var(--r-md);
+}
+.bmini__cell {
+  position: relative; min-width: 0; min-height: 0; width: auto; height: auto; padding: 0; border: 0; border-radius: 3px;
+  background: var(--surface-2); box-shadow: none;
+}
+.bmini__cell--plain { background: var(--bairro-road); }
+.bmini__cell.is-you { outline: 3px solid var(--text); outline-offset: 1px; z-index: 1; }
+.bmini__dot { position: absolute; inset: 25%; border-radius: 50%; box-shadow: 0 0 0 1px var(--text); }
+.bstrip {
+  display: flex; gap: 6px; overflow-x: auto; overscroll-behavior-x: contain; position: relative;
+  scroll-snap-type: x mandatory; padding: 4px calc(50% - 2.75rem) 8px; min-width: 0; scrollbar-width: none;
+}
+.bstrip::-webkit-scrollbar { display: none; }
+.bstrip .bsq { flex: none; scroll-snap-align: center; width: 5.5rem; min-height: 8rem; }
+.pracinha--compact { max-width: none; width: 100%; box-sizing: border-box; padding: 10px 12px; gap: 6px; }
+.pracinha--compact .pracinha__actions { width: 100%; }
+.pracinha--compact .pracinha__actions button { flex: 1 1 8rem; min-height: 48px; }
+.bsummary {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; min-height: 48px; padding: 6px 14px;
+  justify-content: flex-start; font-size: 14px; text-align: left;
+}
+.bsummary .ico { margin-left: auto; }
+.bsummary__me b { font-size: 16px; }
+.bsummary__other { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-weight: 700; }
+.bsummary__other.is-bankrupt { text-decoration: line-through; }
+.bsheet { max-width: 480px; }
+.bsheet__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.bsheet__head h2 { margin: 0; }
+.bsheet__head button { min-width: 44px; min-height: 44px; }
+.bsheet .bpanel__box h2 { font-size: 15px; }
+.bsheet .bpanel__box:first-child h2 { display: none; }

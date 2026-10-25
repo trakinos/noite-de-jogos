@@ -44,7 +44,7 @@ export function Square({ info, size, colors, names, onOpen }: Props) {
       {buyable && info.owner === null && <span className="bsq__price">{money(tr.lang, info.price!)}</span>}
       {info.owner !== null && <span className="bsq__owner" style={{ backgroundColor: colors[info.owner] }} aria-hidden="true" />}
       {info.houses > 0 && (
-        <span className="bsq__houses" aria-hidden="true">{info.houses === 5 ? '🏢' : '🏠'.repeat(info.houses)}</span>
+        <span className="bsq__houses" aria-hidden="true">{info.houses === 5 ? '▮' : '⌂'.repeat(info.houses)}</span>
       )}
       {info.tokens.length > 0 && (
         <span className="bsq__tokens" aria-hidden="true">

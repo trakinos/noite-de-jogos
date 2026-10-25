@@ -10,6 +10,7 @@ import { BAIRRO_DICTIONARIES } from '../i18n';
 import type { BairroIntent } from '../types';
 import type { BairroView } from '../view';
 import { MapBoard } from './MapBoard';
+import { StreetBoard } from './StreetBoard';
 import { useMediaQuery } from './useMediaQuery';
 
 /** Computers get the neighborhood map; narrower screens get the street in focus. */
@@ -52,7 +53,6 @@ export function BairroBoard({ view, lobby, code, error, clock, awaiting, onInten
 
   const reasons = BAIRRO_DICTIONARIES[lang].reasons;
   const errorText = error && (Object.hasOwn(reasons, error) ? reasons[error] : tr.reason(error));
-  // The street board for phones replaces this below 900 px.
   const layout = { view, names, colors, awaiting, onIntent, onOpenSquare };
 
   return (
@@ -91,7 +91,7 @@ export function BairroBoard({ view, lobby, code, error, clock, awaiting, onInten
         )}
       </header>
 
-      <MapBoard {...layout} />
+      {wide ? <MapBoard {...layout} /> : <StreetBoard {...layout} />}
 
       {errorText && (
         <div className="toast bboard__toast" role="alert">

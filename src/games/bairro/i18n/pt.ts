@@ -125,7 +125,8 @@ export const pt: BairroDictionary = {
     bankruptTitle: 'Declarar que faliu?', bankruptBody: 'Você sai do jogo e suas escrituras vão para quem você deve. Não dá para desfazer.',
     bankruptCancel: 'Ainda não',
     yourTurn: 'Sua vez', turnOf: 'Vez de {name}', dice: 'Dados: {d1} e {d2}', noRollYet: 'Ninguém rolou ainda',
-    players: 'Jogadores', youTag: 'você', pontos: '{n} pontos', pontoOne: '1 ponto', bankruptTag: 'faliu',
+    players: 'Jogadores', youTag: 'você', deeds: '{n} escrituras', deedOne: '1 escritura',
+    streetMap: 'Mapa do bairro', streetStrip: 'Ruas do bairro', playersSheet: 'Ver jogadores e escrituras', bankruptTag: 'faliu',
     yourDeeds: 'Suas escrituras', noDeeds: 'Nenhuma ainda', servicos: 'Serviços', wholeRua: 'rua completa',
   },
 };

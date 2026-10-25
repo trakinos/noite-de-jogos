@@ -32,7 +32,9 @@ export function PlayersPanel({ view, names, colors, onOpenSquare }: Props) {
         <button type="button" className={`bdeed ${own.mortgaged ? 'bdeed--mortgaged' : ''}`} onClick={() => onOpenSquare(pos)}>
           <span>{text.square(pos)}</span>
           {own.houses > 0 && (
-            <span className="bdeed__houses">{own.houses === 5 ? `🏢 ${text.ui('predio')}` : `🏠×${own.houses}`}</span>
+            <span className="bdeed__houses" aria-label={own.houses === 5 ? text.ui('predio') : text.ui(own.houses === 1 ? 'houseOne' : 'houses', { n: own.houses })}>
+              {own.houses === 5 ? '▮' : '⌂'.repeat(own.houses)}
+            </span>
           )}
           {own.mortgaged && <span className="muted">{text.ui('mortgagedTag')}</span>}
         </button>
@@ -59,7 +61,7 @@ export function PlayersPanel({ view, names, colors, onOpenSquare }: Props) {
                 ) : (
                   <>
                     <span className="bplayer__cash">{money(tr.lang, p.cash)}</span>
-                    <span className="muted">{n === 1 ? text.ui('pontoOne') : text.ui('pontos', { n })}</span>
+                    <span className="muted">{n === 1 ? text.ui('deedOne') : text.ui('deeds', { n })}</span>
                     {p.jailTurns !== null && <span className="bplayer__tag">{text.square(JAIL_POS)}</span>}
                   </>
                 )}

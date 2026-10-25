@@ -16,10 +16,12 @@ interface Props {
   names: string[];
   awaiting: boolean;
   onIntent(intent: BairroIntent): void;
+  /** Phones: no title, smaller dice, full-width buttons. */
+  compact?: boolean;
 }
 
 /** The middle of the board: whose turn, the dice, the last move and your buttons. */
-export function Pracinha({ view, names, awaiting, onIntent }: Props) {
+export function Pracinha({ view, names, awaiting, onIntent, compact = false }: Props) {
   const { tr } = useLang();
   const text = useBairroText();
   const [confirmBust, setConfirmBust] = useState(false);
@@ -33,8 +35,8 @@ export function Pracinha({ view, names, awaiting, onIntent }: Props) {
   }
 
   return (
-    <div className="pracinha">
-      <h2 className="pracinha__title">{text.square(PRACINHA_POS)}</h2>
+    <div className={`pracinha${compact ? ' pracinha--compact' : ''}`}>
+      {!compact && <h2 className="pracinha__title">{text.square(PRACINHA_POS)}</h2>}
       <p className="pracinha__turn">
         {view.current === view.you ? text.ui('yourTurn') : text.ui('turnOf', { name: names[view.current] ?? '' })}
       </p>
