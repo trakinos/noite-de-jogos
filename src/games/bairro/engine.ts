@@ -4,6 +4,7 @@ import { canBuild, canMortgage, canSell, canUnmortgage, liquidationValue, ruaPos
 import { DECK } from './deck';
 import { BOARD, JAIL_FINE, JAIL_POS, PASS_START, RUAS, unmortgageCost } from './board';
 import type { PontoSquare, RuaId, ServicoSquare } from './board';
+import { charge, credit, lawyerCardId, log, mortgageOne, passTurn, sellOne } from './ops';
 import type { BairroIntent, BairroState } from './types';
 
 const ok = (): ApplyResult => ({ ok: true });
@@ -51,32 +52,10 @@ export function apply(s: BairroState, player: number, intent: BairroIntent): App
 
 // ---- helpers shared by the rules ----
 
-export function log(s: BairroState, player: number | null, key: string, params?: Record<string, string | number>): void {
-  s.log.push(params ? { player, key, params } : { player, key });
-}
-
 function rollDice(s: BairroState): [number, number] {
   const rigged = s.riggedDice?.shift();
   if (rigged) return rigged;
   return [nextInt(s.rng, 6) + 1, nextInt(s.rng, 6) + 1];
-}
-
-export function credit(s: BairroState, player: number, amount: number): void {
-  s.players[player].cash += amount;
-}
-
-/** `debtor` pays `amount` to `creditor` (null = bank) now if they can, else it becomes a Debt. Returns whether it was paid. */
-export function charge(s: BairroState, debtor: number, creditor: number | null, amount: number): boolean {
-  const p = s.players[debtor];
-  if (p.cash < amount) {
-    s.debts.push({ debtor, creditor, amount });
-    if (creditor === null) log(s, debtor, 'owesBank', { amount });
-    else log(s, debtor, 'owesPlayer', { to: creditor, amount });
-    return false;
-  }
-  p.cash -= amount;
-  if (creditor !== null) credit(s, creditor, amount);
-  return true;
 }
 
 /** Moves forward by `steps`, paying PASS_START when passing or landing on 0. */
@@ -112,11 +91,6 @@ export function rentFor(s: BairroState, pos: number, diceSum: number): number {
   const rua = RUAS[sq.rua].map(id => BOARD.findIndex(x => x.id === id));
   const monopoly = rua.every(i => s.owned[i]?.owner === own.owner && s.owned[i].houses === 0);
   return sq.rent[0] * (monopoly ? 2 : 1);
-}
-
-/** lawyerCards is a count, so the card id is inferred: c01 unless it is already back in the deck. */
-function lawyerCardId(s: BairroState): string {
-  return s.deck.includes('c01') ? 'c02' : 'c01';
 }
 
 /** Takes the top card and applies it. Used cards go to the bottom; a lawyer card is kept by the drawer. */
@@ -295,27 +269,11 @@ function sellBuilding(s: BairroState, player: number, pos: number): ApplyResult 
   return ok();
 }
 
-/** Sells one building on `pos` to the bank at half cost. The caller checks the even rule. */
-function sellOne(s: BairroState, player: number, pos: number): void {
-  const refund = (BOARD[pos] as PontoSquare).houseCost / 2;
-  s.owned[pos].houses--;
-  credit(s, player, refund);
-  log(s, player, 'soldBuilding', { pos, amount: refund });
-}
-
 function mortgage(s: BairroState, player: number, pos: number): ApplyResult {
   const why = canMortgage(s, player, pos);
   if (why) return fail(why);
   mortgageOne(s, player, pos);
   return ok();
-}
-
-/** Mortgages `pos` for its mortgage value. The caller checks the rua has no buildings. */
-function mortgageOne(s: BairroState, player: number, pos: number): void {
-  const sq = BOARD[pos] as PontoSquare | ServicoSquare;
-  s.owned[pos].mortgaged = true;
-  credit(s, player, sq.mortgage);
-  log(s, player, 'mortgaged', { pos, amount: sq.mortgage });
 }
 
 function unmortgage(s: BairroState, player: number, pos: number): ApplyResult {
@@ -332,20 +290,6 @@ function endTurn(s: BairroState): ApplyResult {
   if (s.phase.kind !== 'manage' || s.phase.rollAgain) return fail('notNow');
   passTurn(s);
   return ok();
-}
-
-/** Hands the turn to the next solvent player. */
-function passTurn(s: BairroState): void {
-  const n = s.players.length;
-  let next = s.current;
-  for (let k = 1; k <= n; k++) {
-    next = (s.current + k) % n;
-    if (!s.players[next].bankrupt) break;
-  }
-  s.current = next;
-  s.phase = { kind: 'roll' };
-  s.doublesInRow = 0;
-  s.turnNumber++;
 }
 
 // ---- debts and bankruptcy ----
