@@ -3,16 +3,21 @@ import { Game } from '../../engine/game';
 import { createRng } from '../../engine/rng';
 import { answerAtRandom, finishTurn, openPrompts } from '../../engine/timeout';
 import type { CardId, Intent } from '../../engine/types';
-import { viewFor } from '../../engine/view';
+import { viewFor, type PlayerView } from '../../engine/view';
 import type { ClockInput, ClockKind } from '../../net/turnClock';
 import type { GameInstance, GameModule, SeatInfo } from '../module';
+
+/** The one place Dominion's screens narrow the host's untyped view. */
+export function asDominionView(v: unknown): PlayerView {
+  return v as PlayerView;
+}
 
 export interface DominionOptions {
   kingdom: CardId[];
 }
 
-class DominionInstance implements GameInstance {
-  constructor(private readonly game: Game) {}
+export class DominionInstance implements GameInstance {
+  constructor(readonly game: Game) {}
 
   apply(playerId: string, intent: unknown) {
     return this.game.apply(playerId, intent as Intent);

@@ -9,9 +9,11 @@ const lobby = {
     { id: 'p1', name: 'Bo', online: true, color: 'pink' as const },
   ],
   game: 'dominion' as const,
-  kingdom: [],
+  options: { kingdom: [] },
   inGame: true,
   turnTimer: null,
+  minPlayers: 2,
+  maxPlayers: 4,
 };
 
 describe('playerColor', () => {

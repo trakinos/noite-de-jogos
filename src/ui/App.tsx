@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { asDominionView } from '../games/dominion/module';
 import { describePeerError } from '../net/errors';
 import { joinLink } from '../net/roomCode';
 import { useLang } from '../i18n/LangProvider';
@@ -104,9 +105,9 @@ export function App() {
           invitedCode={invitedCode}
           busy={busy}
           error={state?.status === 'rejected' ? state.error : error}
-          onHost={(_game, name) =>
+          onHost={(game, name) =>
             connect(name, async () => {
-              const session = await hostGame(name);
+              const session = await hostGame(game, name);
               // Drop a stale invite so the address bar and a refresh never point at the old room.
               history.replaceState(null, '', location.pathname);
               setInvitedCode(null);
@@ -188,10 +189,11 @@ export function App() {
       );
     }
 
-    if (state.view.result) {
+    const view = asDominionView(state.view);
+    if (view.result) {
       return (
         <EndScreen
-          result={state.view.result}
+          result={view.result}
           lobby={state.lobby}
           isHost={active.host !== null}
           onPlayAgain={() => active.host?.playAgain()}
@@ -203,7 +205,7 @@ export function App() {
 
     return (
       <Board
-        view={state.view}
+        view={view}
         lobby={state.lobby}
         code={active.code}
         error={state.error}

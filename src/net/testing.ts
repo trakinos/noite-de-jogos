@@ -1,4 +1,7 @@
 // Helpers for tests only. Not imported by production code.
+import { asDominionView, DominionInstance } from '../games/dominion/module';
+import type { PlayerView } from '../engine/view';
+import type { Game } from '../engine/game';
 import { createRng, nextFloat } from '../engine/rng';
 import type { HostOptions, HostSession } from './host';
 import { createMemoryPair, flush } from './memory';
@@ -10,6 +13,17 @@ export function seededHostOptions(seed = 1): HostOptions {
   const rng = createRng(seed);
   let n = 0;
   return { random: () => nextFloat(rng), makeToken: () => `token-${n++}` };
+}
+
+/** The Dominion engine game behind a host running the Dominion module. */
+export function dominionGame(host: HostSession): Game {
+  if (!(host.instance instanceof DominionInstance)) throw new Error('No Dominion game in progress');
+  return host.instance.game;
+}
+
+/** The latest Dominion view a test client received. */
+export function viewOf(client: { last(type: 'view'): { view: unknown } | undefined }): PlayerView {
+  return asDominionView(client.last('view')!.view);
 }
 
 export interface TestClient {

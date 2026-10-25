@@ -1,9 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
+import { KINGDOM_IDS } from '../cards/registry';
 import { botMove } from '../sim/bigMoney';
 import { GuestSession, memoryTokenStore, type TokenStore } from './guest';
 import { HostSession } from './host';
+import { asDominionView, dominionModule } from '../games/dominion/module';
 import { createMemoryPair, flush } from './memory';
-import { seededHostOptions } from './testing';
+import { dominionGame, seededHostOptions } from './testing';
 import type { Connection } from './transport';
 
 function remoteGuest(host: HostSession, name: string, tokens: TokenStore = memoryTokenStore()) {
@@ -13,7 +15,7 @@ function remoteGuest(host: HostSession, name: string, tokens: TokenStore = memor
 }
 
 async function table(names: string[]) {
-  const host = new HostSession(seededHostOptions());
+  const host = new HostSession(dominionModule, seededHostOptions());
   const sessions = [new GuestSession(host.connectLocal(), names[0], memoryTokenStore())];
   for (const name of names.slice(1)) sessions.push(remoteGuest(host, name).session);
   await flush();
@@ -22,7 +24,7 @@ async function table(names: string[]) {
 
 describe('GuestSession', () => {
   it('joins, stores its token and tracks the lobby', async () => {
-    const host = new HostSession(seededHostOptions());
+    const host = new HostSession(dominionModule, seededHostOptions());
     new GuestSession(host.connectLocal(), 'Ana', memoryTokenStore());
     const tokens = memoryTokenStore();
     const { session } = remoteGuest(host, 'Bo', tokens);
@@ -34,7 +36,7 @@ describe('GuestSession', () => {
   });
 
   it('notifies subscribers until they unsubscribe', async () => {
-    const host = new HostSession(seededHostOptions());
+    const host = new HostSession(dominionModule, seededHostOptions());
     const session = new GuestSession(host.connectLocal(), 'Ana', memoryTokenStore());
     const seen: string[] = [];
     const unsubscribe = session.subscribe((s) => seen.push(s.status));
@@ -42,7 +44,7 @@ describe('GuestSession', () => {
     expect(seen).toContain('joined');
     unsubscribe();
     const count = seen.length;
-    host.randomizeKingdom();
+    host.setOptions({ kingdom: KINGDOM_IDS.slice(0, 10) });
     await flush();
     expect(seen).toHaveLength(count);
   });
@@ -56,7 +58,7 @@ describe('GuestSession', () => {
   });
 
   it('rejoins its seat with a stored token after a disconnect', async () => {
-    const host = new HostSession(seededHostOptions());
+    const host = new HostSession(dominionModule, seededHostOptions());
     new GuestSession(host.connectLocal(), 'Ana', memoryTokenStore());
     const tokens = memoryTokenStore();
     const first = remoteGuest(host, 'Bo', tokens).session;
@@ -69,14 +71,14 @@ describe('GuestSession', () => {
     const again = remoteGuest(host, 'Bo', tokens).session;
     await flush();
     expect(again.current).toMatchObject({ status: 'joined', playerId: 'p1' });
-    expect(again.current.view!.you).toBe(1);
+    expect(asDominionView(again.current.view).you).toBe(1);
   });
 
   it('shows a refused move as an error until it is dismissed', async () => {
     const { host, sessions } = await table(['Ana', 'Bo']);
     host.start();
     await flush();
-    const waiting = sessions[1 - host.game!.state.turn.player];
+    const waiting = sessions[1 - dominionGame(host).state.turn.player];
     waiting.sendIntent({ type: 'endPhase' });
     await flush();
     expect(waiting.current.error).toBe('It is not your turn');
@@ -96,7 +98,7 @@ describe('GuestSession', () => {
   });
 
   it('reports when the host goes away', async () => {
-    const host = new HostSession(seededHostOptions());
+    const host = new HostSession(dominionModule, seededHostOptions());
     new GuestSession(host.connectLocal(), 'Ana', memoryTokenStore());
     const { session, hostEnd } = remoteGuest(host, 'Bo');
     await flush();
@@ -109,7 +111,7 @@ describe('GuestSession', () => {
     expect(host.start()).toEqual({ ok: true });
     await flush();
     const byId = new Map(sessions.map((s) => [s.current.playerId!, s]));
-    const game = host.game!;
+    const game = dominionGame(host);
     for (let step = 0; step < 5000 && !game.state.result; step++) {
       const { playerId, intent } = botMove(game);
       const session = byId.get(playerId)!;
@@ -118,31 +120,31 @@ describe('GuestSession', () => {
       expect(session.current.error, `step ${step}`).toBeNull();
     }
     expect(game.state.result).not.toBeNull();
-    for (const s of sessions) expect(s.current.view!.result!.winners).toEqual(game.state.result!.winners);
+    for (const s of sessions) expect(asDominionView(s.current.view).result!.winners).toEqual(game.state.result!.winners);
   });
 
   it('ignores a second intent while waiting for the reply, then accepts again', async () => {
     const { host, sessions } = await table(['Ana', 'Bo']);
     host.start();
     await flush();
-    const mover = sessions[host.game!.state.turn.player];
+    const mover = sessions[dominionGame(host).state.turn.player];
     expect(mover.current.awaiting).toBe(false);
     mover.sendIntent({ type: 'endPhase' });
     mover.sendIntent({ type: 'endPhase' });
     expect(mover.current.awaiting).toBe(true);
     await flush();
-    expect(host.game!.state.turn.phase).toBe('buy');
+    expect(dominionGame(host).state.turn.phase).toBe('buy');
     expect(mover.current.awaiting).toBe(false);
     mover.sendIntent({ type: 'endPhase' });
     await flush();
-    expect(host.game!.state.turn.player).not.toBe(sessions.indexOf(mover));
+    expect(dominionGame(host).state.turn.player).not.toBe(sessions.indexOf(mover));
   });
 
   it('stops awaiting when the host refuses the move', async () => {
     const { host, sessions } = await table(['Ana', 'Bo']);
     host.start();
     await flush();
-    const waiting = sessions[1 - host.game!.state.turn.player];
+    const waiting = sessions[1 - dominionGame(host).state.turn.player];
     waiting.sendIntent({ type: 'endPhase' });
     expect(waiting.current.awaiting).toBe(true);
     await flush();

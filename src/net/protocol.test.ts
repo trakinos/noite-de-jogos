@@ -44,6 +44,13 @@ describe('parseHostMessage', () => {
     expect(parseHostMessage({ type: 'error', reason: 'Room full' })).toEqual({ type: 'error', reason: 'Room full' });
   });
 
+  it('falls back to dominion for a missing or unknown lobby game', () => {
+    for (const lobby of [{ hostId: 'p0' }, { game: 'chess', hostId: 'p0' }]) {
+      const msg = parseHostMessage({ type: 'lobby', lobby });
+      expect(msg?.type === 'lobby' && msg.lobby.game).toBe('dominion');
+    }
+  });
+
   it('parses a view with or without a clock', () => {
     const view = { you: 0 };
     expect(parseHostMessage({ type: 'view', view, clock: { kind: 'turn', remainingMs: 5, totalMs: 10 } })).toEqual({

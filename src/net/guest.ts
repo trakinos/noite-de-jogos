@@ -1,5 +1,4 @@
 import type { Intent } from '../engine/types';
-import type { PlayerView } from '../engine/view';
 import type { PlayerColorId } from '../theme/playerColors';
 import { parseHostMessage, type GuestMessage, type HostMessage, type LobbyState } from './protocol';
 import type { Connection } from './transport';
@@ -18,7 +17,8 @@ export interface GuestState {
   status: GuestStatus;
   playerId: string | null;
   lobby: LobbyState | null;
-  view: PlayerView | null;
+  /** The game's own view type; its screens narrow it. */
+  view: unknown;
   /** The last error from the host: why joining failed, or why a move was refused. */
   error: string | null;
   /** True from sending a move until the host answers, so a double click can't send a stale second move. */

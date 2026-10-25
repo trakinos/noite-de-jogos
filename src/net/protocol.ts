@@ -1,7 +1,6 @@
-import type { CardId, Intent } from '../engine/types';
-import type { PlayerView } from '../engine/view';
+import type { Intent } from '../engine/types';
 import { isPlayerColor, type PlayerColorId } from '../theme/playerColors';
-import type { GameId } from '../games/catalog';
+import { isGameId, type GameId } from '../games/catalog';
 import type { ClockInfo } from './turnClock';
 
 export interface LobbyPlayer {
@@ -15,9 +14,12 @@ export interface LobbyState {
   game: GameId;
   hostId: string;
   players: LobbyPlayer[];
-  kingdom: CardId[];
+  /** Game-specific settings; each game's lobby UI narrows this to its own options type. */
+  options: unknown;
   inGame: boolean;
   turnTimer: number | null;
+  minPlayers: number;
+  maxPlayers: number;
 }
 
 export type GuestMessage =
@@ -28,7 +30,7 @@ export type GuestMessage =
 export type HostMessage =
   | { type: 'welcome'; playerId: string; token: string }
   | { type: 'lobby'; lobby: LobbyState }
-  | { type: 'view'; view: PlayerView; clock: ClockInfo | null }
+  | { type: 'view'; view: unknown; clock: ClockInfo | null }
   | { type: 'error'; reason: string };
 
 export const MAX_NAME_LENGTH = 20;
@@ -65,9 +67,11 @@ export function parseHostMessage(raw: unknown): HostMessage | null {
         ? { type: 'welcome', playerId: raw.playerId, token: raw.token }
         : null;
     case 'lobby':
-      return isRecord(raw.lobby) ? { type: 'lobby', lobby: raw.lobby as unknown as LobbyState } : null;
+      if (!isRecord(raw.lobby)) return null;
+      // A host from before the game field existed only ever ran Dominion.
+      return { type: 'lobby', lobby: { ...(raw.lobby as unknown as LobbyState), game: isGameId(raw.lobby.game) ? raw.lobby.game : 'dominion' } };
     case 'view':
-      return isRecord(raw.view) ? { type: 'view', view: raw.view as unknown as PlayerView, clock: parseClock(raw.clock) } : null;
+      return isRecord(raw.view) ? { type: 'view', view: raw.view, clock: parseClock(raw.clock) } : null;
     case 'error':
       return typeof raw.reason === 'string' ? { type: 'error', reason: raw.reason } : null;
     default:
