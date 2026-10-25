@@ -33,7 +33,7 @@ function rectOf(root: HTMLElement, zone: string): DOMRect | null {
 }
 
 /** Reduced motion, or a background tab, whose paused animations would all replay on return. */
-function stayStill(): boolean {
+export function stayStill(): boolean {
   return document.visibilityState === 'hidden' || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
 }
 

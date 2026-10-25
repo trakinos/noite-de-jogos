@@ -16,6 +16,7 @@ import { MapBoard } from './MapBoard';
 import { StreetBoard } from './StreetBoard';
 import { TradeAnswerDialog } from './TradeAnswerDialog';
 import { TradeDialog } from './TradeDialog';
+import { useDisplayedPositions } from './useBairroMotion';
 import { useMediaQuery } from './useMediaQuery';
 
 /** Computers get the neighborhood map; narrower screens get the street in focus. */
@@ -57,6 +58,11 @@ export function BairroBoard({ view, lobby, code, error, clock, awaiting, onInten
   const [tradeOpen, setTradeOpen] = useState(false);
   const proposing = view.pending === 'roll' || view.pending === 'manage';
   const myOffer = view.offer?.from === view.you;
+  // The compose dialog closes when proposing stops being possible and as soon as the offer is sent, so it never flashes back after the answer.
+  useEffect(() => {
+    if (!proposing || myOffer) setTradeOpen(false);
+  }, [proposing, myOffer]);
+  const positions = useDisplayedPositions(view);
 
   useEffect(() => {
     if (!error) return;
@@ -66,7 +72,7 @@ export function BairroBoard({ view, lobby, code, error, clock, awaiting, onInten
 
   const reasons = BAIRRO_DICTIONARIES[lang].reasons;
   const errorText = error && (Object.hasOwn(reasons, error) ? reasons[error] : tr.reason(error));
-  const layout = { view, names, colors, awaiting, onIntent, onOpenSquare, onTrade: () => setTradeOpen(true) };
+  const layout = { view, positions, names, colors, awaiting, onIntent, onOpenSquare, onTrade: () => setTradeOpen(true) };
 
   return (
     <main className={`bboard ${wide ? 'bboard--wide' : 'bboard--narrow'}`}>

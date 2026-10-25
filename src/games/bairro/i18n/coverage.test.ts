@@ -39,6 +39,7 @@ describe('bairro log and reason keys', () => {
 
   /** Dictionary keys the runs can't reach, each with why. */
   const UNREACHED_LOG: Record<string, string> = {
+    timedOut: 'only a clock running out writes it, and the sim and fuzz never expire one; covered in timeout.test.ts',
     tradeVoided: 'nothing can change while an offer is open, so an accepted offer is always still valid; covered in trades.test.ts',
   };
   const UNREACHED_REASONS: Record<string, string> = {

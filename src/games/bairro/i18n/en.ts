@@ -51,6 +51,8 @@ export const en: BairroDictionary = {
     c30: 'Ball through the neighbor\'s window: pay $10',
   },
   log: {
+    turnStarted: '{player}\'s turn',
+    timedOut: '{player} ran out of time',
     rolled: '{player} rolled {d1} and {d2}',
     passStart: '{player} passed the Ponto de Ônibus and collected {amount}',
     bought: '{player} bought {pos} for {price}',
@@ -118,6 +120,7 @@ export const en: BairroDictionary = {
     prefeitura: 'Prefeitura (city hall, the bank)', faliu: 'went bust', 'dono-do-bairro': 'Dono do Bairro',
   },
   ui: {
+    log: 'Log', logSheet: 'See the game log',
     ownerFallback: 'owner',
     forSale: 'for sale', houses: '{n} puxadinhos', houseOne: '1 puxadinho', predio: 'prédio', mortgagedTag: 'mortgaged',
     actRoll: 'Roll the dice', actRollAgain: 'Roll again', actBuy: 'Buy for {amount}', actDecline: 'Leave it',

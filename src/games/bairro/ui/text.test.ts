@@ -28,7 +28,7 @@ const SAMPLE: Record<string, Record<string, string | number>> = {
   soldBuilding: { pos: 1, amount: 25 }, mortgaged: { pos: 1, amount: 30 }, unmortgaged: { pos: 1, amount: 33 },
   paidDebtBank: { amount: 90 }, paidDebtPlayer: { to: 1, amount: 90 }, bankruptToBank: {}, bankruptToPlayer: { to: 1 },
   tradeProposed: { to: 1 }, tradeAccepted: { to: 1 }, tradeDeclined: { to: 1 }, tradeCancelled: { to: 1 },
-  tradeVoided: { to: 1 }, won: {},
+  tradeVoided: { to: 1 }, won: {}, turnStarted: {}, timedOut: {},
 };
 
 describe.each(['pt', 'en'] as const)('logLine %s', lang => {

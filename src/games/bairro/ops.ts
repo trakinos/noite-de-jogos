@@ -59,4 +59,5 @@ export function passTurn(s: BairroState): void {
   s.doublesInRow = 0;
   s.turnNumber++;
   s.tradesThisTurn = 0;
+  log(s, next, 'turnStarted');
 }

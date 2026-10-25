@@ -4,6 +4,7 @@ import type { BairroIntent } from '../types';
 import type { BairroView } from '../view';
 import { actionsFor } from './actions';
 import type { Action } from './actions';
+import { useDiceFaces } from './useBairroMotion';
 import { money } from './text';
 import { useBairroText } from './useBairroText';
 import { waitingFor } from './waiting';
@@ -29,6 +30,7 @@ export function Pracinha({ view, names, awaiting, onIntent, onTrade, compact = f
   const actions = view.pending === 'debt' ? [] : actionsFor(view, awaiting);
   const waiting = waitingFor(view, names, tr.lang);
   const last = view.log.at(-1);
+  const faces = useDiceFaces(view);
   const label = (a: Action) => text.ui(a.label, a.amount === undefined ? undefined : { amount: money(tr.lang, a.amount) });
 
   return (
@@ -37,10 +39,10 @@ export function Pracinha({ view, names, awaiting, onIntent, onTrade, compact = f
       <p className="pracinha__turn">
         {view.current === view.you ? text.ui('yourTurn') : text.ui('turnOf', { name: names[view.current] ?? '' })}
       </p>
-      {view.lastRoll ? (
+      {view.lastRoll && faces ? (
         <div className="pracinha__dice" role="img" aria-label={text.ui('dice', { d1: view.lastRoll[0], d2: view.lastRoll[1] })}>
-          <span className="bdie">{view.lastRoll[0]}</span>
-          <span className="bdie">{view.lastRoll[1]}</span>
+          <span className={`bdie${faces !== view.lastRoll ? ' bdie--shake' : ''}`}>{faces[0]}</span>
+          <span className={`bdie${faces !== view.lastRoll ? ' bdie--shake' : ''}`}>{faces[1]}</span>
         </div>
       ) : (
         <p className="pracinha__log">{text.ui('noRollYet')}</p>

@@ -51,6 +51,8 @@ export const pt: BairroDictionary = {
     c30: 'Bola na vidraça do vizinho: pague $10',
   },
   log: {
+    turnStarted: 'Vez de {player}',
+    timedOut: '{player} ficou sem tempo',
     rolled: '{player} tirou {d1} e {d2}',
     passStart: '{player} passou no Ponto de Ônibus e recebeu {amount}',
     bought: '{player} comprou {pos} por {price}',
@@ -118,6 +120,7 @@ export const pt: BairroDictionary = {
     faliu: 'faliu', 'dono-do-bairro': 'Dono do Bairro',
   },
   ui: {
+    log: 'Registro', logSheet: 'Ver o registro da partida',
     ownerFallback: 'dono',
     forSale: 'à venda', houses: '{n} puxadinhos', houseOne: '1 puxadinho', predio: 'prédio', mortgagedTag: 'hipotecado',
     actRoll: 'Rolar os dados', actRollAgain: 'Rolar de novo', actBuy: 'Comprar por {amount}', actDecline: 'Deixar pra lá',

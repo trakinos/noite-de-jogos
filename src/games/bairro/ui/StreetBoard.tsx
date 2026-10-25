@@ -2,9 +2,11 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { useLang } from '../../../i18n/LangProvider';
 import { Icon } from '../../../ui/components/Icon';
 import { BairroDialog } from './BairroDialog';
+import { BairroLog } from './BairroLog';
 import { BOARD_SIZE } from './geometry';
 import type { LayoutProps } from './MapBoard';
 import { MiniMap } from './MiniMap';
+import { withPositions } from './motion';
 import { PlayersPanel } from './PlayersPanel';
 import { Pracinha } from './Pracinha';
 import { Square } from './Square';
@@ -17,12 +19,15 @@ const POSITIONS = Array.from({ length: BOARD_SIZE }, (_, p) => p);
 const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** The phone board: a mini-map, the street in focus as a snapping row, the Pracinha and a players summary. */
-export function StreetBoard({ view, names, colors, awaiting, onIntent, onOpenSquare, onTrade }: LayoutProps) {
+export function StreetBoard({ view, names, colors, awaiting, onIntent, onOpenSquare, onTrade, positions }: LayoutProps) {
   const { tr } = useLang();
   const text = useBairroText();
   const strip = useRef<HTMLDivElement>(null);
   const [sheet, setSheet] = useState(false);
-  const myPos = view.players[view.you]?.pos ?? 0;
+  const [logSheet, setLogSheet] = useState(false);
+  const drawn = withPositions(view, positions);
+  // The strip follows your token as it walks.
+  const myPos = positions[view.you] ?? 0;
 
   function center(pos: number, instant: boolean) {
     const row = strip.current;
@@ -47,10 +52,11 @@ export function StreetBoard({ view, names, colors, awaiting, onIntent, onOpenSqu
       <MiniMap view={view} colors={colors} onPick={pos => center(pos, false)} />
       <div className="bstrip" ref={strip} role="group" aria-label={text.ui('streetStrip')}>
         {POSITIONS.map(pos => (
-          <Square key={pos} info={squareInfo(view, pos)} size="strip" colors={colors} names={names} onOpen={onOpenSquare} />
+          <Square key={pos} info={squareInfo(drawn, pos)} size="strip" colors={colors} names={names} onOpen={onOpenSquare} />
         ))}
       </div>
       <Pracinha view={view} names={names} awaiting={awaiting} onIntent={onIntent} onTrade={onTrade} compact />
+      <div className="bline">
       <button type="button" className="bsummary" aria-label={text.ui('playersSheet')} onClick={() => setSheet(true)}>
         {me && (
           <span className="bsummary__me">
@@ -65,6 +71,10 @@ export function StreetBoard({ view, names, colors, awaiting, onIntent, onOpenSqu
         ))}
         <Icon name="more" />
       </button>
+      <button type="button" className="blog-btn" aria-label={text.ui('logSheet')} title={text.ui('logSheet')} onClick={() => setLogSheet(true)}>
+        <Icon name="book" />
+      </button>
+      </div>
       {sheet && (
         <BairroDialog title={text.ui('players')} onClose={() => setSheet(false)}>
           <PlayersPanel
@@ -76,6 +86,11 @@ export function StreetBoard({ view, names, colors, awaiting, onIntent, onOpenSqu
               onOpenSquare(pos);
             }}
           />
+        </BairroDialog>
+      )}
+      {logSheet && (
+        <BairroDialog title={text.ui('log')} onClose={() => setLogSheet(false)}>
+          <BairroLog entries={view.log} names={names} />
         </BairroDialog>
       )}
     </div>
