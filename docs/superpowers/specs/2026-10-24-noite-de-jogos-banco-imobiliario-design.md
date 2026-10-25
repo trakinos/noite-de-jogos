@@ -253,7 +253,11 @@ Same Feira look and tokens. Phone-first.
 - **End screen:** the ranking, with net worth in a short game.
 - **Rules dialog** in PT/EN.
 
-The visual design of the board is the builder's call. Make mockups first and show them before building.
+**Board direction (user's choice, 2026-10-25, from three mockups):**
+- **Computers: "Neighborhood map" (B).** The 40-square ring drawn as the bairro seen from above. Squares are shop fronts with an awning in their rua's color, a road runs around the ring, and the Pracinha with trees fills the middle, where the dice, the last move and the turn's buttons sit. Players and your escrituras are in a side column.
+- **Phones: "Street in focus" (C).** A mini-map of the whole bairro on top (your token highlighted), then a strip of large squares around your token that you can swipe along, then the dice, the last move, the buttons and a compact players line.
+- Both: owner color as a strip on the square, puxadinhos/prédio drawn on the awning, mortgaged squares striped and faded, tokens in player colors. Tapping a square opens its escritura.
+- Mockups (local only): `.superpowers/brainstorm/*/content/board-directions-v2.html`.
 
 ## 8. Things to confirm later
 
