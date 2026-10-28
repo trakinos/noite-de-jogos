@@ -9,8 +9,8 @@ Notes from the first real playtest of Dono do Bairro. "DRDB" below is the Deu Ru
 - [x] Rolling doubles gets an animation, so the moment feels meaningful.
 - [x] Arrest animation: a little cop catches the player and takes them to jail.
 - [x] Animations for when the current player is arrested and when bail is paid.
-- [ ] Animation for drawing a DRDB card (see the Feira code for a similar animation).
-- [ ] Show the DRDB card to everyone, colored for good or bad.
+- [x] Animation for drawing a DRDB card (see the Feira code for a similar animation).
+- [x] Show the DRDB card to everyone, colored for good or bad.
 - [ ] During a trade, show the values of the properties in the proposal.
 - [ ] Counter-proposal in trades.
 - [ ] Redo the board tiles: the group color detail always faces the center of the board (as it does now on the bottom row), and the whole tile gets a soft tint of the owner's color.

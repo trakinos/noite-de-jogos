@@ -6,7 +6,8 @@ const EASE = 'cubic-bezier(0.3, 0.7, 0.3, 1)';
 const ARC_PX = 60;
 
 let layer: HTMLElement | null = null;
-function arrestLayer(): HTMLElement {
+/** The layer above the page that board scenes play in, shared with the card motion's styles. */
+export function arrestLayer(): HTMLElement {
   if (!layer || !layer.isConnected) {
     layer = document.createElement('div');
     layer.className = 'flights';
@@ -17,7 +18,7 @@ function arrestLayer(): HTMLElement {
 }
 
 /** The square's box on screen: the map board on computers, the mini-map on phones (always in view there). */
-function squareRect(pos: number): DOMRect | null {
+export function squareRect(pos: number): DOMRect | null {
   for (const scope of ['.bmap', '.bmini']) {
     const rect = document.querySelector(`${scope} [data-sq="${pos}"]`)?.getBoundingClientRect();
     if (rect && rect.width > 0) return rect;
@@ -51,20 +52,23 @@ export function playArrest(from: number, to: number, color: string): void {
   const at = (pt: { x: number; y: number }, extra = '') => `translate(${pt.x - p.x}px, ${pt.y - p.y}px) ${extra}`;
   const anim = group.animate(
     [
-      { offset: 0, transform: at(p, 'scale(0)'), opacity: 0 },
-      { offset: 0.12, transform: at(p, 'scale(1.25)'), opacity: 1 },
-      { offset: 0.2, transform: at(p, 'scale(1)') },
-      { offset: 0.28, transform: at(p, 'scale(1) rotate(-6deg)') },
-      { offset: 0.5, transform: at(mid, 'scale(1.1) rotate(4deg)') },
-      { offset: 0.72, transform: at(q, 'scale(1)') },
-      { offset: 0.92, transform: at(q, 'scale(1)'), opacity: 1 },
-      { offset: 1, transform: at(q, 'scale(0.8)'), opacity: 0 },
+      { offset: 0, easing: EASE, transform: at(p, 'scale(0)'), opacity: 0 },
+      { offset: 0.12, easing: EASE, transform: at(p, 'scale(1.25)'), opacity: 1 },
+      { offset: 0.2, easing: EASE, transform: at(p, 'scale(1)') },
+      { offset: 0.28, easing: EASE, transform: at(p, 'scale(1) rotate(-6deg)') },
+      { offset: 0.5, easing: EASE, transform: at(mid, 'scale(1.1) rotate(4deg)') },
+      { offset: 0.72, easing: EASE, transform: at(q, 'scale(1)') },
+      { offset: 0.92, easing: EASE, transform: at(q, 'scale(1)'), opacity: 1 },
+      { offset: 1, easing: EASE, transform: at(q, 'scale(0.8)'), opacity: 0 },
     ],
-    { duration: ARREST_MS, easing: EASE, fill: 'both' },
+    // Ease each leg, not the whole timeline, so the cop arrives when the bars drop.
+    { duration: ARREST_MS, fill: 'both' },
   );
   const end = () => group.remove();
   anim.onfinish = end;
   anim.oncancel = end;
+  // A paused timeline (some hidden panes) never finishes the animation; never leave the scene on screen.
+  setTimeout(end, ARREST_MS + 500);
 }
 
 const RELEASE_ICONS: Record<ReleaseKind, string> = { fine: '💸', lawyer: '📜', doubles: '🎲' };

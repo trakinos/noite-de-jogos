@@ -10,6 +10,8 @@ export interface TokenMove {
   steps: number[];
   /** Arrested here, after walking to it: the last step (to the Papuda) is the cop taking the token away. */
   arrestAt?: number;
+  /** A Tigrinho card drawn on the way: shown after the first `after` steps, before the rest (a jump or the arrest). */
+  card?: { id: string; pos: number; after: number };
 }
 
 /** The longest walk a roll can give (two dice); anything longer is a jump. */
@@ -26,33 +28,43 @@ const advancesToStart = (card: unknown) => DECK.find(c => c.id === card)?.effect
 const walk = (from: number, to: number) =>
   Array.from({ length: (to - from + BOARD_SIZE) % BOARD_SIZE }, (_, i) => (from + i + 1) % BOARD_SIZE);
 
-/**
- * Where `player` was arrested: the third doubles arrest on the spot; a roll onto "Vá pra Papuda" or onto a card
- * that sends you there arrests where the dice landed. Null when the arrest can't be placed (then the token just jumps).
- */
-function arrestSquare(fresh: BairroView['log'], player: number, from: number): number | null {
-  const mine = fresh.filter(e => e.player === player);
-  if (mine.some(e => e.key === 'thirdDouble')) return from;
+/** Where the dice put `player` this roll, or null when no roll explains the move. */
+function rolledTo(mine: BairroView['log'], from: number): number | null {
   const roll = mine.find(e => e.key === 'rolled');
   const sum = Number(roll?.params?.d1) + Number(roll?.params?.d2);
   return Number.isFinite(sum) ? (from + sum) % BOARD_SIZE : null;
 }
 
-/** Token moves between two views of the same game: a walk, or a jump for jail and long card moves. */
+/**
+ * Token moves between two views of the same game: a walk, or a jump for long moves. An arrest walks to where the
+ * token was caught (on the spot for the third doubles); a Tigrinho card walks to its square, then shows the card
+ * before any jump or arrest it causes.
+ */
 export function movesBetween(prev: BairroView, next: BairroView): TokenMove[] {
   if (prev.players.length !== next.players.length) return [];
   const fresh = newEntries(prev, next);
-  return next.players.flatMap((p, player) => {
+  return next.players.flatMap((p, player): TokenMove[] => {
     const from = prev.players[player].pos;
     const to = p.pos;
     if (from === to) return [];
-    const distance = (to - from + BOARD_SIZE) % BOARD_SIZE;
-    if (fresh.some(e => e.player === player && e.key === 'wentToJail')) {
-      const at = arrestSquare(fresh, player, from);
-      if (at !== null) return [{ player, from, to, steps: [...walk(from, at), to], arrestAt: at }];
+    const mine = fresh.filter(e => e.player === player);
+    const arrested = mine.some(e => e.key === 'wentToJail');
+    const third = mine.some(e => e.key === 'thirdDouble');
+    const drawn = mine.find(e => e.key === 'luck')?.params?.card;
+    const landed = third ? from : rolledTo(mine, from);
+
+    if (landed !== null && drawn !== undefined) {
+      const card = { id: String(drawn), pos: landed, after: walk(from, landed).length };
+      const path = walk(from, landed);
+      if (landed === to) return [{ player, from, to, steps: path, card }];
+      return [{ player, from, to, steps: [...path, to], card, ...(arrested ? { arrestAt: landed } : {}) }];
+    }
+    if (arrested) {
+      if (landed !== null) return [{ player, from, to, steps: [...walk(from, landed), to], arrestAt: landed }];
       return [{ player, from, to, steps: [to] }];
     }
-    const jumped = fresh.some(e => e.player === player && e.key === 'luck' && advancesToStart(e.params?.card));
+    const jumped = drawn !== undefined && advancesToStart(drawn);
+    const distance = (to - from + BOARD_SIZE) % BOARD_SIZE;
     if (jumped || distance > MAX_WALK) return [{ player, from, to, steps: [to] }];
     return [{ player, from, to, steps: walk(from, to) }];
   });

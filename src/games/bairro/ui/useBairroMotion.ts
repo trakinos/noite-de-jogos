@@ -27,18 +27,28 @@ export const GRAB_MS = 450;
 /** Drawn nowhere: the token is in the cop's hands. */
 const CARRIED = -1;
 
+/** A Tigrinho card on screen: it rises from its square, flips over and stays long enough to read. */
+export const CARD_MS = 2600;
+
+export interface BoardScenes {
+  /** The cop takes the token away (see ARREST_MS). */
+  onArrest?: (move: TokenMove) => void;
+  /** A Tigrinho card is drawn (see CARD_MS). */
+  onCard?: (move: TokenMove) => void;
+}
+
 /**
  * Where each seat's token is drawn: walks through `steps` after a move (after the dice have shaken),
- * and ends on the real position. An arrest walks to the arrest square, calls `onArrest` there, and the
- * token is carried (drawn nowhere) until the cop drops it in the Papuda.
- * Jumps, reduced motion and hidden tabs show the real position at once.
+ * and ends on the real position. A Tigrinho card holds the walk on its square for CARD_MS. An arrest calls
+ * `onArrest` on the arrest square, and the token is carried (drawn nowhere) until the cop drops it in the Papuda.
+ * Reduced motion and hidden tabs show the real position at once.
  */
-export function useDisplayedPositions(view: BairroView, onArrest?: (move: TokenMove) => void): number[] {
+export function useDisplayedPositions(view: BairroView, scenes: BoardScenes = {}): number[] {
   const [shown, setShown] = useState(() => positionsOf(view));
   const prev = useRef(view);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const arrest = useRef(onArrest);
-  arrest.current = onArrest;
+  const cb = useRef(scenes);
+  cb.current = scenes;
 
   useLayoutEffect(() => {
     const before = prev.current;
@@ -55,17 +65,26 @@ export function useDisplayedPositions(view: BairroView, onArrest?: (move: TokenM
     const start = [...real];
     for (const m of moves) start[m.player] = m.from;
     setShown(start);
-    const delay = rolledBetween(before, view) ? ROLL_MS : 0;
+    const later = (ms: number, fn: () => void) => timers.current.push(setTimeout(fn, ms));
     const at = (ms: number, player: number, pos: number) =>
-      timers.current.push(setTimeout(() => setShown(cur => cur.map((p, i) => (i === player ? pos : p))), ms));
+      later(ms, () => setShown(cur => cur.map((p, i) => (i === player ? pos : p))));
     for (const m of moves) {
-      const walk = m.arrestAt === undefined ? m.steps : m.steps.slice(0, -1);
-      walk.forEach((pos, k) => at(delay + k * STEP_MS, m.player, pos));
-      if (m.arrestAt === undefined) continue;
-      const caught = delay + walk.length * STEP_MS;
-      timers.current.push(setTimeout(() => arrest.current?.(m), caught));
-      at(caught + GRAB_MS, m.player, CARRIED);
-      at(caught + ARREST_MS, m.player, m.to);
+      let t = rolledBetween(before, view) ? ROLL_MS : 0;
+      m.steps.forEach((pos, k) => {
+        if (m.card && k === m.card.after) {
+          later(t, () => cb.current.onCard?.(m));
+          t += CARD_MS;
+        }
+        if (m.arrestAt !== undefined && k === m.steps.length - 1) {
+          later(t, () => cb.current.onArrest?.(m));
+          at(t + GRAB_MS, m.player, CARRIED);
+          at(t + ARREST_MS, m.player, pos);
+          return;
+        }
+        at(t, m.player, pos);
+        t += STEP_MS;
+      });
+      if (m.card && m.card.after === m.steps.length) later(t, () => cb.current.onCard?.(m));
     }
   }, [view]);
 

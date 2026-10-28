@@ -53,7 +53,7 @@ Full list and notes: `docs/playtest-26.10.27.md`.
 - [x] **Doubles:** the dice glow and a "Dobrada!" burst pops for everyone (gold, or red for the third in a row).
 - [x] **Arrest:** the token walks to where it's caught, then a cop with a siren carries it to the Papuda and the bars drop.
 - [x] **Papuda moments:** your own arrest fills your screen with bars; leaving shows the bars lifting with the fine, the lawyer card or the dice.
-- [ ] **Tigrinho:** drawing a Tigrinho card (like the Feira card motion), shown to everyone in a good or bad color.
+- [x] **Tigrinho:** the drawn card rises from its square and flips over in the middle of every screen, green for bom and red for ruim.
 - [ ] **Tiles:** the rua color always faces the center, the whole tile takes a soft tint of the owner's color, and each tile shows its current rent.
 - [ ] **Players list:** click a player to see their escrituras.
 - [ ] **Trades:** show the values of the escrituras in a proposal; counter-proposals.

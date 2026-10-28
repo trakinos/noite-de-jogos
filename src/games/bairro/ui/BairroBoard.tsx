@@ -7,6 +7,7 @@ import { Icon } from '../../../ui/components/Icon';
 import { TimerBar } from '../../../ui/components/TimerBar';
 import { playerColor } from '../../../ui/playerColor';
 import { JAIL_FINE, JAIL_POS } from '../board';
+import { DECK } from '../deck';
 import { BAIRRO_DICTIONARIES } from '../i18n';
 import type { BairroIntent } from '../types';
 import type { BairroView } from '../view';
@@ -19,6 +20,7 @@ import { TradeAnswerDialog } from './TradeAnswerDialog';
 import { TradeDialog } from './TradeDialog';
 import { BARS_AT_MS, useDisplayedPositions, useReleases } from './useBairroMotion';
 import { playArrest, playJailedScreen, playRelease } from './jailScenes';
+import { playLuckCard } from './luckScene';
 import { useMediaQuery } from './useMediaQuery';
 import { useBairroText } from './useBairroText';
 import { money } from './text';
@@ -70,9 +72,19 @@ export function BairroBoard({ view, lobby, code, error, clock, awaiting, onInten
     if (!proposing || myOffer) setTradeOpen(false);
   }, [proposing, myOffer]);
   const colorOf = (player: number) => colors[player] ?? 'currentColor';
-  const positions = useDisplayedPositions(view, m => {
-    playArrest(m.arrestAt!, m.to, colorOf(m.player));
-    if (m.player === view.you) setTimeout(() => playJailedScreen(text.ui('jailedTitle'), text.ui('jailedSub')), BARS_AT_MS);
+  const positions = useDisplayedPositions(view, {
+    onArrest: m => {
+      playArrest(m.arrestAt!, m.to, colorOf(m.player));
+      if (m.player === view.you) setTimeout(() => playJailedScreen(text.ui('jailedTitle'), text.ui('jailedSub')), BARS_AT_MS);
+    },
+    onCard: m => {
+      const tone = DECK.find(c => c.id === m.card!.id)?.tone ?? 'bom';
+      playLuckCard(m.card!.pos, tone, {
+        title: text.ui(tone === 'bom' ? 'luckGood' : 'luckBad'),
+        who: m.player === view.you ? text.ui('luckYouDrew') : text.ui('luckDrew', { name: names[m.player] ?? '' }),
+        body: text.card(m.card!.id),
+      });
+    },
   });
   useReleases(view, r => {
     const label = r.kind === 'fine' ? `-${money(lang, JAIL_FINE)}` : '';

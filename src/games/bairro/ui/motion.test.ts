@@ -3,6 +3,7 @@ import { apply } from '../engine';
 import { game, rig } from '../testkit';
 import { viewFor } from '../view';
 import { DECK } from '../deck';
+import { BOARD } from '../board';
 import { doublesBetween, releasesBetween, movesBetween, newEntries, rolledBetween, withPositions } from './motion';
 
 describe('movesBetween', () => {
@@ -220,5 +221,37 @@ describe('releasesBetween', () => {
     const before = viewFor(s, 0);
     apply(s, 0, { type: 'roll' });
     expect(releasesBetween(before, viewFor(s, 0))).toEqual([]);
+  });
+});
+
+describe('Tigrinho cards on the way', () => {
+  const luckPos = BOARD.findIndex(sq => sq.kind === 'luck');
+  const drawOn = (kind: string, extra: (c: (typeof DECK)[number]) => boolean = () => true) => {
+    const s = game(2);
+    s.players[0].pos = luckPos - 3;
+    const card = DECK.find(c => c.effect.kind === kind && extra(c))!;
+    s.deck = [card.id, ...s.deck.filter(id => id !== card.id)];
+    rig(s, [[1, 2]]);
+    const before = viewFor(s, 0);
+    apply(s, 0, { type: 'roll' });
+    return { moves: movesBetween(before, viewFor(s, 0)), card: card.id, s };
+  };
+  const walkTo = [luckPos - 2, luckPos - 1, luckPos];
+
+  it('shows a money card once the walk ends', () => {
+    const { moves, card } = drawOn('money');
+    expect(moves).toEqual([{ player: 0, from: luckPos - 3, to: luckPos, steps: walkTo, card: { id: card, pos: luckPos, after: 3 } }]);
+  });
+
+  it('shows the card, then the cop, for a card that sends you to the Papuda', () => {
+    const { moves, card } = drawOn('goToJail');
+    expect(moves).toEqual([
+      { player: 0, from: luckPos - 3, to: 10, steps: [...walkTo, 10], card: { id: card, pos: luckPos, after: 3 }, arrestAt: luckPos },
+    ]);
+  });
+
+  it('shows the card, then jumps to the Pé de Meia', () => {
+    const { moves, card } = drawOn('advanceToStart');
+    expect(moves).toEqual([{ player: 0, from: luckPos - 3, to: 0, steps: [...walkTo, 0], card: { id: card, pos: luckPos, after: 3 } }]);
   });
 });

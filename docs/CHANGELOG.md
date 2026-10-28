@@ -9,6 +9,7 @@ What changed for players, newest first. Every push to `main` deploys to https://
 - **Easier to follow the turn.** The token of the player whose turn it is is bigger and pulses gently, on the map and on the phone strip.
 - **Slower walk.** Tokens walk around the board a little slower, so everyone can see where they land.
 - **Real dice.** The dice show pips instead of numbers. They tumble and hop while rolling, then bounce as they land.
+- **Tigrinho cards for everyone.** Drawing a card lifts it off the Tigrinho square to the middle of every screen, where it flips over: green "Deu bom!" or red "Deu ruim!", who drew it and what it says. A card that sends you to the Pé de Meia or the Papuda shows first, then the token moves.
 - **Arrests.** Landing on "Vá pra Papuda", drawing a Tigrinho card that sends you there, or rolling three doubles calls the cop: a 👮 with a siren grabs the token where it stands, carries it across the board to the Papuda, and the bars drop.
 - **Your own arrest hits home.** When it's you, bars slam down over your whole screen with "Você foi pra Papuda!" and how to get out.
 - **Getting out of the Papuda.** The bars lift off the square and the token hops out, with 💸 and the fine, 📜 for the Carta do Advogado, or 🎲 for doubles.
