@@ -1,12 +1,14 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { stayStill } from '../../../ui/useCardMotion';
 import type { BairroView } from '../view';
-import { movesBetween, rolledBetween } from './motion';
+import { doublesBetween, movesBetween, rolledBetween, type DoublesKind } from './motion';
 
 /** One step of a token's walk. */
 export const STEP_MS = 220;
 /** The dice shake before the faces show. */
 export const ROLL_MS = 800;
+/** How long the doubles burst stays up after the dice land. */
+export const BURST_MS = 1800;
 /** How often the faces change while shaking. */
 const SHAKE_TICK_MS = 100;
 
@@ -80,4 +82,32 @@ export function useDiceFaces(view: BairroView): [number, number] | null {
   useEffect(() => stop, []);
 
   return rolling ? faces : view.lastRoll;
+}
+
+/**
+ * The doubles burst to show: from the moment the dice land after a doubles roll, for BURST_MS.
+ * Not on first render; in a hidden tab nobody sees it, and under reduced motion it shows without waiting.
+ */
+export function useDoublesBurst(view: BairroView): DoublesKind | null {
+  const prev = useRef(view);
+  const [burst, setBurst] = useState<DoublesKind | null>(null);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useLayoutEffect(() => {
+    const before = prev.current;
+    prev.current = view;
+    if (before === view) return;
+    const kind = doublesBetween(before, view);
+    if (!kind || document.visibilityState === 'hidden') return;
+    timers.current.forEach(clearTimeout);
+    setBurst(null);
+    const delay = stayStill() ? 0 : ROLL_MS;
+    timers.current = [
+      setTimeout(() => setBurst(kind), delay),
+      setTimeout(() => setBurst(null), delay + BURST_MS),
+    ];
+  }, [view]);
+
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  return burst;
 }

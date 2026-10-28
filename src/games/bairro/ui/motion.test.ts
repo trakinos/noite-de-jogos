@@ -3,7 +3,7 @@ import { apply } from '../engine';
 import { game, rig } from '../testkit';
 import { viewFor } from '../view';
 import { DECK } from '../deck';
-import { movesBetween, newEntries, rolledBetween, withPositions } from './motion';
+import { doublesBetween, movesBetween, newEntries, rolledBetween, withPositions } from './motion';
 
 describe('movesBetween', () => {
   it('walks a normal move square by square', () => {
@@ -119,5 +119,38 @@ describe('advance to start', () => {
     s.log.push({ player: 0, key: 'luck', params: { card } });
     s.players[0].pos = 0;
     expect(movesBetween(before, viewFor(s, 0))).toEqual([{ player: 0, from: 36, to: 0, steps: [0] }]);
+  });
+});
+
+describe('doublesBetween', () => {
+  const rollWith = (dice: [number, number][], setup?: (s: ReturnType<typeof game>) => void) => {
+    const s = game(2);
+    setup?.(s);
+    rig(s, dice);
+    const before = viewFor(s, 0);
+    apply(s, 0, { type: 'roll' });
+    return doublesBetween(before, viewFor(s, 0));
+  };
+
+  it('is nothing for a plain roll', () => {
+    expect(rollWith([[2, 5]])).toBeNull();
+  });
+
+  it('says roll again for doubles', () => {
+    expect(rollWith([[3, 3]])).toBe('again');
+  });
+
+  it('says free when doubles get you out of the Papuda', () => {
+    expect(rollWith([[4, 4]], s => { s.players[0].pos = 10; s.players[0].jailTurns = 0; })).toBe('free');
+  });
+
+  it('says third on the third doubles in a row', () => {
+    expect(rollWith([[5, 5]], s => { s.doublesInRow = 2; })).toBe('third');
+  });
+
+  it('is nothing when nobody rolled', () => {
+    const s = game(2);
+    const v = viewFor(s, 0);
+    expect(doublesBetween(v, v)).toBeNull();
   });
 });

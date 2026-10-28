@@ -41,6 +41,22 @@ export function rolledBetween(prev: BairroView, next: BairroView): boolean {
   return newEntries(prev, next).some(e => e.key === 'rolled');
 }
 
+/** What a doubles roll means: roll again, out of the Papuda, or the third in a row (off to the Papuda). */
+export type DoublesKind = 'again' | 'free' | 'third';
+
+/** The doubles rolled between the two views, if the newest roll was doubles. */
+export function doublesBetween(prev: BairroView, next: BairroView): DoublesKind | null {
+  const fresh = newEntries(prev, next);
+  const at = fresh.map(e => e.key).lastIndexOf('rolled');
+  if (at < 0) return null;
+  const { d1, d2 } = fresh[at].params ?? {};
+  if (d1 === undefined || d1 !== d2) return null;
+  const after = fresh.slice(at + 1).map(e => e.key);
+  if (after.includes('thirdDouble')) return 'third';
+  if (after.includes('leftJailDoubles')) return 'free';
+  return 'again';
+}
+
 /** The view with the tokens standing at `positions` (per seat), for drawing tokens mid-walk. */
 export function withPositions(view: BairroView, positions: number[]): BairroView {
   return { ...view, players: view.players.map((p, i) => ({ ...p, pos: positions[i] ?? p.pos })) };

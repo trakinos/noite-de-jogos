@@ -1,10 +1,11 @@
+import type { CSSProperties } from 'react';
 import { useLang } from '../../../i18n/LangProvider';
 import { BOARD } from '../board';
 import type { BairroIntent } from '../types';
 import type { BairroView } from '../view';
 import { actionsFor } from './actions';
 import type { Action } from './actions';
-import { useDiceFaces } from './useBairroMotion';
+import { useDiceFaces, useDoublesBurst } from './useBairroMotion';
 import { Die } from './Die';
 import { money } from './text';
 import { useBairroText } from './useBairroText';
@@ -32,6 +33,7 @@ export function Pracinha({ view, names, awaiting, onIntent, onTrade, compact = f
   const waiting = waitingFor(view, names, tr.lang);
   const last = [...view.log].reverse().find(e => e.key !== 'turnStarted');
   const faces = useDiceFaces(view);
+  const burst = useDoublesBurst(view);
   const label = (a: Action) => text.ui(a.label, a.amount === undefined ? undefined : { amount: money(tr.lang, a.amount) });
 
   return (
@@ -41,9 +43,20 @@ export function Pracinha({ view, names, awaiting, onIntent, onTrade, compact = f
         {view.current === view.you ? text.ui('yourTurn') : text.ui('turnOf', { name: names[view.current] ?? '' })}
       </p>
       {view.lastRoll && faces ? (
-        <div className="pracinha__dice" role="img" aria-label={text.ui('dice', { d1: view.lastRoll[0], d2: view.lastRoll[1] })}>
-          <Die face={faces[0]} rolling={faces !== view.lastRoll} />
-          <Die face={faces[1]} rolling={faces !== view.lastRoll} />
+        <div className={`pracinha__dice${burst ? ` pracinha__dice--${burst}` : ''}`}>
+          <div className="pracinha__dicepair" role="img" aria-label={text.ui('dice', { d1: view.lastRoll[0], d2: view.lastRoll[1] })}>
+            <Die face={faces[0]} rolling={faces !== view.lastRoll} />
+            <Die face={faces[1]} rolling={faces !== view.lastRoll} />
+          </div>
+          {burst && (
+            <div className={`bburst bburst--${burst}`} role="status">
+              <span className="bburst__sparks" aria-hidden="true">
+                {Array.from({ length: 10 }, (_, i) => <span key={i} style={{ '--i': i } as CSSProperties} />)}
+              </span>
+              <strong className="bburst__title">{text.ui(burst === 'third' ? 'doublesThirdTitle' : 'doublesTitle')}</strong>
+              <span className="bburst__sub">{text.ui(`doubles_${burst}`)}</span>
+            </div>
+          )}
         </div>
       ) : (
         <p className="pracinha__log">{text.ui('noRollYet')}</p>

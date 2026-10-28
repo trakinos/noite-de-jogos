@@ -6,7 +6,7 @@ Notes from the first real playtest of Dono do Bairro. "DRDB" below is the Deu Ru
 
 - [x] The current player should be shown bigger on the board (also on phones).
 - [x] Make the player movement a little slower.
-- [ ] Rolling doubles gets an animation, so the moment feels meaningful.
+- [x] Rolling doubles gets an animation, so the moment feels meaningful.
 - [ ] Arrest animation: a little cop catches the player and takes them to jail.
 - [ ] Animations for when the current player is arrested and when bail is paid.
 - [ ] Animation for drawing a DRDB card (see the Feira code for a similar animation).

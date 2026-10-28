@@ -128,6 +128,8 @@ export const pt: BairroDictionary = {
     actPayDebt: 'Pagar {amount}', actGoBankrupt: 'Faliu',
     bankruptTitle: 'Declarar que faliu?', bankruptBody: 'Você sai do jogo e suas escrituras vão para quem você deve. Não dá para desfazer.',
     bankruptCancel: 'Ainda não',
+    doublesTitle: 'Dobrada!', doublesThirdTitle: 'Três dobradas!',
+    doubles_again: 'Jogue de novo', doubles_free: 'Saiu da Papuda', doubles_third: 'Direto pra Papuda',
     yourTurn: 'Sua vez', turnOf: 'Vez de {name}', dice: 'Dados: {d1} e {d2}', noRollYet: 'Ninguém rolou ainda',
     players: 'Jogadores', youTag: 'você', deeds: '{n} escrituras', deedOne: '1 escritura',
     streetStrip: 'Ruas do bairro', playersSheet: 'Ver jogadores e escrituras', bankruptTag: 'faliu',

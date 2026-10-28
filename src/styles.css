@@ -1016,7 +1016,8 @@ button.link:hover { color: var(--text); }
 .pracinha__title { margin: 0; font-size: 20px; }
 .pracinha__turn { margin: 0; font-weight: 800; }
 .pracinha__log { margin: 0; font-size: 13px; color: var(--muted); font-weight: 600; }
-.pracinha__dice { display: flex; gap: 8px; }
+.pracinha__dice { position: relative; display: grid; justify-items: center; }
+.pracinha__dicepair { display: flex; gap: 8px; }
 .bdie {
   --die: 44px;
   width: var(--die); height: var(--die); box-sizing: border-box; padding: calc(var(--die) * 0.14);
@@ -1164,6 +1165,49 @@ button.link:hover { color: var(--text); }
 .pracinha__dice .bdie--rolling:nth-child(2) { animation-duration: 340ms; animation-direction: reverse; }
 .bdie--land { animation: bdie-land 400ms ease-out; }
 @media (prefers-reduced-motion: reduce) { .bdie--rolling, .bdie--land { animation: none; } }
+
+/* Doubles: the dice glow and a burst pops over them, gold for a good doubles, red for the third in a row. */
+.pracinha__dice { --burst: #f2b632; }
+.pracinha__dice--third { --burst: #e0533d; }
+.pracinha__dice--again .bdie, .pracinha__dice--free .bdie, .pracinha__dice--third .bdie {
+  border-color: var(--burst); box-shadow: 0 0 0 3px color-mix(in srgb, var(--burst) 45%, transparent), 0 0 18px var(--burst);
+  animation: bdie-cheer 600ms ease-in-out 2;
+}
+@keyframes bdie-cheer {
+  0%, 100% { transform: none; }
+  30% { transform: translateY(-8px) rotate(-8deg); }
+  60% { transform: translateY(0) rotate(6deg); }
+}
+.bburst {
+  position: absolute; left: 50%; bottom: calc(100% + 6px); z-index: 2; translate: -50% 0;
+  display: grid; justify-items: center; gap: 2px; padding: 6px 14px; white-space: nowrap; pointer-events: none;
+  background: var(--burst); color: #1d1712; border-radius: var(--r-md); box-shadow: var(--e2, var(--e1));
+  animation: bburst-pop 1800ms ease-out forwards;
+}
+.bburst--third { color: #fff; }
+.bburst__title { font-family: var(--font-display); font-weight: 800; font-size: 20px; letter-spacing: 0.02em; line-height: 1; }
+.bburst__sub { font-size: 12px; font-weight: 700; }
+@keyframes bburst-pop {
+  0% { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+  12% { transform: scale(1.2) rotate(3deg); opacity: 1; }
+  22% { transform: scale(1) rotate(0); }
+  85% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.9) translateY(-6px); opacity: 0; }
+}
+.bburst__sparks { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+.bburst__sparks span {
+  position: absolute; width: 7px; height: 7px; margin: -3.5px; border-radius: 50%; background: var(--burst);
+  box-shadow: 0 0 6px var(--burst); rotate: calc(var(--i) * 36deg);
+  animation: bburst-spark 700ms ease-out forwards;
+}
+@keyframes bburst-spark {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-64px) scale(0.3); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bburst, .bburst__sparks span, .pracinha__dice .bdie { animation: none; }
+  .bburst__sparks { display: none; }
+}
 
 /* Dono do Bairro: rulebook and end screen */
 .brules { max-width: 560px; max-height: calc(100dvh - 32px); overflow-y: auto; display: grid; gap: 14px; }
