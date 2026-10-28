@@ -44,8 +44,13 @@ export function Square({ info, size, colors, names, current, facing, onOpen }: P
     housesLabel,
     info.mortgaged ? text.ui('mortgagedTag') : null,
     rent && text.ui('rentTag', { rent: rent.long }),
+    info.jailed.length > 0 && text.ui('jailedTag', { names: info.jailed.map(i => names[i] || text.ui('ownerFallback')).join(', ') }),
   ].filter(Boolean).join(', ');
 
+  const visitors = info.tokens.filter(i => !info.jailed.includes(i));
+  const token = (i: number) => (
+    <span key={i} className={`bsq__token${i === current ? ' bsq__token--current' : ''}`} style={{ backgroundColor: colors[i] }} />
+  );
   const cls = [
     'bsq', `bsq--${size}`, `bsq--${info.kind}`,
     facing ? `bsq--face-${facing}` : '',
@@ -63,11 +68,9 @@ export function Square({ info, size, colors, names, current, facing, onOpen }: P
       {info.houses > 0 && (
         <span className="bsq__houses" aria-hidden="true">{info.houses === 5 ? '▮' : '⌂'.repeat(info.houses)}</span>
       )}
-      {info.tokens.length > 0 && (
-        <span className="bsq__tokens" aria-hidden="true">
-          {info.tokens.map(i => <span key={i} className={`bsq__token${i === current ? ' bsq__token--current' : ''}`} style={{ backgroundColor: colors[i] }} />)}
-        </span>
-      )}
+      {visitors.length > 0 && <span className="bsq__tokens" aria-hidden="true">{visitors.map(token)}</span>}
+      {/* Serving time: behind bars in the corner of the Papuda, apart from anyone just visiting. */}
+      {info.jailed.length > 0 && <span className="bsq__cell" aria-hidden="true">{info.jailed.map(token)}</span>}
     </button>
   );
 }

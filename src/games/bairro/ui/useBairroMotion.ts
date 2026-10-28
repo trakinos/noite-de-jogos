@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { stayStill } from '../../../ui/useCardMotion';
 import type { BairroView } from '../view';
-import { doublesBetween, movesBetween, releasesBetween, rolledBetween, type DoublesKind, type Release, type TokenMove } from './motion';
+import { doublesBetween, movesBetween, releasesBetween, rolledBetween, type Bonus, type DoublesKind, type Release, type TokenMove } from './motion';
 
 /** One step of a token's walk. */
 export const STEP_MS = 220;
@@ -29,34 +29,45 @@ const CARRIED = -1;
 
 /** A Tigrinho card on screen: it rises from its square, flips over and stays long enough to read. */
 export const CARD_MS = 2600;
+/** Money from the board: the amount pops off the square and floats up. */
+export const BONUS_MS = 1600;
 
 export interface BoardScenes {
   /** The cop takes the token away (see ARREST_MS). */
   onArrest?: (move: TokenMove) => void;
   /** A Tigrinho card is drawn (see CARD_MS). */
   onCard?: (move: TokenMove) => void;
+  /** The board pays or charges as the token reaches the square (see BONUS_MS); the walk goes on meanwhile. */
+  onBonus?: (move: TokenMove, bonus: Bonus) => void;
 }
 
 /**
  * Where each seat's token is drawn: walks through `steps` after a move (after the dice have shaken),
  * and ends on the real position. A Tigrinho card holds the walk on its square for CARD_MS. An arrest calls
  * `onArrest` on the arrest square, and the token is carried (drawn nowhere) until the cop drops it in the Papuda.
+ * Board money (`onBonus`) fires as the token reaches its square. Views that move nobody don't cut a walk short.
  * Reduced motion and hidden tabs show the real position at once.
  */
 export function useDisplayedPositions(view: BairroView, scenes: BoardScenes = {}): number[] {
   const [shown, setShown] = useState(() => positionsOf(view));
   const prev = useRef(view);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  /** Where the walk under way ends; null when nothing is walking. */
+  const walkingTo = useRef<number[] | null>(null);
   const cb = useRef(scenes);
   cb.current = scenes;
 
   useLayoutEffect(() => {
     const before = prev.current;
     prev.current = view;
-    timers.current.forEach(clearTimeout);
-    timers.current = [];
     const real = positionsOf(view);
     const moves = movesBetween(before, view);
+    // A view that moves nobody (ending the turn, buying) lets the walk under way finish, scenes and all.
+    const same = (a: number[]) => a.length === real.length && a.every((p, i) => p === real[i]);
+    if (moves.length === 0 && walkingTo.current && same(walkingTo.current) && !stayStill()) return;
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+    walkingTo.current = null;
     if (moves.length === 0 || stayStill()) {
       setShown(real);
       return;
@@ -65,7 +76,11 @@ export function useDisplayedPositions(view: BairroView, scenes: BoardScenes = {}
     const start = [...real];
     for (const m of moves) start[m.player] = m.from;
     setShown(start);
-    const later = (ms: number, fn: () => void) => timers.current.push(setTimeout(fn, ms));
+    let end = 0;
+    const later = (ms: number, fn: () => void) => {
+      end = Math.max(end, ms);
+      timers.current.push(setTimeout(fn, ms));
+    };
     const at = (ms: number, player: number, pos: number) =>
       later(ms, () => setShown(cur => cur.map((p, i) => (i === player ? pos : p))));
     for (const m of moves) {
@@ -82,10 +97,15 @@ export function useDisplayedPositions(view: BairroView, scenes: BoardScenes = {}
           return;
         }
         at(t, m.player, pos);
+        for (const b of m.bonuses ?? []) if (b.at === k) later(t, () => cb.current.onBonus?.(m, b));
         t += STEP_MS;
       });
       if (m.card && m.card.after === m.steps.length) later(t, () => cb.current.onCard?.(m));
     }
+    walkingTo.current = real;
+    later(end + 1, () => {
+      walkingTo.current = null;
+    });
   }, [view]);
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);

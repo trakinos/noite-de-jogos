@@ -21,6 +21,11 @@ What changed for players, newest first. Every push to `main` deploys to https://
 - **Counter-offers.** Whoever gets a trade offer can now answer with a counter-offer instead of just accepting or declining. It opens with the terms on the table, ready to change, and goes back to the other player, who can accept, decline or counter again, up to 3 counter-offers per trade. Counter-offers don't use up the turn's 3 proposals, and whoever sent one can still withdraw it.
 - **New tiles.** On the map, every rua's color band now faces the Pracinha, on whichever side of the board it sits. An owned tile is tinted in its owner's color with a thin ring of it, on the map and on the phone strip, and it shows the rent landing there costs right now (doubled for a whole rua, more with puxadinhos, "8×🎲" for a serviço). A mortgaged tile shows no rent.
 - **See anyone's escrituras.** Tap a player in the players list (or in the phone's players sheet) and the list below shows their escrituras by rua, under "Escrituras de Ana". Tapping one opens its card. Your own come back when you tap yourself.
+- **Money from the board.** Passing the Pé de Meia or landing on the Bolão pops a green "+$200" off the square with coins bursting out; the IPTU pops a red "-$200" with coins falling in. It plays for everyone, as the token gets there.
+- **Dice numbers.** Once the dice land, the numbers show below them ("4 + 2 = 6").
+- **Who's locked up.** At the Papuda, players serving time sit behind bars in a little cell on the tile; anyone just visiting stands apart, as before.
+- **Walks aren't cut short.** Ending the turn (or any move that doesn't move a token) while a token is still walking used to make it jump to the end and skip what was on the way; now the walk and its scenes finish.
+- **Rules fix.** The rules said the Bolão charges $200; it pays you $200, as the game always did.
 
 ## Dono do Bairro
 

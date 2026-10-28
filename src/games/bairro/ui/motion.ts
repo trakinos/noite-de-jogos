@@ -1,3 +1,4 @@
+import { BOARD } from '../board';
 import { DECK } from '../deck';
 import { BOARD_SIZE } from './geometry';
 import type { BairroView } from '../view';
@@ -12,6 +13,40 @@ export interface TokenMove {
   arrestAt?: number;
   /** A Tigrinho card drawn on the way: shown after the first `after` steps, before the rest (a jump or the arrest). */
   card?: { id: string; pos: number; after: number };
+  /** Money from the board on the way: passing the Pé de Meia, the IPTU or the Bolão, as the token reaches step `at`. */
+  bonuses?: Bonus[];
+}
+
+export type BonusKind = 'start' | 'iptu' | 'bolao';
+export interface Bonus {
+  /** Index into `steps`: the token is on this square when the money moves. */
+  at: number;
+  pos: number;
+  kind: BonusKind;
+  /** Positive for money in, negative for the IPTU. */
+  amount: number;
+}
+
+const BOLAO_POS = BOARD.findIndex(sq => sq.kind === 'bolao');
+
+/** The board's money in `mine` (one player's new log entries), placed on the move's steps. */
+function bonusesOn(steps: number[], mine: BairroView['log']): Bonus[] {
+  const last = steps.length - 1;
+  const on = (pos: number) => {
+    const k = steps.lastIndexOf(pos);
+    return k < 0 ? last : k;
+  };
+  return mine.flatMap((e): Bonus[] => {
+    const amount = Number(e.params?.amount);
+    if (!Number.isFinite(amount)) return [];
+    if (e.key === 'passStart') return [{ at: on(0), pos: 0, kind: 'start', amount }];
+    if (e.key === 'wonBolao') return [{ at: on(BOLAO_POS), pos: BOLAO_POS, kind: 'bolao', amount }];
+    if (e.key === 'paidTax') {
+      const pos = Number(e.params?.pos);
+      return Number.isInteger(pos) ? [{ at: on(pos), pos, kind: 'iptu', amount: -amount }] : [];
+    }
+    return [];
+  });
 }
 
 /** The longest walk a roll can give (two dice); anything longer is a jump. */
@@ -48,26 +83,34 @@ export function movesBetween(prev: BairroView, next: BairroView): TokenMove[] {
     const to = p.pos;
     if (from === to) return [];
     const mine = fresh.filter(e => e.player === player);
-    const arrested = mine.some(e => e.key === 'wentToJail');
-    const third = mine.some(e => e.key === 'thirdDouble');
-    const drawn = mine.find(e => e.key === 'luck')?.params?.card;
-    const landed = third ? from : rolledTo(mine, from);
-
-    if (landed !== null && drawn !== undefined) {
-      const card = { id: String(drawn), pos: landed, after: walk(from, landed).length };
-      const path = walk(from, landed);
-      if (landed === to) return [{ player, from, to, steps: path, card }];
-      return [{ player, from, to, steps: [...path, to], card, ...(arrested ? { arrestAt: landed } : {}) }];
-    }
-    if (arrested) {
-      if (landed !== null) return [{ player, from, to, steps: [...walk(from, landed), to], arrestAt: landed }];
-      return [{ player, from, to, steps: [to] }];
-    }
-    const jumped = drawn !== undefined && advancesToStart(drawn);
-    const distance = (to - from + BOARD_SIZE) % BOARD_SIZE;
-    if (jumped || distance > MAX_WALK) return [{ player, from, to, steps: [to] }];
-    return [{ player, from, to, steps: walk(from, to) }];
+    return moveOf(player, from, to, mine).map(m => {
+      const bonuses = bonusesOn(m.steps, mine);
+      return bonuses.length > 0 ? { ...m, bonuses } : m;
+    });
   });
+}
+
+/** One player's move from `from` to `to`, read from their new log entries `mine`. */
+function moveOf(player: number, from: number, to: number, mine: BairroView['log']): TokenMove[] {
+  const arrested = mine.some(e => e.key === 'wentToJail');
+  const third = mine.some(e => e.key === 'thirdDouble');
+  const drawn = mine.find(e => e.key === 'luck')?.params?.card;
+  const landed = third ? from : rolledTo(mine, from);
+
+  if (landed !== null && drawn !== undefined) {
+    const card = { id: String(drawn), pos: landed, after: walk(from, landed).length };
+    const path = walk(from, landed);
+    if (landed === to) return [{ player, from, to, steps: path, card }];
+    return [{ player, from, to, steps: [...path, to], card, ...(arrested ? { arrestAt: landed } : {}) }];
+  }
+  if (arrested) {
+    if (landed !== null) return [{ player, from, to, steps: [...walk(from, landed), to], arrestAt: landed }];
+    return [{ player, from, to, steps: [to] }];
+  }
+  const jumped = drawn !== undefined && advancesToStart(drawn);
+  const distance = (to - from + BOARD_SIZE) % BOARD_SIZE;
+  if (jumped || distance > MAX_WALK) return [{ player, from, to, steps: [to] }];
+  return [{ player, from, to, steps: walk(from, to) }];
 }
 
 /** Whether dice were rolled between the two views (a repeated roll still counts). */

@@ -6,6 +6,49 @@ import { DECK } from '../deck';
 import { BOARD } from '../board';
 import { doublesBetween, releasesBetween, movesBetween, newEntries, rolledBetween, withPositions } from './motion';
 
+describe('movesBetween bonuses', () => {
+  it('pays the Pé de Meia as the token passes it', () => {
+    const s = game(2);
+    s.players[0].pos = 38;
+    rig(s, [[2, 3]]);
+    const before = viewFor(s, 0);
+    apply(s, 0, { type: 'roll' });
+    const [m] = movesBetween(before, viewFor(s, 0));
+    expect(m.steps).toEqual([39, 0, 1, 2, 3]);
+    expect(m.bonuses).toEqual([{ at: 1, pos: 0, kind: 'start', amount: 200 }]);
+  });
+
+  it('charges the IPTU and pays the Bolão on landing', () => {
+    const iptu = BOARD.findIndex(sq => sq.kind === 'iptu');
+    const bolao = BOARD.findIndex(sq => sq.kind === 'bolao');
+    const s = game(2);
+    rig(s, [[1, iptu - 1]]);
+    let before = viewFor(s, 0);
+    apply(s, 0, { type: 'roll' });
+    expect(movesBetween(before, viewFor(s, 0))[0].bonuses).toEqual([{ at: iptu - 1, pos: iptu, kind: 'iptu', amount: -200 }]);
+
+    const t = game(2);
+    t.players[0].pos = bolao - 4;
+    rig(t, [[1, 3]]);
+    before = viewFor(t, 0);
+    apply(t, 0, { type: 'roll' });
+    expect(movesBetween(before, viewFor(t, 0))[0].bonuses).toEqual([{ at: 3, pos: bolao, kind: 'bolao', amount: 200 }]);
+  });
+
+  it('pays the Pé de Meia on a jump there, and has no bonuses on a plain walk', () => {
+    const s = game(2);
+    s.players[0].pos = 25;
+    const before = viewFor(s, 0);
+    s.players[0].pos = 0;
+    s.log.push({ player: 0, key: 'passStart', params: { amount: 200 } });
+    expect(movesBetween(before, viewFor(s, 0))[0].bonuses).toEqual([{ at: 0, pos: 0, kind: 'start', amount: 200 }]);
+    const t = game(2);
+    const b2 = viewFor(t, 0);
+    t.players[0].pos = 4;
+    expect(movesBetween(b2, viewFor(t, 0))[0]).not.toHaveProperty('bonuses');
+  });
+});
+
 describe('movesBetween', () => {
   it('walks a normal move square by square', () => {
     const s = game(2);
@@ -252,6 +295,9 @@ describe('Tigrinho cards on the way', () => {
 
   it('shows the card, then jumps to the Pé de Meia', () => {
     const { moves, card } = drawOn('advanceToStart');
-    expect(moves).toEqual([{ player: 0, from: luckPos - 3, to: 0, steps: [...walkTo, 0], card: { id: card, pos: luckPos, after: 3 } }]);
+    expect(moves).toEqual([{
+      player: 0, from: luckPos - 3, to: 0, steps: [...walkTo, 0], card: { id: card, pos: luckPos, after: 3 },
+      bonuses: [{ at: 3, pos: 0, kind: 'start', amount: 200 }],
+    }]);
   });
 });

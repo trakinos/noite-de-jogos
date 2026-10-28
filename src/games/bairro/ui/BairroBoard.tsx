@@ -22,6 +22,7 @@ import { TradeWatch } from './TradeWatch';
 import { BARS_AT_MS, useDisplayedPositions, useReleases } from './useBairroMotion';
 import { playArrest, playJailedScreen, playRelease } from './jailScenes';
 import { playLuckCard } from './luckScene';
+import { playBonus } from './bonusScene';
 import { useMediaQuery } from './useMediaQuery';
 import { useBairroText } from './useBairroText';
 import { money } from './text';
@@ -86,6 +87,7 @@ export function BairroBoard({ view, lobby, code, error, clock, awaiting, onInten
         body: text.card(m.card!.id),
       });
     },
+    onBonus: (_m, b) => playBonus(b.pos, b.kind, b.amount > 0, `${b.amount > 0 ? '+' : '-'}${money(lang, Math.abs(b.amount))}`),
   });
   useReleases(view, r => {
     const label = r.kind === 'fine' ? `-${money(lang, JAIL_FINE)}` : '';

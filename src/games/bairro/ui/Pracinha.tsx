@@ -48,6 +48,12 @@ export function Pracinha({ view, names, awaiting, onIntent, onTrade, compact = f
             <Die face={faces[0]} rolling={faces !== view.lastRoll} />
             <Die face={faces[1]} rolling={faces !== view.lastRoll} />
           </div>
+          {/* The numbers come in once the dice have landed; the pair's label already says them. */}
+          {faces === view.lastRoll && (
+            <p key={view.logTotal} className="pracinha__sum" aria-hidden="true">
+              {text.ui('diceSum', { d1: faces[0], d2: faces[1], sum: faces[0] + faces[1] })}
+            </p>
+          )}
           {burst && (
             <div className={`bburst bburst--${burst}`} role="status">
               <span className="bburst__sparks" aria-hidden="true">

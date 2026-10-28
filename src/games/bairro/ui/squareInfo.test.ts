@@ -49,4 +49,13 @@ describe('squareInfo', () => {
     s.players[1]!.bankrupt = true;
     expect(squareInfo(viewFor(s, 0), 5).rent).toBeNull();
   });
+  it('tells the players locked in the Papuda from the ones visiting', () => {
+    const s = game(3);
+    for (const p of s.players) p.pos = 10;
+    s.players[1]!.jailTurns = 0;
+    expect(squareInfo(viewFor(s, 0), 10)).toMatchObject({ tokens: [0, 1, 2], jailed: [1] });
+    // Walking to the Papuda before the cop drops them there: not in the cell yet.
+    s.players[1]!.pos = 30;
+    expect(squareInfo(viewFor(s, 0), 30).jailed).toEqual([]);
+  });
 });

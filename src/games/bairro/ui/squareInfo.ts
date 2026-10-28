@@ -1,4 +1,4 @@
-import { BOARD } from '../board';
+import { BOARD, JAIL_POS } from '../board';
 import type { BairroView } from '../view';
 import { RUA_COLORS } from './geometry';
 
@@ -15,6 +15,8 @@ export interface SquareInfo {
   mortgaged: boolean;
   /** Seats standing here; bankrupt players are left out. */
   tokens: number[];
+  /** The ones among `tokens` serving time: only on the Papuda, where visitors just pass through. */
+  jailed: number[];
   /**
    * What landing here costs right now: an amount for a ponto, the dice multiplier for a serviço.
    * Null when nobody collects (no owner, mortgaged, or the owner went bust). Mirrors the engine's rentFor.
@@ -50,6 +52,7 @@ export function squareInfo(view: BairroView, pos: number): SquareInfo {
     houses: own?.houses ?? 0,
     mortgaged: own?.mortgaged ?? false,
     tokens: view.players.flatMap((p, i) => (!p.bankrupt && p.pos === pos ? [i] : [])),
+    jailed: pos !== JAIL_POS ? [] : view.players.flatMap((p, i) => (!p.bankrupt && p.pos === pos && p.jailTurns !== null ? [i] : [])),
     rent: rentNow(view, pos),
   };
 }
