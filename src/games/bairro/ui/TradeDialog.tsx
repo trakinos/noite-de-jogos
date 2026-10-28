@@ -7,6 +7,7 @@ import { BairroDialog } from './BairroDialog';
 import { money } from './text';
 import { clampCount, emptySide, isEmptySide, sideLines, tradeOptions, tradePartners, tradesLeft } from './trade';
 import type { TradeSideOptions } from './trade';
+import { AssetPrice, SideTotal, TradeBalance } from './TradeValues';
 import { useBairroText } from './useBairroText';
 
 interface Props {
@@ -18,6 +19,7 @@ interface Props {
 }
 
 interface ColumnProps {
+  view: BairroView;
   title: string;
   options: TradeSideOptions;
   side: OfferSide;
@@ -25,7 +27,7 @@ interface ColumnProps {
 }
 
 /** One side of the offer: the escrituras that may go in, a cash amount and the lawyer cards. */
-function Column({ title, options, side, onChange }: ColumnProps) {
+function Column({ view, title, options, side, onChange }: ColumnProps) {
   const { tr } = useLang();
   const text = useBairroText();
   const toggle = (pos: number) =>
@@ -44,6 +46,7 @@ function Column({ title, options, side, onChange }: ColumnProps) {
                 <input type="checkbox" checked={side.assets.includes(a.pos)} disabled={!a.enabled} onChange={() => toggle(a.pos)} />
                 <span>
                   {text.square(a.pos)}
+                  <AssetPrice view={view} pos={a.pos} />
                   {a.reason && <small className="besc__reason">{text.reason(a.reason)}</small>}
                 </span>
               </label>
@@ -75,6 +78,7 @@ function Column({ title, options, side, onChange }: ColumnProps) {
           </button>
         </div>
       )}
+      <SideTotal view={view} side={side} />
     </section>
   );
 }
@@ -106,6 +110,7 @@ export function TradeDialog({ view, names, awaiting, onIntent, onClose }: Props)
     return (
       <BairroDialog key="waiting" title={text.ui('tradeTitle')} onClose={() => undefined} dismissable={false} className="btrade">
         <p className="btrade__summary">{summary}</p>
+        <TradeBalance view={view} give={mine.give} get={mine.get} />
         <p role="status" className="muted">{text.ui('tradeWaiting', { name: name(mine.to) })}</p>
         <div className="besc__actions">
           <button type="button" disabled={awaiting} onClick={() => onIntent({ type: 'cancelTrade' })}>
@@ -142,10 +147,11 @@ export function TradeDialog({ view, names, awaiting, onIntent, onClose }: Props)
         </p>
       )}
       <div className="btrade__cols">
-        <Column title={text.ui('tradeIGive')} options={opts.give} side={give} onChange={setGive} />
-        <Column title={text.ui('tradeIGet')} options={opts.get} side={get} onChange={setGet} />
+        <Column view={view} title={text.ui('tradeIGive')} options={opts.give} side={give} onChange={setGive} />
+        <Column view={view} title={text.ui('tradeIGet')} options={opts.get} side={get} onChange={setGet} />
       </div>
       <p className="btrade__summary" aria-live="polite">{summary}</p>
+      <TradeBalance view={view} give={give} get={get} />
       <p className="muted btrade__used">{text.ui('tradeUsed', { n: view.tradesThisTurn, max: MAX_TRADES_PER_TURN })}</p>
       <div className="besc__actions">
         <button type="button" className="primary" disabled={awaiting || tradesLeft(view) === 0 || (isEmptySide(give) && isEmptySide(get))} onClick={send}>

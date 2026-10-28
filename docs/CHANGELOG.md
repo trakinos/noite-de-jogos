@@ -14,6 +14,7 @@ What changed for players, newest first. Every push to `main` deploys to https://
 - **Your own arrest hits home.** When it's you, bars slam down over your whole screen with "Você foi pra Papuda!" and how to get out.
 - **Getting out of the Papuda.** The bars lift off the square and the token hops out, with 💸 and the fine, 📜 for the Carta do Advogado, or 🎲 for doubles.
 - **Doubles feel like doubles.** The dice glow and cheer and a "Dobrada!" burst pops over them for everyone: "Jogue de novo", "Saiu da Papuda", or in red, "Três dobradas! Direto pra Papuda".
+- **Trades show what they're worth.** Each escritura in a proposal shows its price (a mortgaged one also shows what lifting the mortgage costs), each side shows its total, and a line says who comes out ahead on paper, for both the one proposing and the one answering.
 
 ## Dono do Bairro
 

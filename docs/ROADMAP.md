@@ -56,7 +56,8 @@ Full list and notes: `docs/playtest-26.10.27.md`.
 - [x] **Tigrinho:** the drawn card rises from its square and flips over in the middle of every screen, green for bom and red for ruim.
 - [ ] **Tiles:** the rua color always faces the center, the whole tile takes a soft tint of the owner's color, and each tile shows its current rent.
 - [ ] **Players list:** click a player to see their escrituras.
-- [ ] **Trades:** show the values of the escrituras in a proposal; counter-proposals.
+- [x] **Trades:** show the values of the escrituras in a proposal.
+- [ ] **Trades:** counter-proposals.
 - [ ] **Lobby settings:** trades visible to everyone; game acceleration (brainstorm later).
 - [ ] **Custom rules** (a toggle, then a list to pick from; later): shuffled street positions, objective cards, shuffled hidden street values, Tigrinho wildcards (forced trade, forced mortgage…), a bribe to skip rent.
 

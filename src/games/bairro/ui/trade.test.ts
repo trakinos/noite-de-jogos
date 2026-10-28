@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { game, give } from '../testkit';
 import { viewFor } from '../view';
 import { bairroText } from './text';
-import { clampCount, isEmptySide, sideLines, tradePartners, tradeOptions, tradesLeft } from './trade';
+import { assetValue, clampCount, isEmptySide, sideValue, sideLines, tradePartners, tradeOptions, tradesLeft } from './trade';
 
 describe('tradeOptions', () => {
   it('lists each side\'s assets in board order, with cash and lawyer cards', () => {
@@ -76,5 +76,26 @@ describe('sideLines', () => {
     expect(sideLines({ assets: [1, 3], cash: 1240, lawyerCards: 2 }, en, 'en')).toEqual([en.square(1), en.square(3), '$1,240', '2 lawyer cards']);
     expect(sideLines({ assets: [], cash: 0, lawyerCards: 1 }, pt, 'pt')).toEqual(['1 carta de advogado']);
     expect(sideLines({ assets: [], cash: 0, lawyerCards: 0 }, en, 'en')).toEqual([]);
+  });
+});
+
+describe('trade values', () => {
+  it('values an escritura at its price, less the cost of lifting its mortgage', () => {
+    const s = game(2);
+    give(s, 0, 1);
+    give(s, 0, 3, { mortgaged: true });
+    give(s, 1, 5);
+    const v = viewFor(s, 0);
+    expect(assetValue(v, 1)).toEqual({ pos: 1, price: 60, lift: null, worth: 60 });
+    expect(assetValue(v, 3)).toEqual({ pos: 3, price: 60, lift: 36, worth: 24 });
+    expect(assetValue(v, 5)).toMatchObject({ price: 200, worth: 200 });
+  });
+
+  it('adds a side up: escrituras plus cash, lawyer cards left out', () => {
+    const s = game(2);
+    give(s, 0, 1);
+    give(s, 0, 3, { mortgaged: true });
+    expect(sideValue(viewFor(s, 0), { assets: [1, 3], cash: 100, lawyerCards: 2 })).toBe(184);
+    expect(sideValue(viewFor(s, 0), { assets: [], cash: 0, lawyerCards: 0 })).toBe(0);
   });
 });

@@ -4,7 +4,8 @@ import { TimerBar } from '../../../ui/components/TimerBar';
 import type { BairroIntent, OfferSide } from '../types';
 import type { BairroView } from '../view';
 import { BairroDialog } from './BairroDialog';
-import { sideLines } from './trade';
+import { money } from './text';
+import { AssetPrice, SideTotal, TradeBalance } from './TradeValues';
 import { useBairroText } from './useBairroText';
 
 interface Props {
@@ -22,16 +23,29 @@ export function TradeAnswerDialog({ view, names, clock, awaiting, onIntent }: Pr
   const offer = view.offer;
   if (!offer) return null;
 
+  // Escrituras by name with their price, then cash and lawyer cards.
   const list = (side: OfferSide) => {
-    const lines = sideLines(side, text, tr.lang);
-    return lines.length === 0 ? (
+    const extras = [
+      ...(side.cash > 0 ? [money(tr.lang, side.cash)] : []),
+      ...(side.lawyerCards > 0 ? [side.lawyerCards === 1 ? text.ui('tradeCardsOne') : text.ui('tradeCardsMany', { n: side.lawyerCards })] : []),
+    ];
+    return side.assets.length + extras.length === 0 ? (
       <p className="muted">{text.ui('tradeNothing')}</p>
     ) : (
-      <ul className="btrade__lines">
-        {lines.map((l, i) => (
-          <li key={i}>{l}</li>
-        ))}
-      </ul>
+      <>
+        <ul className="btrade__lines">
+          {side.assets.map(pos => (
+            <li key={pos}>
+              {text.square(pos)}
+              <AssetPrice view={view} pos={pos} />
+            </li>
+          ))}
+          {extras.map((l, i) => (
+            <li key={`x${i}`}>{l}</li>
+          ))}
+        </ul>
+        <SideTotal view={view} side={side} />
+      </>
     );
   };
 
@@ -49,6 +63,7 @@ export function TradeAnswerDialog({ view, names, clock, awaiting, onIntent }: Pr
           {list(offer.get)}
         </section>
       </div>
+      <TradeBalance view={view} give={offer.get} get={offer.give} />
       <div className="besc__actions">
         <button type="button" className="primary" disabled={awaiting} onClick={() => onIntent({ type: 'answerTrade', accept: true })}>
           {text.ui('answerAccept')}

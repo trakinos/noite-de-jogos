@@ -1134,6 +1134,14 @@ button.link:hover { color: var(--text); }
 .btrade__cards b { min-width: 1.5em; text-align: center; font-variant-numeric: tabular-nums; }
 .btrade__summary { margin: 0; font-weight: 800; }
 .btrade__used { margin: 0; }
+.btrade__lines li { display: grid; }
+.btrade__price { font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+.btrade__price.is-mortgaged { color: var(--danger); }
+.btrade__total { margin: 0; font-weight: 800; font-variant-numeric: tabular-nums; }
+.btrade__balance { display: grid; gap: 2px; padding: 8px 10px; border-radius: var(--r-md); background: var(--surface-2); }
+.btrade__balance p { margin: 0; font-weight: 800; }
+.btrade__balance--ahead { box-shadow: inset 4px 0 0 #3f9d5a; }
+.btrade__balance--behind { box-shadow: inset 4px 0 0 #e0533d; }
 @media (max-width: 479px) {
   .btrade__cols { grid-template-columns: 1fr; }
 }

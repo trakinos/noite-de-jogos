@@ -1,6 +1,6 @@
 import type { Lang } from '../../../i18n/types';
 import { ruaPositions } from '../assets';
-import { BOARD } from '../board';
+import { BOARD, unmortgageCost } from '../board';
 import { MAX_TRADES_PER_TURN } from '../trades';
 import type { OfferSide } from '../types';
 import type { BairroView } from '../view';
@@ -67,4 +67,25 @@ export function sideLines(side: OfferSide, text: BairroText, lang: Lang): string
     ...(side.cash > 0 ? [money(lang, side.cash)] : []),
     ...(side.lawyerCards > 0 ? [side.lawyerCards === 1 ? text.ui('tradeCardsOne') : text.ui('tradeCardsMany', { n: side.lawyerCards })] : []),
   ];
+}
+
+/** What an escritura is worth in a trade: its price, less the cost of lifting the mortgage when it has one. */
+export interface AssetValue {
+  pos: number;
+  price: number;
+  /** What the new owner pays to lift the mortgage; null when it has none. */
+  lift: number | null;
+  worth: number;
+}
+
+export function assetValue(view: BairroView, pos: number): AssetValue {
+  const sq = BOARD[pos]!;
+  const price = sq.kind === 'ponto' || sq.kind === 'servico' ? sq.price : 0;
+  const lift = view.owned[pos]?.mortgaged && (sq.kind === 'ponto' || sq.kind === 'servico') ? unmortgageCost(sq) : null;
+  return { pos, price, lift, worth: price - (lift ?? 0) };
+}
+
+/** A side's total in money: its escrituras' worth plus its cash. Lawyer cards have no price, so they don't count. */
+export function sideValue(view: BairroView, side: OfferSide): number {
+  return side.assets.reduce((sum, pos) => sum + assetValue(view, pos).worth, side.cash);
 }
