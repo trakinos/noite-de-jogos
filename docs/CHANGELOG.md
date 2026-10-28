@@ -8,6 +8,7 @@ What changed for players, newest first. Every push to `main` deploys to https://
 - **New names.** The card deck is now **Tigrinho**, the start square is **Pé de Meia**, the jail is the **Papuda**, and the Sorveteiro service (right next to the Sorveteria) is now the **Carro da Pamonha**.
 - **Easier to follow the turn.** The token of the player whose turn it is is bigger and pulses gently, on the map and on the phone strip.
 - **Slower walk.** Tokens walk around the board a little slower, so everyone can see where they land.
+- **Real dice.** The dice show pips instead of numbers. They tumble and hop while rolling, then bounce as they land.
 
 ## Dono do Bairro
 

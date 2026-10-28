@@ -4,8 +4,8 @@ Notes from the first real playtest of Dono do Bairro. "DRDB" below is the Deu Ru
 
 ## Improvements
 
-- [ ] The current player should be shown bigger on the board (also on phones).
-- [ ] Make the player movement a little slower.
+- [x] The current player should be shown bigger on the board (also on phones).
+- [x] Make the player movement a little slower.
 - [ ] Rolling doubles gets an animation, so the moment feels meaningful.
 - [ ] Arrest animation: a little cop catches the player and takes them to jail.
 - [ ] Animations for when the current player is arrested and when bail is paid.
@@ -16,8 +16,8 @@ Notes from the first real playtest of Dono do Bairro. "DRDB" below is the Deu Ru
 - [ ] Redo the board tiles: the group color detail always faces the center of the board (as it does now on the bottom row), and the whole tile gets a soft tint of the owner's color.
 - [ ] Show the current rent on each tile.
 - [ ] Click a player in the players list to see their properties.
-- [ ] Dice with pips instead of numerals.
-- [ ] If possible, a dice-rolling animation.
+- [x] Dice with pips instead of numerals.
+- [x] If possible, a dice-rolling animation.
 
 ## Renames
 

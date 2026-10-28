@@ -6,9 +6,9 @@ import { movesBetween, rolledBetween } from './motion';
 /** One step of a token's walk. */
 export const STEP_MS = 220;
 /** The dice shake before the faces show. */
-export const ROLL_MS = 500;
+export const ROLL_MS = 800;
 /** How often the faces change while shaking. */
-const SHAKE_TICK_MS = 80;
+const SHAKE_TICK_MS = 100;
 
 const positionsOf = (view: BairroView) => view.players.map(p => p.pos);
 

@@ -49,7 +49,7 @@ Full list and notes: `docs/playtest-26.10.27.md`.
 - [x] **Renames:** Deu Bom / Deu Ruim → Tigrinho, Sorveteiro → Carro da Pamonha, Ponto de Ônibus → Pé de Meia, Xilindró → Papuda.
 - [x] The current player's token is bigger on the board (map and phone strip), with a soft pulse.
 - [x] Tokens walk a little slower.
-- [ ] **Dice:** pips instead of numerals, and a rolling animation.
+- [x] **Dice:** pips instead of numerals, and a rolling animation.
 - [ ] **Moments:** a doubles animation; arrest (a little cop takes the token to the Papuda); bail paid; drawing a Tigrinho card (like the Feira card motion), shown to everyone in a good or bad color.
 - [ ] **Tiles:** the rua color always faces the center, the whole tile takes a soft tint of the owner's color, and each tile shows its current rent.
 - [ ] **Players list:** click a player to see their escrituras.

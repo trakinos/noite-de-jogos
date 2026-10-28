@@ -5,6 +5,7 @@ import type { BairroView } from '../view';
 import { actionsFor } from './actions';
 import type { Action } from './actions';
 import { useDiceFaces } from './useBairroMotion';
+import { Die } from './Die';
 import { money } from './text';
 import { useBairroText } from './useBairroText';
 import { waitingFor } from './waiting';
@@ -41,8 +42,8 @@ export function Pracinha({ view, names, awaiting, onIntent, onTrade, compact = f
       </p>
       {view.lastRoll && faces ? (
         <div className="pracinha__dice" role="img" aria-label={text.ui('dice', { d1: view.lastRoll[0], d2: view.lastRoll[1] })}>
-          <span className={`bdie${faces !== view.lastRoll ? ' bdie--shake' : ''}`}>{faces[0]}</span>
-          <span className={`bdie${faces !== view.lastRoll ? ' bdie--shake' : ''}`}>{faces[1]}</span>
+          <Die face={faces[0]} rolling={faces !== view.lastRoll} />
+          <Die face={faces[1]} rolling={faces !== view.lastRoll} />
         </div>
       ) : (
         <p className="pracinha__log">{text.ui('noRollYet')}</p>

@@ -1018,10 +1018,16 @@ button.link:hover { color: var(--text); }
 .pracinha__log { margin: 0; font-size: 13px; color: var(--muted); font-weight: 600; }
 .pracinha__dice { display: flex; gap: 8px; }
 .bdie {
-  width: 40px; height: 40px; display: grid; place-items: center; border-radius: var(--r-sm);
-  background: var(--surface); color: var(--text); border: 2px solid var(--border); box-shadow: var(--e1);
-  font-family: var(--font-display); font-weight: 800; font-size: 20px;
+  --die: 44px;
+  width: var(--die); height: var(--die); box-sizing: border-box; padding: calc(var(--die) * 0.14);
+  display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); place-items: center;
+  border-radius: calc(var(--die) * 0.22);
+  background: linear-gradient(145deg, #fffdf8, #ece4d6); border: 2px solid var(--border);
+  box-shadow: var(--e1), inset 0 -3px 0 rgba(0, 0, 0, 0.12);
 }
+.pracinha--compact .bdie { --die: 38px; }
+.bdie__pip { width: 72%; aspect-ratio: 1; border-radius: 50%; }
+.bdie__pip--on { background: radial-gradient(circle at 35% 35%, #4a3f36, #1d1712); }
 .pracinha__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .bpanel { display: grid; gap: 12px; }
 .bpanel__box { padding: 14px 16px; }
@@ -1140,14 +1146,24 @@ button.link:hover { color: var(--text); }
 .bline { display: flex; gap: 8px; align-items: stretch; }
 .bline .bsummary { flex: 1; min-width: 0; }
 .blog-btn { flex: none; min-width: 48px; min-height: 48px; display: grid; place-items: center; }
-@keyframes bdie-shake {
-  0%, 100% { transform: translate(0) rotate(0); }
-  20% { transform: translate(-3px, 2px) rotate(-12deg); }
-  40% { transform: translate(3px, -2px) rotate(10deg); }
-  60% { transform: translate(-2px, -3px) rotate(-8deg); }
-  80% { transform: translate(2px, 3px) rotate(8deg); }
+/* Rolling: the die tumbles and hops while the faces change, then drops and bounces into place. */
+@keyframes bdie-tumble {
+  0% { transform: translateY(0) rotate(0deg) scale(1); }
+  25% { transform: translateY(-14px) rotate(90deg) scale(1.08); }
+  50% { transform: translateY(0) rotate(180deg) scale(0.96); }
+  75% { transform: translateY(-10px) rotate(270deg) scale(1.05); }
+  100% { transform: translateY(0) rotate(360deg) scale(1); }
 }
-.bdie--shake { animation: bdie-shake 160ms linear infinite; }
+@keyframes bdie-land {
+  0% { transform: scale(1.18, 0.82); }
+  40% { transform: scale(0.94, 1.06) translateY(-4px); }
+  70% { transform: scale(1.03, 0.97); }
+  100% { transform: none; }
+}
+.bdie--rolling { animation: bdie-tumble 400ms ease-in-out infinite; }
+.pracinha__dice .bdie--rolling:nth-child(2) { animation-duration: 340ms; animation-direction: reverse; }
+.bdie--land { animation: bdie-land 400ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .bdie--rolling, .bdie--land { animation: none; } }
 
 /* Dono do Bairro: rulebook and end screen */
 .brules { max-width: 560px; max-height: calc(100dvh - 32px); overflow-y: auto; display: grid; gap: 14px; }
