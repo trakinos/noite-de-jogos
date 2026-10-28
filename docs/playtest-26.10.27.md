@@ -28,7 +28,7 @@ Notes from the first real playtest of Dono do Bairro. "DRDB" below is the Deu Ru
 
 ## Extra settings (changeable in the lobby before the game starts)
 
-- [ ] Trades are shown to everyone, not just the players involved.
+- [x] Trades are shown to everyone, not just the players involved.
 - [ ] Game acceleration (brainstorm later).
 
 ## Custom rules (toggle custom rules, then pick from a list — not yet to be developed)

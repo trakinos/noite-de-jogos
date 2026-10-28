@@ -73,8 +73,10 @@ export class BairroInstance implements GameInstance {
   }
 }
 
-/** The Dono do Bairro has no lobby options. */
-export type BairroOptions = Record<string, never>;
+export interface BairroOptions {
+  /** Everyone sees the terms of an open trade offer, not just the two players in it. */
+  openTrades: boolean;
+}
 
 /** The guest receives views as unknown; in a bairro room they are this game's views. */
 export function asBairroView(v: unknown): BairroView {
@@ -85,12 +87,13 @@ export const bairroModule: GameModule<BairroOptions> = {
   id: 'bairro',
   minPlayers: 2,
   maxPlayers: 6,
-  defaultOptions: () => ({}),
+  defaultOptions: () => ({ openTrades: false }),
   parseOptions(raw): BairroOptions | { error: string } {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { error: 'Bad options' };
-    return {};
+    // Anything but a real true leaves trades private, so a room from before the setting reads as off.
+    return { openTrades: (raw as { openTrades?: unknown }).openTrades === true };
   },
-  create(seats: SeatInfo[], _options, seed) {
-    return new BairroInstance(createBairro(seats, seed));
+  create(seats: SeatInfo[], options, seed) {
+    return new BairroInstance(createBairro(seats, seed, options));
   },
 };

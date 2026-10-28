@@ -18,6 +18,7 @@ import { MapBoard } from './MapBoard';
 import { StreetBoard } from './StreetBoard';
 import { TradeAnswerDialog } from './TradeAnswerDialog';
 import { TradeDialog } from './TradeDialog';
+import { TradeWatch } from './TradeWatch';
 import { BARS_AT_MS, useDisplayedPositions, useReleases } from './useBairroMotion';
 import { playArrest, playJailedScreen, playRelease } from './jailScenes';
 import { playLuckCard } from './luckScene';
@@ -148,6 +149,8 @@ export function BairroBoard({ view, lobby, code, error, clock, awaiting, onInten
       {((tradeOpen && proposing) || myOffer) && (
         <TradeDialog view={view} names={names} awaiting={awaiting} onIntent={onIntent} onClose={() => setTradeOpen(false)} />
       )}
+
+      <TradeWatch view={view} names={names} />
 
       {view.pending === 'tradeAnswer' && <TradeAnswerDialog view={view} names={names} clock={clock} awaiting={awaiting} onIntent={onIntent} />}
 

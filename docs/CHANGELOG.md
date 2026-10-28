@@ -4,6 +4,9 @@ What changed for players, newest first. Every push to `main` deploys to https://
 
 ## Unreleased — Dono do Bairro, after the first playtest
 
+### Added
+- **Open trades (lobby setting).** The host can turn on "Trocas abertas" before the game starts. Then everyone not in a trade sees the offer on the table, with each side's escrituras, prices and totals, until it is answered. With it off (the default), only the two players see the terms; everyone else learns only who is trading with whom, and the terms are no longer sent to their devices at all.
+
 ### Changed
 - **New names.** The card deck is now **Tigrinho**, the start square is **Pé de Meia**, the jail is the **Papuda**, and the Sorveteiro service (right next to the Sorveteria) is now the **Carro da Pamonha**.
 - **Easier to follow the turn.** The token of the player whose turn it is is bigger and pulses gently, on the map and on the phone strip.

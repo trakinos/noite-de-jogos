@@ -4,7 +4,7 @@ import { START_MONEY } from './board';
 import { DECK } from './deck';
 import type { BairroState } from './types';
 
-export function createBairro(seats: SeatInfo[], seed: number): BairroState {
+export function createBairro(seats: SeatInfo[], seed: number, options: { openTrades?: boolean } = {}): BairroState {
   const rng = createRng(seed);
   const players = shuffle(rng, seats).map(seat => ({
     id: seat.id, name: seat.name, cash: START_MONEY, pos: 0, jailTurns: null, lawyerCards: 0, bankrupt: false,
@@ -15,5 +15,6 @@ export function createBairro(seats: SeatInfo[], seed: number): BairroState {
     doublesInRow: 0, lastRoll: null,
     debts: [], offer: null,
     bankruptOrder: [], log: [], rng, winner: null, turnNumber: 0, tradesThisTurn: 0,
+    openTrades: options.openTrades ?? false,
   };
 }

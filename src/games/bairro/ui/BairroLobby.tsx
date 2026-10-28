@@ -3,6 +3,7 @@ import type { HostSession } from '../../../net/host';
 import type { LobbyState } from '../../../net/protocol';
 import type { PlayerColorId } from '../../../theme/playerColors';
 import { Lobby } from '../../../ui/screens/Lobby';
+import { BairroLobbyOptions } from './BairroLobbyOptions';
 import { BairroRules } from './BairroRules';
 
 interface Props {
@@ -15,12 +16,12 @@ interface Props {
   onLeave(): void;
 }
 
-/** The shared Lobby with Dono do Bairro's rulebook behind the Rules button. */
+/** The shared Lobby with Dono do Bairro's settings and its rulebook behind the Rules button. */
 export function BairroLobby(props: Props) {
   const [rules, setRules] = useState(false);
   return (
     <>
-      <Lobby {...props} onRules={() => setRules(true)} />
+      <Lobby {...props} options={<BairroLobbyOptions lobby={props.lobby} host={props.host} />} onRules={() => setRules(true)} />
       {rules && <BairroRules onClose={() => setRules(false)} />}
     </>
   );

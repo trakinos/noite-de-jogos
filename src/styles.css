@@ -1161,6 +1161,18 @@ button.link:hover { color: var(--text); }
 .btrade__cards b { min-width: 1.5em; text-align: center; font-variant-numeric: tabular-nums; }
 .btrade__summary { margin: 0; font-weight: 800; }
 .btrade__used { margin: 0; }
+.bsetting { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; font-weight: 700; }
+.bsetting__switch { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.bsetting__switch input { width: 20px; height: 20px; min-height: 0; margin: 0; }
+/* Open trades: the offer on the table, for everyone not in it. Sits low and out of the way, above the board. */
+.btradewatch {
+  position: fixed; left: 16px; bottom: 16px; z-index: 40; display: grid; gap: 8px;
+  width: min(420px, calc(100vw - 32px)); max-height: 50vh; overflow: auto; padding: 12px 14px; box-shadow: var(--shadow-lg, 0 8px 24px rgb(0 0 0 / 0.25));
+}
+.btradewatch h2 { margin: 0; font-size: 16px; }
+/* On the computer it sits over the side column, clear of the board. */
+.bboard--wide .btradewatch { left: auto; right: max(24px, calc((100vw - 1280px) / 2 + 24px)); width: 280px; }
+.btradewatch p { margin: 0; }
 .btrade__lines li { display: grid; }
 .btrade__price { font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
 .btrade__price.is-mortgaged { color: var(--danger); }

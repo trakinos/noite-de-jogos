@@ -58,7 +58,8 @@ Full list and notes: `docs/playtest-26.10.27.md`.
 - [x] **Players list:** click a player to see their escrituras.
 - [x] **Trades:** show the values of the escrituras in a proposal.
 - [x] **Trades:** counter-proposals.
-- [ ] **Lobby settings:** trades visible to everyone; game acceleration (brainstorm later).
+- [x] **Lobby settings:** trades visible to everyone.
+- [ ] **Lobby settings:** game acceleration (brainstorm later).
 - [ ] **Custom rules** (a toggle, then a list to pick from; later): shuffled street positions, objective cards, shuffled hidden street values, Tigrinho wildcards (forced trade, forced mortgage…), a bribe to skip rent.
 
 ### C. Dono do Bairro, later

@@ -77,7 +77,7 @@ describe('viewFor', () => {
 
 describe('clock input', () => {
   const instance = (n: number) => bairroModule.create(
-    Array.from({ length: n }, (_, i) => ({ id: `p${i}`, name: `P${i}` })), {}, 1) as BairroInstance;
+    Array.from({ length: n }, (_, i) => ({ id: `p${i}`, name: `P${i}` })), bairroModule.defaultOptions(), 1) as BairroInstance;
 
   it('keeps one turn object per turn and replaces it when the turn changes', () => {
     const g = instance(2);
@@ -139,9 +139,10 @@ describe('clock input', () => {
 describe('bairroModule', () => {
   it('seats 2 to 6 players with no options', () => {
     expect(bairroModule).toMatchObject({ id: 'bairro', minPlayers: 2, maxPlayers: 6 });
-    expect(bairroModule.defaultOptions()).toEqual({});
-    expect(bairroModule.parseOptions({})).toEqual({});
-    expect(bairroModule.parseOptions({ anything: 1 })).toEqual({});
+    expect(bairroModule.defaultOptions()).toEqual({ openTrades: false });
+    expect(bairroModule.parseOptions({})).toEqual({ openTrades: false });
+    expect(bairroModule.parseOptions({ openTrades: true, anything: 1 })).toEqual({ openTrades: true });
+    expect(bairroModule.parseOptions({ openTrades: 'yes' })).toEqual({ openTrades: false });
     for (const raw of [null, undefined, 3, 'x', []]) expect(bairroModule.parseOptions(raw)).toHaveProperty('error');
   });
 
@@ -150,7 +151,7 @@ describe('bairroModule', () => {
   });
 
   it('maps player ids to seats for apply and viewFor', () => {
-    const g = bairroModule.create([{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], {}, 5);
+    const g = bairroModule.create([{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], bairroModule.defaultOptions(), 5);
     const s = (g as BairroInstance).state;
     const current = s.players[s.current].id;
     const other = s.players[1 - s.current].id;
@@ -159,5 +160,33 @@ describe('bairroModule', () => {
     expect(g.apply(current, { type: 'roll' })).toEqual({ ok: true });
     expect((g.viewFor(other) as ReturnType<typeof viewFor>).you).toBe(1 - s.current);
     expect(() => g.viewFor('nobody')).toThrow();
+  });
+});
+
+describe('trade privacy', () => {
+  const offer = (s: ReturnType<typeof game>) => {
+    give(s, 0, 1);
+    s.offer = { from: 0, to: 1, give: { assets: [1], cash: 50, lawyerCards: 0 }, get: { assets: [], cash: 100, lawyerCards: 0 }, counters: 0 };
+  };
+
+  it('keeps the terms between the two players by default', () => {
+    const s = game(3);
+    offer(s);
+    expect(viewFor(s, 0).offer).toEqual(s.offer);
+    expect(viewFor(s, 1).offer).toEqual(s.offer);
+    expect(viewFor(s, 2).offer).toEqual({ from: 0, to: 1, counters: 0, give: { assets: [], cash: 0, lawyerCards: 0 }, get: { assets: [], cash: 0, lawyerCards: 0 } });
+  });
+
+  it('shows everyone the terms with open trades', () => {
+    const s = game(3);
+    s.openTrades = true;
+    offer(s);
+    expect(viewFor(s, 2).offer).toEqual(s.offer);
+  });
+
+  it('starts a room with the lobby setting', () => {
+    const seats = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }];
+    expect(bairroModule.create(seats, { openTrades: true }, 1)).toMatchObject({ state: { openTrades: true } });
+    expect(bairroModule.create(seats, bairroModule.defaultOptions(), 1)).toMatchObject({ state: { openTrades: false } });
   });
 });

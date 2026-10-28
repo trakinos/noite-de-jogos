@@ -36,6 +36,8 @@ export interface BairroState {
   turnNumber: number;
   /** Trade proposals made this turn (cancelling or answering doesn't count); reset on every turn change. */
   tradesThisTurn: number;
+  /** Lobby setting: everyone sees the terms of an open offer, not just the two players in it. */
+  openTrades: boolean;
   /** Test hook: when non-empty, the next roll is taken from here instead of the rng. */
   riggedDice?: [number, number][];
 }
