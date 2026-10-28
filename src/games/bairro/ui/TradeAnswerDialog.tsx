@@ -1,10 +1,14 @@
+import { useState } from 'react';
 import { useLang } from '../../../i18n/LangProvider';
 import type { LocalClock } from '../../../net/guest';
 import { TimerBar } from '../../../ui/components/TimerBar';
 import type { BairroIntent, OfferSide } from '../types';
 import type { BairroView } from '../view';
+import { MAX_COUNTERS } from '../trades';
 import { BairroDialog } from './BairroDialog';
 import { money } from './text';
+import { isEmptySide, tradeOptions } from './trade';
+import { Column } from './TradeDialog';
 import { AssetPrice, SideTotal, TradeBalance } from './TradeValues';
 import { useBairroText } from './useBairroText';
 
@@ -16,12 +20,52 @@ interface Props {
   onIntent(intent: BairroIntent): void;
 }
 
-/** Opens by itself when someone offers you a trade: what you get, what you give, Accept or Decline. It can't be dismissed. */
-export function TradeAnswerDialog({ view, names, clock, awaiting, onIntent }: Props) {
+/**
+ * Opens by itself when someone offers you a trade: what you get, what you give, Accept, Decline or a counter-offer.
+ * It can't be dismissed. A new offer (a counter to your counter) starts it fresh, since it is keyed by the offer.
+ */
+export function TradeAnswerDialog(props: Props) {
+  const offer = props.view.offer;
+  return offer ? <Answer key={JSON.stringify(offer)} {...props} /> : null;
+}
+
+function Answer({ view, names, clock, awaiting, onIntent }: Props) {
   const { tr } = useLang();
   const text = useBairroText();
-  const offer = view.offer;
-  if (!offer) return null;
+  const offer = view.offer!;
+  const from = names[offer.from] || text.ui('ownerFallback');
+  // A counter-offer starts from the terms on the table, seen from your side.
+  const [countering, setCountering] = useState(false);
+  const [give, setGive] = useState<OfferSide>(() => structuredClone(offer.get));
+  const [get, setGet] = useState<OfferSide>(() => structuredClone(offer.give));
+
+  if (countering) {
+    const opts = tradeOptions(view, offer.from);
+    return (
+      <BairroDialog key="counter" title={text.ui('counterTitle')} onClose={() => undefined} dismissable={false} className="btrade">
+        <p className="btrade__who">{text.ui('counterIntro', { name: from })}</p>
+        {clock && <TimerBar clock={clock} />}
+        <div className="btrade__cols">
+          <Column view={view} title={text.ui('tradeIGive')} options={opts.give} side={give} onChange={setGive} />
+          <Column view={view} title={text.ui('tradeIGet')} options={opts.get} side={get} onChange={setGet} />
+        </div>
+        <TradeBalance view={view} give={give} get={get} />
+        <div className="besc__actions">
+          <button
+            type="button"
+            className="primary"
+            disabled={awaiting || (isEmptySide(give) && isEmptySide(get))}
+            onClick={() => onIntent({ type: 'counterTrade', offer: { give, get } })}
+          >
+            {text.ui('counterSend')}
+          </button>
+          <button type="button" disabled={awaiting} onClick={() => setCountering(false)}>
+            {text.ui('counterBack')}
+          </button>
+        </div>
+      </BairroDialog>
+    );
+  }
 
   // Escrituras by name with their price, then cash and lawyer cards.
   const list = (side: OfferSide) => {
@@ -50,8 +94,8 @@ export function TradeAnswerDialog({ view, names, clock, awaiting, onIntent }: Pr
   };
 
   return (
-    <BairroDialog title={text.ui('answerTitle')} onClose={() => undefined} dismissable={false} className="btrade">
-      <p className="btrade__who">{text.ui('answerIntro', { name: names[offer.from] || text.ui('ownerFallback') })}</p>
+    <BairroDialog key="answer" title={text.ui(offer.counters > 0 ? 'answerCounterTitle' : 'answerTitle')} onClose={() => undefined} dismissable={false} className="btrade">
+      <p className="btrade__who">{text.ui(offer.counters > 0 ? 'answerCounterIntro' : 'answerIntro', { name: from })}</p>
       {clock && <TimerBar clock={clock} />}
       <div className="btrade__cols">
         <section className="btrade__col">
@@ -71,6 +115,11 @@ export function TradeAnswerDialog({ view, names, clock, awaiting, onIntent }: Pr
         <button type="button" disabled={awaiting} onClick={() => onIntent({ type: 'answerTrade', accept: false })}>
           {text.ui('answerDecline')}
         </button>
+        {offer.counters < MAX_COUNTERS && (
+          <button type="button" disabled={awaiting} onClick={() => setCountering(true)}>
+            {text.ui('answerCounter')}
+          </button>
+        )}
       </div>
     </BairroDialog>
   );

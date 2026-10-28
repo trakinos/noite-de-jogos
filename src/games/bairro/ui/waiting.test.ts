@@ -34,7 +34,7 @@ describe('waitingFor', () => {
 
   it('says who is answering a trade', () => {
     const s = game(3);
-    s.offer = { from: 0, to: 2, give: { assets: [], cash: 10, lawyerCards: 0 }, get: { assets: [], cash: 0, lawyerCards: 0 } };
+    s.offer = { from: 0, to: 2, give: { assets: [], cash: 10, lawyerCards: 0 }, get: { assets: [], cash: 0, lawyerCards: 0 }, counters: 0 };
     expect(waiting(s, 0)).toEqual({ key: 'waitTrade', params: { name: 'Caio' } });
   });
 

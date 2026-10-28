@@ -218,3 +218,67 @@ describe('trades', () => {
     }
   });
 });
+
+describe('counter-offers', () => {
+  const counter = (s: BairroState, player: number, give_: Partial<OfferSide>, get: Partial<OfferSide>) =>
+    apply(s, player, { type: 'counterTrade', offer: { give: side(give_), get: side(get) } });
+
+  it('turns the offer around: the proposer answers the new terms', () => {
+    const s = game(2);
+    give(s, 0, 1);
+    give(s, 1, 3);
+    propose(s, terms({ assets: [1] }, { assets: [3] }));
+    expect(counter(s, 1, { assets: [3] }, { assets: [1], cash: 50 })).toEqual({ ok: true });
+    expect(s.offer).toEqual({ from: 1, to: 0, give: side({ assets: [3] }), get: side({ assets: [1], cash: 50 }), counters: 1 });
+    expect(s.tradesThisTurn).toBe(1);
+    expect(apply(s, 0, { type: 'answerTrade', accept: true })).toEqual({ ok: true });
+    expect(s.owned[1].owner).toBe(1);
+    expect(s.owned[3].owner).toBe(0);
+    expect(s.players[0].cash).toBe(1450);
+    expect(s.players[1].cash).toBe(1550);
+    expect(s.log.map(l => l.key)).toEqual(['tradeProposed', 'tradeCountered', 'tradeAccepted']);
+  });
+
+  it('only the one answering counters, and the counter must be valid', () => {
+    const s = game(3);
+    give(s, 0, 1);
+    propose(s, terms({ assets: [1] }, {}));
+    expect(counter(s, 0, {}, { assets: [1] })).toEqual(refused('tradePending'));
+    expect(counter(s, 2, {}, { assets: [1] })).toEqual(refused('tradePending'));
+    expect(counter(s, 1, { cash: 5000 }, { assets: [1] })).toEqual(refused('notEnoughCash'));
+    expect(counter(s, 1, { assets: [1] }, {})).toEqual(refused('notOwner'));
+    expect(counter(s, 1, {}, {})).toEqual(refused('emptyOffer'));
+    expect(apply(s, 1, { type: 'counterTrade' } as never)).toEqual(refused('badOffer'));
+    expect(s.offer?.counters).toBe(0);
+  });
+
+  it('goes back and forth up to the limit; then it is accept or decline', () => {
+    const s = game(2);
+    propose(s, terms({ cash: 10 }, {}));
+    expect(counter(s, 1, {}, { cash: 20 })).toEqual({ ok: true });
+    expect(counter(s, 0, { cash: 15 }, {})).toEqual({ ok: true });
+    expect(counter(s, 1, {}, { cash: 18 })).toEqual({ ok: true });
+    expect(s.offer).toMatchObject({ from: 1, to: 0, counters: 3 });
+    expect(counter(s, 0, { cash: 16 }, {})).toEqual(refused('tooManyCounters'));
+    expect(apply(s, 0, { type: 'answerTrade', accept: false })).toEqual({ ok: true });
+    expect(s.offer).toBeNull();
+  });
+
+  it('whoever made the counter-offer can withdraw it', () => {
+    const s = game(2);
+    propose(s, terms({ cash: 10 }, {}));
+    counter(s, 1, {}, { cash: 20 });
+    expect(apply(s, 0, { type: 'cancelTrade' })).toEqual(refused('tradePending'));
+    expect(apply(s, 1, { type: 'cancelTrade' })).toEqual({ ok: true });
+    expect(s.offer).toBeNull();
+    // The turn goes on: the current player can act again.
+    expect(apply(s, 0, { type: 'roll' }).ok).toBe(true);
+  });
+
+  it('has its log line and refusal in every language', () => {
+    for (const d of Object.values(BAIRRO_DICTIONARIES)) {
+      expect(d.log.tradeCountered).toBeTruthy();
+      expect(d.reasons.tooManyCounters).toBeTruthy();
+    }
+  });
+});

@@ -15,6 +15,7 @@ What changed for players, newest first. Every push to `main` deploys to https://
 - **Getting out of the Papuda.** The bars lift off the square and the token hops out, with 💸 and the fine, 📜 for the Carta do Advogado, or 🎲 for doubles.
 - **Doubles feel like doubles.** The dice glow and cheer and a "Dobrada!" burst pops over them for everyone: "Jogue de novo", "Saiu da Papuda", or in red, "Três dobradas! Direto pra Papuda".
 - **Trades show what they're worth.** Each escritura in a proposal shows its price (a mortgaged one also shows what lifting the mortgage costs), each side shows its total, and a line says who comes out ahead on paper, for both the one proposing and the one answering.
+- **Counter-offers.** Whoever gets a trade offer can now answer with a counter-offer instead of just accepting or declining. It opens with the terms on the table, ready to change, and goes back to the other player, who can accept, decline or counter again, up to 3 counter-offers per trade. Counter-offers don't use up the turn's 3 proposals, and whoever sent one can still withdraw it.
 
 ## Dono do Bairro
 

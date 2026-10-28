@@ -5,7 +5,7 @@ import { DECK } from './deck';
 import { BOARD, JAIL_FINE, JAIL_POS, PASS_START, RUAS, unmortgageCost } from './board';
 import type { PontoSquare, RuaId, ServicoSquare } from './board';
 import { charge, credit, lawyerCardId, log, mortgageOne, passTurn, sellOne } from './ops';
-import { answerTrade, cancelTrade, proposeTrade } from './trades';
+import { answerTrade, cancelTrade, counterTrade, proposeTrade } from './trades';
 import type { BairroIntent, BairroState } from './types';
 
 const ok = (): ApplyResult => ({ ok: true });
@@ -18,6 +18,7 @@ type Handler = (s: BairroState, player: number, intent: BairroIntent) => ApplyRe
 const INTENT_TYPES: ReadonlySet<string> = new Set<IntentType>([
   'roll', 'buy', 'decline', 'endTurn', 'payJailFine', 'useLawyer', 'build', 'sellBuilding',
   'mortgage', 'unmortgage', 'payDebt', 'goBankrupt', 'proposeTrade', 'cancelTrade', 'answerTrade',
+  'counterTrade',
 ]);
 
 const HANDLERS: Partial<Record<IntentType, Handler>> = {
@@ -36,6 +37,7 @@ const HANDLERS: Partial<Record<IntentType, Handler>> = {
   proposeTrade: (s, player, i) => proposeTrade(s, player, i),
   cancelTrade: (s, player) => cancelTrade(s, player),
   answerTrade: (s, player, i) => answerTrade(s, player, i),
+  counterTrade: (s, player, i) => counterTrade(s, player, i),
 };
 
 /** While any debt is open, these are the only intents accepted, and only from a debtor, on or off turn. */
@@ -48,8 +50,9 @@ export function apply(s: BairroState, player: number, intent: BairroIntent): App
   if (typeof type !== 'string' || !INTENT_TYPES.has(type)) return fail('badIntent');
   if (s.players[player]?.bankrupt) return fail('bankrupt');
   if (s.offer !== null) {
-    // Exception to the own-turn gate: while an offer is open, the recipient answers and the proposer cancels, nothing else.
-    const allowed = (type === 'answerTrade' && player === s.offer.to) || (type === 'cancelTrade' && player === s.offer.from);
+    // Exception to the own-turn gate: while an offer is open, the recipient answers or counters and the proposer cancels, nothing else.
+    const answering = (type === 'answerTrade' || type === 'counterTrade') && player === s.offer.to;
+    const allowed = answering || (type === 'cancelTrade' && player === s.offer.from);
     if (!allowed) return fail('tradePending');
   } else if (s.debts.length > 0) {
     if (!DEBT_INTENTS.has(type as IntentType) || !s.debts.some(d => d.debtor === player)) return fail('waitingForDebts');

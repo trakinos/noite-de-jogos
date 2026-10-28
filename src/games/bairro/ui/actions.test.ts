@@ -93,7 +93,7 @@ describe('actionsFor', () => {
     const s = game(2);
     expect(viewFor(s, 1).pending).toBe('wait');
     expect(actionsFor(viewFor(s, 1), false)).toEqual([]);
-    s.offer = { from: 0, to: 1, give: { assets: [], cash: 10, lawyerCards: 0 }, get: { assets: [], cash: 0, lawyerCards: 0 } };
+    s.offer = { from: 0, to: 1, give: { assets: [], cash: 10, lawyerCards: 0 }, get: { assets: [], cash: 0, lawyerCards: 0 }, counters: 0 };
     expect(viewFor(s, 1).pending).toBe('tradeAnswer');
     expect(actionsFor(viewFor(s, 1), false)).toEqual([]);
   });
@@ -122,7 +122,7 @@ describe('trade action', () => {
     s.debts = [{ debtor: 0, creditor: null, amount: 5 }];
     expect(ids(viewFor(s, 0))).not.toContain('trade');
     s.debts = [];
-    s.offer = { from: 0, to: 1, give: { assets: [], cash: 10, lawyerCards: 0 }, get: { assets: [], cash: 0, lawyerCards: 0 } };
+    s.offer = { from: 0, to: 1, give: { assets: [], cash: 10, lawyerCards: 0 }, get: { assets: [], cash: 0, lawyerCards: 0 }, counters: 0 };
     expect(ids(viewFor(s, 0))).toEqual([]);
   });
 

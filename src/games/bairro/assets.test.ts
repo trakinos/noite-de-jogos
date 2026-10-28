@@ -79,7 +79,7 @@ describe('building', () => {
     expect(canBuild(s, 0, B)).toBe('notNow');
     s.phase = { kind: 'roll' };
     expect(canBuild(s, 0, B)).toBeNull();
-    s.offer = { from: 0, to: 1, give: { assets: [], cash: 0, lawyerCards: 0 }, get: { assets: [], cash: 0, lawyerCards: 0 } };
+    s.offer = { from: 0, to: 1, give: { assets: [], cash: 0, lawyerCards: 0 }, get: { assets: [], cash: 0, lawyerCards: 0 }, counters: 0 };
     expect(canBuild(s, 0, B)).toBe('notNow');
     s.offer = null;
     s.debts.push({ debtor: 0, creditor: null, amount: 10 });

@@ -2,7 +2,7 @@ import { interpolate } from '../../../i18n';
 import { useLang } from '../../../i18n/LangProvider';
 import { BAIRRO_DICTIONARIES } from '../i18n';
 import { BOARD, JAIL_FINE, MORTGAGE_INTEREST, PASS_START, START_MONEY } from '../board';
-import { MAX_TRADES_PER_TURN } from '../trades';
+import { MAX_COUNTERS, MAX_TRADES_PER_TURN } from '../trades';
 import { BairroDialog } from './BairroDialog';
 import { RULES_LAYOUT } from './rulesLayout';
 import { money } from './text';
@@ -16,7 +16,7 @@ function ruleParams(lang: 'pt' | 'en'): Record<string, string | number> {
     startMoney: $(START_MONEY), passStart: $(PASS_START), jailFine: $(JAIL_FINE),
     iptu: $(amount('iptu')), bolao: $(amount('bolao')),
     multLow: Math.min(...mults), multHigh: Math.max(...mults),
-    interest: Math.round(MORTGAGE_INTEREST * 100), maxTrades: MAX_TRADES_PER_TURN,
+    interest: Math.round(MORTGAGE_INTEREST * 100), maxTrades: MAX_TRADES_PER_TURN, maxCounters: MAX_COUNTERS,
   };
 }
 

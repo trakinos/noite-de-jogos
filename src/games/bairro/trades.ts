@@ -3,7 +3,7 @@ import type { ApplyResult } from '../module';
 import { BOARD } from './board';
 import { ruaPositions } from './assets';
 import { log } from './ops';
-import type { BairroIntent, BairroState, Offer, OfferSide } from './types';
+import type { BairroIntent, BairroState, Offer, OfferSide, OfferTerms } from './types';
 
 const ok = (): ApplyResult => ({ ok: true });
 const fail = (reason: string): ApplyResult => ({ ok: false, reason });
@@ -55,13 +55,37 @@ export function proposeTrade(s: BairroState, player: number, intent: BairroInten
   const give = cleanSide(terms?.give);
   const get = cleanSide(terms?.get);
   if (!give || !get || !isSeat(s, terms?.to)) return fail('badOffer');
-  const offer: Offer = { from: player, to: terms.to, give, get };
+  const offer: Offer = { from: player, to: terms.to, give, get, counters: 0 };
   const why = validateOffer(s, offer);
   if (why) return fail(why);
   if (s.tradesThisTurn >= MAX_TRADES_PER_TURN) return fail('tooManyTrades');
   s.tradesThisTurn++;
   s.offer = offer;
   log(s, player, 'tradeProposed', { to: offer.to });
+  return ok();
+}
+
+/** Counter-offers allowed on one proposal, both sides together. */
+export const MAX_COUNTERS = 3;
+
+/**
+ * The recipient answers with different terms: the offer turns around, so the proposer is now the one who answers.
+ * It doesn't count as a proposal of the turn.
+ */
+export function counterTrade(s: BairroState, player: number, intent: BairroIntent): ApplyResult {
+  const open = s.offer;
+  if (!open) return fail('notNow');
+  if (player !== open.to) return fail('tradePending');
+  if (open.counters >= MAX_COUNTERS) return fail('tooManyCounters');
+  const terms = (intent as { offer?: Partial<OfferTerms> }).offer;
+  const give = cleanSide(terms?.give);
+  const get = cleanSide(terms?.get);
+  if (!give || !get) return fail('badOffer');
+  const offer: Offer = { from: player, to: open.from, give, get, counters: open.counters + 1 };
+  const why = validateOffer(s, offer);
+  if (why) return fail(why);
+  s.offer = offer;
+  log(s, player, 'tradeCountered', { to: offer.to });
   return ok();
 }
 

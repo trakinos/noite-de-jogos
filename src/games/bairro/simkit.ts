@@ -89,7 +89,7 @@ const pick = <T>(rng: RngState, xs: readonly T[]): T => xs[nextInt(rng, xs.lengt
 
 const TYPES = [
   'roll', 'buy', 'decline', 'endTurn', 'payJailFine', 'useLawyer', 'build', 'sellBuilding', 'mortgage',
-  'unmortgage', 'payDebt', 'goBankrupt', 'proposeTrade', 'cancelTrade', 'answerTrade', 'fly', '', 'ROLL',
+  'unmortgage', 'payDebt', 'goBankrupt', 'proposeTrade', 'cancelTrade', 'answerTrade', 'counterTrade', 'fly', '', 'ROLL',
 ];
 
 function randomPos(rng: RngState, s: BairroState): unknown {
@@ -114,7 +114,9 @@ function junkIntent(rng: RngState, s: BairroState, player: number): unknown {
   const r = nextFloat(rng);
   if (r < 0.03) return pick(rng, [null, undefined, 7, 'roll', [], { type: 3 }]);
   const type = pick(rng, TYPES);
-  const to = nextFloat(rng) < 0.9 ? nextInt(rng, s.players.length) : pick(rng, [-1, s.players.length, 'p1', 0.5]);
+  // A counter-offer asks for what the proposer owns, so its `get` side is usually theirs.
+  const counterTo = type === 'counterTrade' && s.offer && nextFloat(rng) < 0.8 ? s.offer.from : null;
+  const to = counterTo ?? (nextFloat(rng) < 0.9 ? nextInt(rng, s.players.length) : pick(rng, [-1, s.players.length, 'p1', 0.5]));
   return {
     type,
     pos: randomPos(rng, s),
@@ -134,9 +136,9 @@ export function runFuzz(seeds: number, maxSteps: number): RunStats {
         const { player, intent } = botMove(s);
         step(s, player, intent, stats, `seed ${seed} step ${i}`);
       } else {
-        // Often the current player, so the junk gets past the turn gate.
+        // Often the current player (or the one an offer waits on), so the junk gets past the turn gate.
         const r = nextFloat(rng);
-        const player = r < 0.4 ? s.current : r < 0.95 ? nextInt(rng, s.players.length) : pick(rng, [-1, s.players.length, 99]);
+        const player = r < 0.4 ? (s.offer && r < 0.2 ? s.offer.to : s.current) : r < 0.95 ? nextInt(rng, s.players.length) : pick(rng, [-1, s.players.length, 99]);
         step(s, player, junkIntent(rng, s, player), stats, `seed ${seed} step ${i}`);
       }
     }

@@ -18,7 +18,8 @@ export interface Debt { debtor: number; creditor: number | null /* null = bank *
 
 export interface OfferSide { assets: number[]; cash: number; lawyerCards: number }
 export interface OfferTerms { to: number; give: OfferSide; get: OfferSide }
-export interface Offer extends OfferTerms { from: number }
+/** An open offer. A counter-offer replaces it, with `from` and `to` swapped and `counters` one higher. */
+export interface Offer extends OfferTerms { from: number; counters: number }
 
 export interface BairroLogEntry { player: number | null; key: string; params?: Record<string, string | number> }
 
@@ -45,4 +46,5 @@ export type BairroIntent =
   | { type: 'build'; pos: number } | { type: 'sellBuilding'; pos: number }
   | { type: 'mortgage'; pos: number } | { type: 'unmortgage'; pos: number }
   | { type: 'payDebt' } | { type: 'goBankrupt' }
-  | { type: 'proposeTrade'; offer: OfferTerms } | { type: 'cancelTrade' } | { type: 'answerTrade'; accept: boolean };
+  | { type: 'proposeTrade'; offer: OfferTerms } | { type: 'cancelTrade' } | { type: 'answerTrade'; accept: boolean }
+  | { type: 'counterTrade'; offer: Omit<OfferTerms, 'to'> };

@@ -18,7 +18,7 @@ interface Props {
   onClose(): void;
 }
 
-interface ColumnProps {
+export interface ColumnProps {
   view: BairroView;
   title: string;
   options: TradeSideOptions;
@@ -27,7 +27,7 @@ interface ColumnProps {
 }
 
 /** One side of the offer: the escrituras that may go in, a cash amount and the lawyer cards. */
-function Column({ view, title, options, side, onChange }: ColumnProps) {
+export function Column({ view, title, options, side, onChange }: ColumnProps) {
   const { tr } = useLang();
   const text = useBairroText();
   const toggle = (pos: number) =>
