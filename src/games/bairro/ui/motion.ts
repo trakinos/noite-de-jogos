@@ -79,6 +79,30 @@ export function doublesBetween(prev: BairroView, next: BairroView): DoublesKind 
   return 'again';
 }
 
+/** How someone got out of the Papuda: paid the fine (by choice or forced on the third try), a lawyer card, or doubles. */
+export type ReleaseKind = 'fine' | 'lawyer' | 'doubles';
+export interface Release {
+  player: number;
+  kind: ReleaseKind;
+  /** True when it came with a roll (doubles or the forced fine), so it waits for the dice. */
+  rolled: boolean;
+}
+
+const RELEASES: Record<string, { kind: ReleaseKind; rolled: boolean }> = {
+  paidJailFine: { kind: 'fine', rolled: false },
+  jailFineForced: { kind: 'fine', rolled: true },
+  usedLawyer: { kind: 'lawyer', rolled: false },
+  leftJailDoubles: { kind: 'doubles', rolled: true },
+};
+
+/** Everyone who left the Papuda between the two views. */
+export function releasesBetween(prev: BairroView, next: BairroView): Release[] {
+  return newEntries(prev, next).flatMap(e => {
+    const r = RELEASES[e.key];
+    return r && e.player !== null ? [{ player: e.player, ...r }] : [];
+  });
+}
+
 /** The view with the tokens standing at `positions` (per seat), for drawing tokens mid-walk. */
 export function withPositions(view: BairroView, positions: number[]): BairroView {
   return { ...view, players: view.players.map((p, i) => ({ ...p, pos: positions[i] ?? p.pos })) };

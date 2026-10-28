@@ -3,7 +3,7 @@ import { apply } from '../engine';
 import { game, rig } from '../testkit';
 import { viewFor } from '../view';
 import { DECK } from '../deck';
-import { doublesBetween, movesBetween, newEntries, rolledBetween, withPositions } from './motion';
+import { doublesBetween, releasesBetween, movesBetween, newEntries, rolledBetween, withPositions } from './motion';
 
 describe('movesBetween', () => {
   it('walks a normal move square by square', () => {
@@ -171,5 +171,54 @@ describe('doublesBetween', () => {
     const s = game(2);
     const v = viewFor(s, 0);
     expect(doublesBetween(v, v)).toBeNull();
+  });
+});
+
+describe('releasesBetween', () => {
+  const jailed = () => {
+    const s = game(2);
+    s.players[0].pos = 10;
+    s.players[0].jailTurns = 0;
+    return s;
+  };
+
+  it('sees the fine paid', () => {
+    const s = jailed();
+    const before = viewFor(s, 0);
+    apply(s, 0, { type: 'payJailFine' });
+    expect(releasesBetween(before, viewFor(s, 0))).toEqual([{ player: 0, kind: 'fine', rolled: false }]);
+  });
+
+  it('sees a lawyer card used', () => {
+    const s = jailed();
+    s.players[0].lawyerCards = 1;
+    const before = viewFor(s, 0);
+    apply(s, 0, { type: 'useLawyer' });
+    expect(releasesBetween(before, viewFor(s, 0))).toEqual([{ player: 0, kind: 'lawyer', rolled: false }]);
+  });
+
+  it('sees doubles, which wait for the dice', () => {
+    const s = jailed();
+    rig(s, [[2, 2]]);
+    const before = viewFor(s, 0);
+    apply(s, 0, { type: 'roll' });
+    expect(releasesBetween(before, viewFor(s, 0))).toEqual([{ player: 0, kind: 'doubles', rolled: true }]);
+  });
+
+  it('sees the forced fine on the third try', () => {
+    const s = jailed();
+    s.players[0].jailTurns = 2;
+    rig(s, [[1, 2]]);
+    const before = viewFor(s, 0);
+    apply(s, 0, { type: 'roll' });
+    expect(releasesBetween(before, viewFor(s, 0))).toEqual([{ player: 0, kind: 'fine', rolled: true }]);
+  });
+
+  it('is nothing for a failed try', () => {
+    const s = jailed();
+    rig(s, [[1, 2]]);
+    const before = viewFor(s, 0);
+    apply(s, 0, { type: 'roll' });
+    expect(releasesBetween(before, viewFor(s, 0))).toEqual([]);
   });
 });

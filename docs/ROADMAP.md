@@ -52,7 +52,8 @@ Full list and notes: `docs/playtest-26.10.27.md`.
 - [x] **Dice:** pips instead of numerals, and a rolling animation.
 - [x] **Doubles:** the dice glow and a "Dobrada!" burst pops for everyone (gold, or red for the third in a row).
 - [x] **Arrest:** the token walks to where it's caught, then a cop with a siren carries it to the Papuda and the bars drop.
-- [ ] **Moments:** the arrested player's own view of the arrest; bail paid; drawing a Tigrinho card (like the Feira card motion), shown to everyone in a good or bad color.
+- [x] **Papuda moments:** your own arrest fills your screen with bars; leaving shows the bars lifting with the fine, the lawyer card or the dice.
+- [ ] **Tigrinho:** drawing a Tigrinho card (like the Feira card motion), shown to everyone in a good or bad color.
 - [ ] **Tiles:** the rua color always faces the center, the whole tile takes a soft tint of the owner's color, and each tile shows its current rent.
 - [ ] **Players list:** click a player to see their escrituras.
 - [ ] **Trades:** show the values of the escrituras in a proposal; counter-proposals.

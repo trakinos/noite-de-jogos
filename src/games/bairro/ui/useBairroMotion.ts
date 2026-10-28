@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { stayStill } from '../../../ui/useCardMotion';
 import type { BairroView } from '../view';
-import { doublesBetween, movesBetween, rolledBetween, type DoublesKind, type TokenMove } from './motion';
+import { doublesBetween, movesBetween, releasesBetween, rolledBetween, type DoublesKind, type Release, type TokenMove } from './motion';
 
 /** One step of a token's walk. */
 export const STEP_MS = 220;
@@ -16,6 +16,12 @@ const positionsOf = (view: BairroView) => view.players.map(p => p.pos);
 
 /** The cop's whole scene: grab the token, carry it to the Papuda, close the bars. */
 export const ARREST_MS = 2000;
+/** Leaving the Papuda: the bars lift and the token hops out. */
+export const RELEASE_MS = 1400;
+/** Your own arrest on your whole screen, starting as the bars drop on the Papuda. */
+export const JAILED_MS = 1800;
+/** When the bars drop in the arrest scene. */
+export const BARS_AT_MS = ARREST_MS * 0.72;
 /** When the cop has the token in hand: the token leaves its square and travels with the cop. */
 export const GRAB_MS = 450;
 /** Drawn nowhere: the token is in the cop's hands. */
@@ -126,4 +132,26 @@ export function useDoublesBurst(view: BairroView): DoublesKind | null {
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
   return burst;
+}
+
+/**
+ * Calls `onRelease` for each player who left the Papuda in a new view: at once for the fine or a lawyer card,
+ * after the dice for doubles and the forced fine. Not on first render, under reduced motion or in a hidden tab.
+ */
+export function useReleases(view: BairroView, onRelease: (release: Release) => void): void {
+  const prev = useRef(view);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const cb = useRef(onRelease);
+  cb.current = onRelease;
+
+  useLayoutEffect(() => {
+    const before = prev.current;
+    prev.current = view;
+    if (before === view || stayStill()) return;
+    for (const r of releasesBetween(before, view)) {
+      timers.current.push(setTimeout(() => cb.current(r), r.rolled ? ROLL_MS : 0));
+    }
+  }, [view]);
+
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
 }

@@ -1,4 +1,5 @@
-import { ARREST_MS } from './useBairroMotion';
+import { ARREST_MS, RELEASE_MS, JAILED_MS } from './useBairroMotion';
+import type { ReleaseKind } from './motion';
 
 const EASE = 'cubic-bezier(0.3, 0.7, 0.3, 1)';
 /** How high the cop's path arcs above the straight line between the two squares. */
@@ -64,4 +65,40 @@ export function playArrest(from: number, to: number, color: string): void {
   const end = () => group.remove();
   anim.onfinish = end;
   anim.oncancel = end;
+}
+
+const RELEASE_ICONS: Record<ReleaseKind, string> = { fine: '💸', lawyer: '📜', doubles: '🎲' };
+
+/**
+ * Leaving the Papuda: the bars lift off the square, the token hops out and what paid for it
+ * (money, the lawyer card, the dice) floats up. Takes RELEASE_MS.
+ */
+export function playRelease(pos: number, color: string, kind: ReleaseKind, label: string): void {
+  const r = squareRect(pos);
+  if (!r) return;
+  const c = centre(r);
+  const group = document.createElement('div');
+  group.className = `brelease brelease--${kind}`;
+  group.style.left = `${c.x}px`;
+  group.style.top = `${c.y}px`;
+  group.innerHTML =
+    '<span class="brelease__bars"></span>' +
+    `<span class="brelease__token" style="background-color:${color}"></span>` +
+    `<span class="brelease__icon">${RELEASE_ICONS[kind]}</span>` +
+    (label ? `<span class="brelease__label"></span>` : '');
+  const tag = group.querySelector<HTMLElement>('.brelease__label');
+  if (tag) tag.textContent = label;
+  arrestLayer().append(group);
+  setTimeout(() => group.remove(), RELEASE_MS);
+}
+
+/** Your own arrest, across your whole screen: bars slam down with the news, then lift. Takes JAILED_MS. */
+export function playJailedScreen(title: string, sub: string): void {
+  const el = document.createElement('div');
+  el.className = 'bjailed';
+  el.innerHTML = '<span class="bjailed__bars"></span><div class="bjailed__card"><strong></strong><span></span></div>';
+  el.querySelector('strong')!.textContent = title;
+  el.querySelector('.bjailed__card span')!.textContent = sub;
+  arrestLayer().append(el);
+  setTimeout(() => el.remove(), JAILED_MS);
 }

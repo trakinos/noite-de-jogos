@@ -130,6 +130,7 @@ export const en: BairroDictionary = {
     bankruptCancel: 'Not yet',
     doublesTitle: 'Doubles!', doublesThirdTitle: 'Three doubles!',
     doubles_again: 'Roll again', doubles_free: 'Out of the Papuda', doubles_third: 'Straight to the Papuda',
+    jailedTitle: 'Off to the Papuda!', jailedSub: 'Pay the bail, use a lawyer card or roll doubles to get out',
     yourTurn: 'Your turn', turnOf: '{name}\'s turn', dice: 'Dice: {d1} and {d2}', noRollYet: 'Nobody has rolled yet',
     players: 'Players', youTag: 'you', deeds: '{n} deeds', deedOne: '1 deed',
     streetStrip: 'Neighborhood streets', playersSheet: 'See players and deeds', bankruptTag: 'bust',

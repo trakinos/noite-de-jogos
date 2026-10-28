@@ -1189,6 +1189,74 @@ button.link:hover { color: var(--text); }
   100% { opacity: 1; transform: translateY(0); }
 }
 
+/* Leaving the Papuda: the bars lift, the token hops out, and the fine, card or dice float up. */
+.flights > .brelease { width: 0; height: 0; overflow: visible; }
+.brelease > * { position: absolute; }
+.brelease__bars {
+  left: -32px; top: -32px; width: 64px; height: 64px; border-radius: 8px; box-sizing: border-box;
+  background: repeating-linear-gradient(90deg, #3a3a3a 0 4px, transparent 4px 10px); border: 3px solid #3a3a3a;
+  animation: brelease-bars 1400ms ease-in forwards;
+}
+.brelease__token {
+  left: -10px; top: -10px; width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--text), 0 0 12px #f2b632;
+  animation: brelease-hop 1400ms ease-out forwards;
+}
+.brelease__icon { left: -0.5em; top: -0.5em; font-size: 26px; line-height: 1; animation: brelease-float 1400ms ease-out forwards; }
+.brelease__label {
+  left: 14px; top: -30px; padding: 1px 6px; border-radius: 6px; white-space: nowrap;
+  background: #e0533d; color: #fff; font-weight: 800; font-size: 13px;
+  animation: brelease-float 1400ms ease-out forwards;
+}
+@keyframes brelease-bars {
+  0%, 15% { transform: none; opacity: 1; }
+  60% { transform: translateY(-44px); opacity: 0.8; }
+  100% { transform: translateY(-60px); opacity: 0; }
+}
+@keyframes brelease-hop {
+  0%, 30% { transform: scale(1); opacity: 1; }
+  45% { transform: translate(10px, -22px) scale(1.25); }
+  60% { transform: translate(18px, 0) scale(1); }
+  70% { transform: translate(22px, -8px); opacity: 1; }
+  100% { transform: translate(24px, 0); opacity: 0; }
+}
+@keyframes brelease-float {
+  0%, 20% { transform: translateY(0) scale(0.4); opacity: 0; }
+  35% { transform: translateY(-14px) scale(1.15); opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(-46px) scale(1); opacity: 0; }
+}
+
+/* Your own arrest: bars slam down over the whole screen with the news, then lift away. */
+.flights > .bjailed { inset: 0; display: grid; place-items: center; animation: bjailed-fade 1800ms ease-out forwards; }
+.bjailed__bars {
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(90deg, rgba(30, 28, 26, 0.85) 0 14px, transparent 14px 70px);
+  animation: bjailed-bars 1800ms cubic-bezier(0.5, 0, 0.3, 1) forwards;
+}
+.bjailed__card {
+  position: relative; display: grid; gap: 4px; justify-items: center; max-width: min(90vw, 420px);
+  padding: 14px 22px; text-align: center; border-radius: var(--r-lg);
+  background: #e0533d; color: #fff; box-shadow: var(--e2, var(--e1));
+  animation: bjailed-card 1800ms ease-out forwards;
+}
+.bjailed__card strong { font-family: var(--font-display); font-size: 26px; line-height: 1.1; }
+.bjailed__card span { font-size: 14px; font-weight: 700; }
+@keyframes bjailed-bars {
+  0% { transform: translateY(-100%); }
+  22% { transform: translateY(0); }
+  27% { transform: translateY(-2%); }
+  32%, 80% { transform: translateY(0); }
+  100% { transform: translateY(-100%); }
+}
+@keyframes bjailed-card {
+  0%, 18% { transform: scale(0.4) rotate(-8deg); opacity: 0; }
+  28% { transform: scale(1.12) rotate(2deg); opacity: 1; }
+  36%, 82% { transform: scale(1) rotate(0); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0; }
+}
+@keyframes bjailed-fade { 0%, 85% { opacity: 1; } 100% { opacity: 0; } }
+
 /* Doubles: the dice glow and a burst pops over them, gold for a good doubles, red for the third in a row. */
 .pracinha__dice { --burst: #f2b632; }
 .pracinha__dice--third { --burst: #e0533d; }

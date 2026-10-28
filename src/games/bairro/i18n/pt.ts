@@ -130,6 +130,7 @@ export const pt: BairroDictionary = {
     bankruptCancel: 'Ainda não',
     doublesTitle: 'Dobrada!', doublesThirdTitle: 'Três dobradas!',
     doubles_again: 'Jogue de novo', doubles_free: 'Saiu da Papuda', doubles_third: 'Direto pra Papuda',
+    jailedTitle: 'Você foi pra Papuda!', jailedSub: 'Pague a fiança, use a Carta do Advogado ou tire dobrada pra sair',
     yourTurn: 'Sua vez', turnOf: 'Vez de {name}', dice: 'Dados: {d1} e {d2}', noRollYet: 'Ninguém rolou ainda',
     players: 'Jogadores', youTag: 'você', deeds: '{n} escrituras', deedOne: '1 escritura',
     streetStrip: 'Ruas do bairro', playersSheet: 'Ver jogadores e escrituras', bankruptTag: 'faliu',

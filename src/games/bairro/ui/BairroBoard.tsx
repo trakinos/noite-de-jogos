@@ -6,6 +6,7 @@ import { ConfirmDialog } from '../../../ui/components/ConfirmDialog';
 import { Icon } from '../../../ui/components/Icon';
 import { TimerBar } from '../../../ui/components/TimerBar';
 import { playerColor } from '../../../ui/playerColor';
+import { JAIL_FINE, JAIL_POS } from '../board';
 import { BAIRRO_DICTIONARIES } from '../i18n';
 import type { BairroIntent } from '../types';
 import type { BairroView } from '../view';
@@ -16,9 +17,11 @@ import { MapBoard } from './MapBoard';
 import { StreetBoard } from './StreetBoard';
 import { TradeAnswerDialog } from './TradeAnswerDialog';
 import { TradeDialog } from './TradeDialog';
-import { useDisplayedPositions } from './useBairroMotion';
-import { playArrest } from './arrestFlight';
+import { BARS_AT_MS, useDisplayedPositions, useReleases } from './useBairroMotion';
+import { playArrest, playJailedScreen, playRelease } from './jailScenes';
 import { useMediaQuery } from './useMediaQuery';
+import { useBairroText } from './useBairroText';
+import { money } from './text';
 
 /** Computers get the neighborhood map; narrower screens get the street in focus. */
 const WIDE = '(min-width: 900px)';
@@ -44,6 +47,7 @@ export interface BairroBoardProps {
 
 export function BairroBoard({ view, lobby, code, error, clock, awaiting, onIntent, onDismissError, onEndGame, onRules }: BairroBoardProps) {
   const { tr, lang } = useLang();
+  const text = useBairroText();
   const wide = useMediaQuery(WIDE);
   const [confirmEnd, setConfirmEnd] = useState(false);
   const menu = useRef<HTMLDetailsElement>(null);
@@ -65,7 +69,15 @@ export function BairroBoard({ view, lobby, code, error, clock, awaiting, onInten
   useEffect(() => {
     if (!proposing || myOffer) setTradeOpen(false);
   }, [proposing, myOffer]);
-  const positions = useDisplayedPositions(view, m => playArrest(m.arrestAt!, m.to, colors[m.player] ?? 'currentColor'));
+  const colorOf = (player: number) => colors[player] ?? 'currentColor';
+  const positions = useDisplayedPositions(view, m => {
+    playArrest(m.arrestAt!, m.to, colorOf(m.player));
+    if (m.player === view.you) setTimeout(() => playJailedScreen(text.ui('jailedTitle'), text.ui('jailedSub')), BARS_AT_MS);
+  });
+  useReleases(view, r => {
+    const label = r.kind === 'fine' ? `-${money(lang, JAIL_FINE)}` : '';
+    playRelease(JAIL_POS, colorOf(r.player), r.kind, label);
+  });
 
   useEffect(() => {
     if (!error) return;
