@@ -2,11 +2,18 @@
 
 What changed for players, newest first. Every push to `main` deploys to https://trakinos.github.io/noite-de-jogos/.
 
-## Unreleased — Dono do Bairro
+## Unreleased — Dono do Bairro, after the first playtest
+
+### Changed
+- **New names.** The card deck is now **Tigrinho**, the start square is **Pé de Meia**, the jail is the **Papuda**, and the Sorveteiro service (right next to the Sorveteria) is now the **Carro da Pamonha**.
+- **Easier to follow the turn.** The token of the player whose turn it is is bigger and pulses gently, on the map and on the phone strip.
+- **Slower walk.** Tokens walk around the board a little slower, so everyone can see where they land.
+
+## Dono do Bairro
 
 ### Added
 - **Dono do Bairro is playable.** Pick "Criar" next to Dono do Bairro on the front page and send the code. It takes 2 to 6 players, each on their own device, in Portuguese or English.
-- **Classic rules.** Roll and walk the neighborhood, buy escrituras (no auctions), collect rent, draw Deu Bom / Deu Ruim cards, and get sent to the Xilindró. Build puxadinhos and a prédio once you hold a whole rua, mortgage when cash runs short, and trade escrituras, money and the Carta do Advogado on your turn. Whoever can't pay goes bust ("Faliu"), and the last one left is the Dono do Bairro.
+- **Classic rules.** Roll and walk the neighborhood, buy escrituras (no auctions), collect rent, draw Tigrinho cards, and get sent to the Papuda. Build puxadinhos and a prédio once you hold a whole rua, mortgage when cash runs short, and trade escrituras, money and the Carta do Advogado on your turn. Whoever can't pay goes bust ("Faliu"), and the last one left is the Dono do Bairro.
 - **Two boards.** On a computer you see the whole neighborhood as a map, with the dice and your buttons in the pracinha in the middle. On a phone you see a small map on top and a strip of the squares around you, with players and the log one tap away.
 - **Escritura cards.** Tap any square to see its price, rents and owner, and to build, sell or mortgage it.
 - **Debts and trades in dialogs.** A debt opens a dialog that shows what you owe and lets you sell or mortgage until you can pay. A trade offer opens a dialog for the other player to accept or decline.

@@ -4,8 +4,8 @@ import { useLang } from '../../../i18n/LangProvider';
 import type { SquareInfo } from './squareInfo';
 
 const ICONS: Record<string, string> = {
-  start: '🚌', luck: '🎲', iptu: '🧾', jail: '🚓', pracinha: '🌳', 'go-to-jail': '👮', bolao: '🎟️',
-  kombi: '🚐', mototaxi: '🛵', 'carro-do-ovo': '🥚', 'caminhao-do-gas': '🛢️', sorveteiro: '🍦', 'van-escolar': '🚌',
+  start: '🧦', luck: '🐯', iptu: '🧾', jail: '🚓', pracinha: '🌳', 'go-to-jail': '👮', bolao: '🎟️',
+  kombi: '🚐', mototaxi: '🛵', 'carro-do-ovo': '🥚', 'caminhao-do-gas': '🛢️', 'carro-da-pamonha': '🌽', 'van-escolar': '🚌',
 };
 
 interface Props {
@@ -15,10 +15,12 @@ interface Props {
   colors: string[];
   /** Player names per seat. */
   names: string[];
+  /** The seat whose turn it is; its token is drawn bigger. */
+  current: number;
   onOpen: (pos: number) => void;
 }
 
-export function Square({ info, size, colors, names, onOpen }: Props) {
+export function Square({ info, size, colors, names, current, onOpen }: Props) {
   const { tr } = useLang();
   const text = useBairroText();
   const name = text.square(info.pos);
@@ -48,7 +50,7 @@ export function Square({ info, size, colors, names, onOpen }: Props) {
       )}
       {info.tokens.length > 0 && (
         <span className="bsq__tokens" aria-hidden="true">
-          {info.tokens.map(i => <span key={i} className="bsq__token" style={{ backgroundColor: colors[i] }} />)}
+          {info.tokens.map(i => <span key={i} className={`bsq__token${i === current ? ' bsq__token--current' : ''}`} style={{ backgroundColor: colors[i] }} />)}
         </span>
       )}
     </button>

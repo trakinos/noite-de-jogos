@@ -976,6 +976,14 @@ button.link:hover { color: var(--text); }
 .bsq__tokens { position: absolute; right: 2px; bottom: 6px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px; max-width: 70%; }
 .bsq__token { width: 0.7em; height: 0.7em; border-radius: 50%; border: 1px solid var(--surface); box-shadow: 0 0 0 1px var(--text); }
 .bsq--strip .bsq__token { width: 1em; height: 1em; }
+/* The player whose turn it is stands out: bigger, with a soft pulsing halo. */
+.bsq__token--current { width: 1.5em; height: 1.5em; border-width: 2px; animation: bsq-token-pulse 1.6s ease-in-out infinite; }
+.bsq--strip .bsq__token--current { width: 1.8em; height: 1.8em; }
+@keyframes bsq-token-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px var(--text), 0 0 0 0 color-mix(in srgb, var(--text) 35%, transparent); }
+  50% { box-shadow: 0 0 0 1px var(--text), 0 0 0 5px color-mix(in srgb, var(--text) 0%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) { .bsq__token--current { animation: none; } }
 
 /* Bairro map colors: grass, road and the Pracinha's lawn. */
 :root { --bairro-grass: #7a8a6a; --bairro-road: #55524c; --bairro-lawn: #9cc27a; --bairro-lawn-edge: #8ab066; --bairro-path: #cdbb97; }

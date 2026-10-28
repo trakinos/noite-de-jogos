@@ -2,7 +2,7 @@ import type { RngState } from '../../engine/rng';
 
 export interface BairroPlayer {
   id: string; name: string; cash: number; pos: number;
-  /** null when free; turns spent in the Xilindró otherwise. */
+  /** null when free; turns spent in the Papuda otherwise. */
   jailTurns: number | null;
   lawyerCards: number; bankrupt: boolean;
 }

@@ -4,7 +4,7 @@ import type { BairroView } from '../view';
 import { movesBetween, rolledBetween } from './motion';
 
 /** One step of a token's walk. */
-export const STEP_MS = 120;
+export const STEP_MS = 220;
 /** The dice shake before the faces show. */
 export const ROLL_MS = 500;
 /** How often the faces change while shaking. */

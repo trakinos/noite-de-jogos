@@ -54,7 +54,7 @@ export const BOARD: readonly Square[] = [
   servico('caminhao-do-gas', 200, 8),
   ponto('pastelaria', 'r6', 260, [22, 110, 330, 800, 975, 1150], 150),
   ponto('sorveteria', 'r6', 260, [22, 110, 330, 800, 975, 1150], 150),
-  servico('sorveteiro', 150, 5),
+  servico('carro-da-pamonha', 150, 5),
   ponto('padaria', 'r6', 280, [24, 120, 360, 850, 1025, 1200], 150),
   { kind: 'goToJail', id: 'go-to-jail' },
   ponto('boteco', 'r7', 300, [26, 130, 390, 900, 1100, 1275], 200),

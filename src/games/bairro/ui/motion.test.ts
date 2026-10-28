@@ -21,7 +21,7 @@ describe('movesBetween', () => {
     expect(movesBetween(before, viewFor(s, 0))).toEqual([{ player: 1, from: 38, to: 3, steps: [39, 0, 1, 2, 3] }]);
   });
 
-  it('jumps straight to the Xilindró', () => {
+  it('jumps straight to the Papuda', () => {
     const s = game(2);
     s.players[0].pos = 28;
     rig(s, [[1, 1]]);
@@ -92,7 +92,7 @@ describe('capped wire logs', () => {
     expect(rolledBetween(before, before)).toBe(false);
   });
 
-  it('still jumps to the Xilindró at the cap', () => {
+  it('still jumps to the Papuda at the cap', () => {
     const s = game(2);
     fill(s, 200);
     s.players[0].pos = 28;

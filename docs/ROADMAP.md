@@ -1,10 +1,10 @@
 # Noite de Jogos — Roadmap
 
-Last updated: 2026-10-24
+Last updated: 2026-10-28
 
 Noite de Jogos (formerly Dominion Friends) is a site where one group of friends plays board games online, each person on their own device, usually while on a call. It has two games:
 - **Dominion Friends:** Dominion with the Feira theme. Playable now.
-- **Dono do Bairro:** the classic rules of Banco Imobiliário with a neighborhood theme. Planned.
+- **Dono do Bairro:** the classic rules of Banco Imobiliário with a neighborhood theme. Playable now.
 
 Design: `docs/superpowers/specs/2026-10-24-noite-de-jogos-banco-imobiliario-design.md`
 
@@ -41,11 +41,24 @@ Classic rules, 2–6 players, playable on working values first. The user checks 
 - [x] Engine tests: unit tests, simulated games and fuzzed intents, the same as Dominion.
 - [x] **Board mockups** (a neighborhood map around the pracinha) for the user to choose from, then the screens: lobby, board, your panel, opponents, trade dialog, animated dice and token, log, end screen, rules dialog. Phone first, dark mode.
 - [ ] **Partida rápida** (lobby options, all off by default, one switch turns on the bundle): a time limit (30/45/60/90 min, the round finishes, the richest player wins), prédio after 3 puxadinhos, deal out pontos at the start, leave the Xilindró early.
-- [ ] Playtest with friends on a call. **The user checks the board's names and values** against a real classic set and sends corrections. Only the data file changes.
+- [x] Playtest with friends on a call (2026-10-27). Notes: `docs/playtest-26.10.27.md`.
+- [ ] **The user checks the board's names and values** against a real classic set and sends corrections. Only the data file changes.
+
+### B2. Dono do Bairro, playtest 2026-10-27
+Full list and notes: `docs/playtest-26.10.27.md`.
+- [x] **Renames:** Deu Bom / Deu Ruim → Tigrinho, Sorveteiro → Carro da Pamonha, Ponto de Ônibus → Pé de Meia, Xilindró → Papuda.
+- [x] The current player's token is bigger on the board (map and phone strip), with a soft pulse.
+- [x] Tokens walk a little slower.
+- [ ] **Dice:** pips instead of numerals, and a rolling animation.
+- [ ] **Moments:** a doubles animation; arrest (a little cop takes the token to the Papuda); bail paid; drawing a Tigrinho card (like the Feira card motion), shown to everyone in a good or bad color.
+- [ ] **Tiles:** the rua color always faces the center, the whole tile takes a soft tint of the owner's color, and each tile shows its current rent.
+- [ ] **Players list:** click a player to see their escrituras.
+- [ ] **Trades:** show the values of the escrituras in a proposal; counter-proposals.
+- [ ] **Lobby settings:** trades visible to everyone; game acceleration (brainstorm later).
+- [ ] **Custom rules** (a toggle, then a list to pick from; later): shuffled street positions, objective cards, shuffled hidden street values, Tigrinho wildcards (forced trade, forced mortgage…), a bribe to skip rent.
 
 ### C. Dono do Bairro, later
 - [ ] Replace the working values with the checked classic numbers and Sorte ou Revés cards.
-- [ ] Counter-offers in trades.
 - [ ] Bots to fill seats.
 - [ ] Sounds (dice, buying, rent, going to the Xilindró).
 

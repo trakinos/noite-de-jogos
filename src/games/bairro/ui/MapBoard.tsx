@@ -33,7 +33,7 @@ export function MapBoard({ view, names, colors, awaiting, onIntent, onOpenSquare
       <div className="bmap__ring">
         {POSITIONS.map(pos => (
           <div key={pos} className="bmap__cell" style={ringGridArea(pos)}>
-            <Square info={squareInfo(drawn, pos)} size="ring" colors={colors} names={names} onOpen={onOpenSquare} />
+            <Square info={squareInfo(drawn, pos)} size="ring" colors={colors} names={names} current={view.current} onOpen={onOpenSquare} />
           </div>
         ))}
         <div className="bmap__park">

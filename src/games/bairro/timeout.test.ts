@@ -36,7 +36,7 @@ describe('turn timeout', () => {
     expect(s.current).toBe(1);
   });
 
-  it('in the Xilindró it rolls instead of paying the fine or using a lawyer card', () => {
+  it('in the Papuda it rolls instead of paying the fine or using a lawyer card', () => {
     const s = game(2);
     s.players[0].pos = 10;
     s.players[0].jailTurns = 0;
