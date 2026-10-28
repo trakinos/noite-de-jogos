@@ -1189,7 +1189,7 @@ button.link:hover { color: var(--text); }
   100% { opacity: 1; transform: translateY(0); }
 }
 
- and a burst pops over them, gold for a good doubles, red for the third in a row. */
+/* Doubles: the dice glow and a burst pops over them, gold for a good doubles, red for the third in a row. */
 .pracinha__dice { --burst: #f2b632; }
 .pracinha__dice--third { --burst: #e0533d; }
 .pracinha__dice--again .bdie, .pracinha__dice--free .bdie, .pracinha__dice--third .bdie {
