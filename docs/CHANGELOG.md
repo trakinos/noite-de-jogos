@@ -26,6 +26,7 @@ What changed for players, newest first. Every push to `main` deploys to https://
 - **Who's locked up.** At the Papuda, players serving time sit behind bars in a little cell on the tile; anyone just visiting stands apart, as before.
 - **Walks aren't cut short.** Ending the turn (or any move that doesn't move a token) while a token is still walking used to make it jump to the end and skip what was on the way; now the walk and its scenes finish.
 - **Rules fix.** The rules said the Bolão charges $200; it pays you $200, as the game always did.
+- **Clearer failed join.** When the room exists but no direct connection can be made (seen in Firefox on a Mac), the front page now says so in the player's language, "Não deu para abrir uma conexão direta com a sala…", instead of PeerJS's English "Negotiation of connection … failed".
 
 ## Dono do Bairro
 

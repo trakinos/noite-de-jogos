@@ -11,6 +11,9 @@ export function describePeerError(err: unknown): string {
     case 'socket-error':
     case 'socket-closed':
       return SERVER_UNREACHABLE;
+    case 'negotiation-failed':
+      // The room exists, but no network path was found between the two browsers.
+      return 'Could not open a direct connection to the room. Your browser or network is blocking it: try another browser or network.';
     case 'browser-incompatible':
       return 'This browser does not support peer-to-peer connections.';
     default:

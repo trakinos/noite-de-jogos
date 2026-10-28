@@ -280,6 +280,7 @@ const en: Dictionary = {
     "Could not reach the connection server. Check your internet connection and try again.": "Could not reach the connection server. Check your internet connection and try again.",
     "This browser does not support peer-to-peer connections.": "This browser does not support peer-to-peer connections.",
     "Connection failed.": "Connection failed.",
+    "Could not open a direct connection to the room. Your browser or network is blocking it: try another browser or network.": "Could not open a direct connection to the room. Your browser or network is blocking it: try another browser or network.",
     "Could not connect. The code may be wrong, or your network blocks peer-to-peer connections.": "Could not connect. The code may be wrong, or your network blocks peer-to-peer connections.",
   },
   types: {

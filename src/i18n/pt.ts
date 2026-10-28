@@ -268,6 +268,7 @@ const pt: Dictionary = {
     "Could not reach the connection server. Check your internet connection and try again.": "Não foi possível acessar o servidor de conexão. Verifique sua internet e tente de novo.",
     "This browser does not support peer-to-peer connections.": "Este navegador não suporta conexões ponto a ponto.",
     "Connection failed.": "A conexão falhou.",
+    "Could not open a direct connection to the room. Your browser or network is blocking it: try another browser or network.": "Não deu para abrir uma conexão direta com a sala. Seu navegador ou sua rede está bloqueando: tente outro navegador ou outra rede.",
     "Could not connect. The code may be wrong, or your network blocks peer-to-peer connections.": "Não foi possível conectar. O código pode estar errado ou sua rede bloqueia conexões ponto a ponto.",
   },
   types: {
