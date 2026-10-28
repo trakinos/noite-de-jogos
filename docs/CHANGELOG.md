@@ -17,6 +17,7 @@ What changed for players, newest first. Every push to `main` deploys to https://
 - **Trades show what they're worth.** Each escritura in a proposal shows its price (a mortgaged one also shows what lifting the mortgage costs), each side shows its total, and a line says who comes out ahead on paper, for both the one proposing and the one answering.
 - **Counter-offers.** Whoever gets a trade offer can now answer with a counter-offer instead of just accepting or declining. It opens with the terms on the table, ready to change, and goes back to the other player, who can accept, decline or counter again, up to 3 counter-offers per trade. Counter-offers don't use up the turn's 3 proposals, and whoever sent one can still withdraw it.
 - **New tiles.** On the map, every rua's color band now faces the Pracinha, on whichever side of the board it sits. An owned tile is tinted in its owner's color with a thin ring of it, on the map and on the phone strip, and it shows the rent landing there costs right now (doubled for a whole rua, more with puxadinhos, "8×🎲" for a serviço). A mortgaged tile shows no rent.
+- **See anyone's escrituras.** Tap a player in the players list (or in the phone's players sheet) and the list below shows their escrituras by rua, under "Escrituras de Ana". Tapping one opens its card. Your own come back when you tap yourself.
 
 ## Dono do Bairro
 

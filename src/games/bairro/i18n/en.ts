@@ -138,7 +138,7 @@ export const en: BairroDictionary = {
     yourTurn: 'Your turn', turnOf: '{name}\'s turn', dice: 'Dice: {d1} and {d2}', noRollYet: 'Nobody has rolled yet',
     players: 'Players', youTag: 'you', deeds: '{n} deeds', deedOne: '1 deed',
     streetStrip: 'Neighborhood streets', playersSheet: 'See players and deeds', bankruptTag: 'bust',
-    yourDeeds: 'Your escrituras', noDeeds: 'None yet', servicos: 'Services', wholeRua: 'whole street',
+    theirDeeds: "{name}'s escrituras", playersHint: 'Tap a player to see their escrituras.', yourDeeds: 'Your escrituras', noDeeds: 'None yet', servicos: 'Services', wholeRua: 'whole street',
     escOwner: 'Owner: {name}', escPrice: 'Price {amount}', escRent: 'Rent', escNow: 'now',
     escBase: 'No buildings', escDoubled: '×2 with the whole rua', escDoubledNote: 'With the whole rua and no buildings, the base rent doubles',
     escHouseCost: 'Each puxadinho costs {amount}', escMortgageValue: 'Mortgage: {amount}', escMortgaged: 'Mortgaged: collects no rent',

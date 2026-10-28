@@ -55,7 +55,7 @@ Full list and notes: `docs/playtest-26.10.27.md`.
 - [x] **Papuda moments:** your own arrest fills your screen with bars; leaving shows the bars lifting with the fine, the lawyer card or the dice.
 - [x] **Tigrinho:** the drawn card rises from its square and flips over in the middle of every screen, green for bom and red for ruim.
 - [x] **Tiles:** the rua color always faces the center, the whole tile takes a soft tint of the owner's color, and each tile shows its current rent.
-- [ ] **Players list:** click a player to see their escrituras.
+- [x] **Players list:** click a player to see their escrituras.
 - [x] **Trades:** show the values of the escrituras in a proposal.
 - [x] **Trades:** counter-proposals.
 - [ ] **Lobby settings:** trades visible to everyone; game acceleration (brainstorm later).
