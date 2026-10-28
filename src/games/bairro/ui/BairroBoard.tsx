@@ -17,6 +17,7 @@ import { StreetBoard } from './StreetBoard';
 import { TradeAnswerDialog } from './TradeAnswerDialog';
 import { TradeDialog } from './TradeDialog';
 import { useDisplayedPositions } from './useBairroMotion';
+import { playArrest } from './arrestFlight';
 import { useMediaQuery } from './useMediaQuery';
 
 /** Computers get the neighborhood map; narrower screens get the street in focus. */
@@ -64,7 +65,7 @@ export function BairroBoard({ view, lobby, code, error, clock, awaiting, onInten
   useEffect(() => {
     if (!proposing || myOffer) setTradeOpen(false);
   }, [proposing, myOffer]);
-  const positions = useDisplayedPositions(view);
+  const positions = useDisplayedPositions(view, m => playArrest(m.arrestAt!, m.to, colors[m.player] ?? 'currentColor'));
 
   useEffect(() => {
     if (!error) return;

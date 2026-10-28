@@ -39,7 +39,7 @@ export function Square({ info, size, colors, names, current, onOpen }: Props) {
 
   const cls = `bsq bsq--${size} bsq--${info.kind}${info.mortgaged ? ' bsq--mortgaged' : ''}`;
   return (
-    <button type="button" className={cls} aria-label={label} onClick={() => onOpen(info.pos)}>
+    <button type="button" className={cls} data-sq={info.pos} aria-label={label} onClick={() => onOpen(info.pos)}>
       {info.ruaColor && <span className="bsq__awning" style={{ backgroundColor: info.ruaColor }} aria-hidden="true" />}
       <span className="bsq__name">{name}</span>
       {icon && <span className="bsq__icon" aria-hidden="true">{icon}</span>}

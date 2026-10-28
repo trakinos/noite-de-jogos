@@ -49,7 +49,7 @@ export function StreetBoard({ view, names, colors, awaiting, onIntent, onOpenSqu
 
   return (
     <div className="bstreet">
-      <MiniMap view={view} colors={colors} onPick={pos => center(pos, false)} />
+      <MiniMap view={drawn} colors={colors} onPick={pos => center(pos, false)} />
       <div className="bstrip" ref={strip} role="group" aria-label={text.ui('streetStrip')}>
         {POSITIONS.map(pos => (
           <Square key={pos} info={squareInfo(drawn, pos)} size="strip" colors={colors} names={names} current={view.current} onOpen={onOpenSquare} />

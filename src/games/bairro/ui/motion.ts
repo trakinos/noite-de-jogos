@@ -8,6 +8,8 @@ export interface TokenMove {
   to: number;
   /** The squares the token shows, in order; the last is `to`. A jump has just that one. */
   steps: number[];
+  /** Arrested here, after walking to it: the last step (to the Papuda) is the cop taking the token away. */
+  arrestAt?: number;
 }
 
 /** The longest walk a roll can give (two dice); anything longer is a jump. */
@@ -21,6 +23,21 @@ export function newEntries(prev: BairroView, next: BairroView) {
 
 const advancesToStart = (card: unknown) => DECK.find(c => c.id === card)?.effect.kind === 'advanceToStart';
 
+const walk = (from: number, to: number) =>
+  Array.from({ length: (to - from + BOARD_SIZE) % BOARD_SIZE }, (_, i) => (from + i + 1) % BOARD_SIZE);
+
+/**
+ * Where `player` was arrested: the third doubles arrest on the spot; a roll onto "Vá pra Papuda" or onto a card
+ * that sends you there arrests where the dice landed. Null when the arrest can't be placed (then the token just jumps).
+ */
+function arrestSquare(fresh: BairroView['log'], player: number, from: number): number | null {
+  const mine = fresh.filter(e => e.player === player);
+  if (mine.some(e => e.key === 'thirdDouble')) return from;
+  const roll = mine.find(e => e.key === 'rolled');
+  const sum = Number(roll?.params?.d1) + Number(roll?.params?.d2);
+  return Number.isFinite(sum) ? (from + sum) % BOARD_SIZE : null;
+}
+
 /** Token moves between two views of the same game: a walk, or a jump for jail and long card moves. */
 export function movesBetween(prev: BairroView, next: BairroView): TokenMove[] {
   if (prev.players.length !== next.players.length) return [];
@@ -30,9 +47,14 @@ export function movesBetween(prev: BairroView, next: BairroView): TokenMove[] {
     const to = p.pos;
     if (from === to) return [];
     const distance = (to - from + BOARD_SIZE) % BOARD_SIZE;
-    const jumped = fresh.some(e => e.player === player && (e.key === 'wentToJail' || (e.key === 'luck' && advancesToStart(e.params?.card))));
+    if (fresh.some(e => e.player === player && e.key === 'wentToJail')) {
+      const at = arrestSquare(fresh, player, from);
+      if (at !== null) return [{ player, from, to, steps: [...walk(from, at), to], arrestAt: at }];
+      return [{ player, from, to, steps: [to] }];
+    }
+    const jumped = fresh.some(e => e.player === player && e.key === 'luck' && advancesToStart(e.params?.card));
     if (jumped || distance > MAX_WALK) return [{ player, from, to, steps: [to] }];
-    return [{ player, from, to, steps: Array.from({ length: distance }, (_, i) => (from + i + 1) % BOARD_SIZE) }];
+    return [{ player, from, to, steps: walk(from, to) }];
   });
 }
 

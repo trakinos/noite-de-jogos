@@ -29,6 +29,7 @@ export function MiniMap({ view, colors, onPick }: Props) {
             type="button"
             className={`bmini__cell${pos === mine ? ' is-you' : ''}${info.ruaColor ? '' : ' bmini__cell--plain'}`}
             style={style}
+            data-sq={pos}
             aria-label={text.square(pos)}
             onClick={() => onPick(pos)}
           >

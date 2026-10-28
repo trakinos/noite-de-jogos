@@ -1166,7 +1166,30 @@ button.link:hover { color: var(--text); }
 .bdie--land { animation: bdie-land 400ms ease-out; }
 @media (prefers-reduced-motion: reduce) { .bdie--rolling, .bdie--land { animation: none; } }
 
-/* Doubles: the dice glow and a burst pops over them, gold for a good doubles, red for the third in a row. */
+/* Arrest: a cop with a siren grabs the token and carries it to the Papuda, where the bars drop. */
+.flights > .barrest { width: 0; height: 0; overflow: visible; }
+.barrest > * { position: absolute; }
+.barrest__cop { left: -0.9em; top: -0.75em; font-size: 36px; line-height: 1; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.45)); }
+.barrest__siren { left: -0.45em; top: -2.3em; font-size: 20px; animation: barrest-siren 300ms steps(2) infinite; }
+.barrest__token {
+  left: 8px; top: 0; width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--text);
+}
+.barrest__bars {
+  left: -32px; top: -32px; width: 64px; height: 64px; border-radius: 8px; opacity: 0;
+  background: repeating-linear-gradient(90deg, #3a3a3a 0 4px, transparent 4px 10px);
+  border: 3px solid #3a3a3a; box-sizing: border-box;
+  animation: barrest-bars 2000ms linear forwards;
+}
+@keyframes barrest-siren { 0% { filter: hue-rotate(0deg); opacity: 1; } 100% { filter: hue-rotate(200deg); opacity: 0.6; } }
+@keyframes barrest-bars {
+  0%, 72% { opacity: 0; transform: translateY(-30px); }
+  80% { opacity: 1; transform: translateY(3px); }
+  86% { transform: translateY(0); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+ and a burst pops over them, gold for a good doubles, red for the third in a row. */
 .pracinha__dice { --burst: #f2b632; }
 .pracinha__dice--third { --burst: #e0533d; }
 .pracinha__dice--again .bdie, .pracinha__dice--free .bdie, .pracinha__dice--third .bdie {

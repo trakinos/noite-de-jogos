@@ -21,14 +21,33 @@ describe('movesBetween', () => {
     expect(movesBetween(before, viewFor(s, 0))).toEqual([{ player: 1, from: 38, to: 3, steps: [39, 0, 1, 2, 3] }]);
   });
 
-  it('jumps straight to the Papuda', () => {
+  it('walks onto "Vá pra Papuda" and is arrested there', () => {
     const s = game(2);
     s.players[0].pos = 28;
     rig(s, [[1, 1]]);
     const before = viewFor(s, 0);
     apply(s, 0, { type: 'roll' });
     expect(s.players[0].pos).toBe(10);
-    expect(movesBetween(before, viewFor(s, 0))).toEqual([{ player: 0, from: 28, to: 10, steps: [10] }]);
+    expect(movesBetween(before, viewFor(s, 0))).toEqual([{ player: 0, from: 28, to: 10, steps: [29, 30, 10], arrestAt: 30 }]);
+  });
+
+  it('is arrested on the spot on the third doubles', () => {
+    const s = game(2);
+    s.players[0].pos = 5;
+    s.doublesInRow = 2;
+    rig(s, [[3, 3]]);
+    const before = viewFor(s, 0);
+    apply(s, 0, { type: 'roll' });
+    expect(movesBetween(before, viewFor(s, 0))).toEqual([{ player: 0, from: 5, to: 10, steps: [10], arrestAt: 5 }]);
+  });
+
+  it('just jumps to the Papuda when no roll explains the arrest', () => {
+    const s = game(2);
+    s.players[0].pos = 22;
+    const before = viewFor(s, 0);
+    s.players[0].pos = 10;
+    s.log.push({ player: 0, key: 'wentToJail' });
+    expect(movesBetween(before, viewFor(s, 0))).toEqual([{ player: 0, from: 22, to: 10, steps: [10] }]);
   });
 
   it('jumps when a move is longer than any roll', () => {
@@ -92,14 +111,14 @@ describe('capped wire logs', () => {
     expect(rolledBetween(before, before)).toBe(false);
   });
 
-  it('still jumps to the Papuda at the cap', () => {
+  it('still walks to the arrest at the cap', () => {
     const s = game(2);
     fill(s, 200);
     s.players[0].pos = 28;
     rig(s, [[1, 1]]);
     const before = capped(s);
     apply(s, 0, { type: 'roll' });
-    expect(movesBetween(before, capped(s))).toEqual([{ player: 0, from: 28, to: 10, steps: [10] }]);
+    expect(movesBetween(before, capped(s))).toEqual([{ player: 0, from: 28, to: 10, steps: [29, 30, 10], arrestAt: 30 }]);
   });
 
   it('copes with a delta larger than the cap', () => {

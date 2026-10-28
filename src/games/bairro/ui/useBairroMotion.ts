@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { stayStill } from '../../../ui/useCardMotion';
 import type { BairroView } from '../view';
-import { doublesBetween, movesBetween, rolledBetween, type DoublesKind } from './motion';
+import { doublesBetween, movesBetween, rolledBetween, type DoublesKind, type TokenMove } from './motion';
 
 /** One step of a token's walk. */
 export const STEP_MS = 220;
@@ -14,14 +14,25 @@ const SHAKE_TICK_MS = 100;
 
 const positionsOf = (view: BairroView) => view.players.map(p => p.pos);
 
+/** The cop's whole scene: grab the token, carry it to the Papuda, close the bars. */
+export const ARREST_MS = 2000;
+/** When the cop has the token in hand: the token leaves its square and travels with the cop. */
+export const GRAB_MS = 450;
+/** Drawn nowhere: the token is in the cop's hands. */
+const CARRIED = -1;
+
 /**
  * Where each seat's token is drawn: walks through `steps` after a move (after the dice have shaken),
- * and ends on the real position. Jumps, reduced motion and hidden tabs show the real position at once.
+ * and ends on the real position. An arrest walks to the arrest square, calls `onArrest` there, and the
+ * token is carried (drawn nowhere) until the cop drops it in the Papuda.
+ * Jumps, reduced motion and hidden tabs show the real position at once.
  */
-export function useDisplayedPositions(view: BairroView): number[] {
+export function useDisplayedPositions(view: BairroView, onArrest?: (move: TokenMove) => void): number[] {
   const [shown, setShown] = useState(() => positionsOf(view));
   const prev = useRef(view);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const arrest = useRef(onArrest);
+  arrest.current = onArrest;
 
   useLayoutEffect(() => {
     const before = prev.current;
@@ -39,11 +50,16 @@ export function useDisplayedPositions(view: BairroView): number[] {
     for (const m of moves) start[m.player] = m.from;
     setShown(start);
     const delay = rolledBetween(before, view) ? ROLL_MS : 0;
-    const longest = Math.max(...moves.map(m => m.steps.length));
-    for (let k = 0; k < longest; k++) {
-      const frame = [...real];
-      for (const m of moves) frame[m.player] = m.steps[Math.min(k, m.steps.length - 1)];
-      timers.current.push(setTimeout(() => setShown(frame), delay + k * STEP_MS));
+    const at = (ms: number, player: number, pos: number) =>
+      timers.current.push(setTimeout(() => setShown(cur => cur.map((p, i) => (i === player ? pos : p))), ms));
+    for (const m of moves) {
+      const walk = m.arrestAt === undefined ? m.steps : m.steps.slice(0, -1);
+      walk.forEach((pos, k) => at(delay + k * STEP_MS, m.player, pos));
+      if (m.arrestAt === undefined) continue;
+      const caught = delay + walk.length * STEP_MS;
+      timers.current.push(setTimeout(() => arrest.current?.(m), caught));
+      at(caught + GRAB_MS, m.player, CARRIED);
+      at(caught + ARREST_MS, m.player, m.to);
     }
   }, [view]);
 

@@ -9,6 +9,7 @@ What changed for players, newest first. Every push to `main` deploys to https://
 - **Easier to follow the turn.** The token of the player whose turn it is is bigger and pulses gently, on the map and on the phone strip.
 - **Slower walk.** Tokens walk around the board a little slower, so everyone can see where they land.
 - **Real dice.** The dice show pips instead of numbers. They tumble and hop while rolling, then bounce as they land.
+- **Arrests.** Landing on "Vá pra Papuda", drawing a Tigrinho card that sends you there, or rolling three doubles calls the cop: a 👮 with a siren grabs the token where it stands, carries it across the board to the Papuda, and the bars drop.
 - **Doubles feel like doubles.** The dice glow and cheer and a "Dobrada!" burst pops over them for everyone: "Jogue de novo", "Saiu da Papuda", or in red, "Três dobradas! Direto pra Papuda".
 
 ## Dono do Bairro
