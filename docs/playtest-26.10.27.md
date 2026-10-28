@@ -13,8 +13,8 @@ Notes from the first real playtest of Dono do Bairro. "DRDB" below is the Deu Ru
 - [x] Show the DRDB card to everyone, colored for good or bad.
 - [x] During a trade, show the values of the properties in the proposal.
 - [x] Counter-proposal in trades.
-- [ ] Redo the board tiles: the group color detail always faces the center of the board (as it does now on the bottom row), and the whole tile gets a soft tint of the owner's color.
-- [ ] Show the current rent on each tile.
+- [x] Redo the board tiles: the group color detail always faces the center of the board (as it does now on the bottom row), and the whole tile gets a soft tint of the owner's color.
+- [x] Show the current rent on each tile.
 - [ ] Click a player in the players list to see their properties.
 - [x] Dice with pips instead of numerals.
 - [x] If possible, a dice-rolling animation.

@@ -1,7 +1,7 @@
 import type { BairroIntent } from '../types';
 import type { BairroView } from '../view';
 import { BairroLog } from './BairroLog';
-import { BOARD_SIZE, ringGridArea } from './geometry';
+import { BOARD_SIZE, ringFacing, ringGridArea } from './geometry';
 import { PlayersPanel } from './PlayersPanel';
 import { Pracinha } from './Pracinha';
 import { Square } from './Square';
@@ -33,7 +33,7 @@ export function MapBoard({ view, names, colors, awaiting, onIntent, onOpenSquare
       <div className="bmap__ring">
         {POSITIONS.map(pos => (
           <div key={pos} className="bmap__cell" style={ringGridArea(pos)}>
-            <Square info={squareInfo(drawn, pos)} size="ring" colors={colors} names={names} current={view.current} onOpen={onOpenSquare} />
+            <Square info={squareInfo(drawn, pos)} size="ring" colors={colors} names={names} current={view.current} facing={ringFacing(pos)} onOpen={onOpenSquare} />
           </div>
         ))}
         <div className="bmap__park">

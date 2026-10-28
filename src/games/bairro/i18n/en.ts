@@ -124,6 +124,7 @@ export const en: BairroDictionary = {
   ui: {
     log: 'Log', logSheet: 'See the game log',
     ownerFallback: 'owner',
+    rentTag: 'rent {rent}', rentDice: '{n} times the dice',
     forSale: 'for sale', houses: '{n} puxadinhos', houseOne: '1 puxadinho', predio: 'prédio', mortgagedTag: 'mortgaged',
     actRoll: 'Roll the dice', actRollAgain: 'Roll again', actBuy: 'Buy for {amount}', actDecline: 'Leave it',
     actEndTurn: 'End turn', actPayJailFine: 'Pay {amount} bail', actUseLawyer: 'Use the lawyer card',

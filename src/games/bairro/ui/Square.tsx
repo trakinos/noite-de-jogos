@@ -1,6 +1,8 @@
+import type { CSSProperties } from 'react';
 import { useBairroText } from './useBairroText';
 import { money } from './text';
 import { useLang } from '../../../i18n/LangProvider';
+import type { Facing } from './geometry';
 import type { SquareInfo } from './squareInfo';
 
 const ICONS: Record<string, string> = {
@@ -17,16 +19,22 @@ interface Props {
   names: string[];
   /** The seat whose turn it is; its token is drawn bigger. */
   current: number;
+  /** On the map, the side that faces the Pracinha: the rua color goes there. The strip keeps it on top. */
+  facing?: Facing | null;
   onOpen: (pos: number) => void;
 }
 
-export function Square({ info, size, colors, names, current, onOpen }: Props) {
+export function Square({ info, size, colors, names, current, facing, onOpen }: Props) {
   const { tr } = useLang();
   const text = useBairroText();
   const name = text.square(info.pos);
   const icon = ICONS[info.name];
   const buyable = info.price !== null;
   const ownerName = info.owner === null ? null : (names[info.owner] || text.ui('ownerFallback'));
+  // The rent on the tile is short; the label spells it out.
+  const rent = info.rent === null ? null
+    : 'amount' in info.rent ? { short: money(tr.lang, info.rent.amount), long: money(tr.lang, info.rent.amount) }
+    : { short: `${info.rent.perDice}×🎲`, long: text.ui('rentDice', { n: info.rent.perDice }) };
   const housesLabel = info.houses === 0 ? null
     : info.houses === 5 ? text.ui('predio')
     : info.houses === 1 ? text.ui('houseOne') : text.ui('houses', { n: info.houses });
@@ -35,16 +43,23 @@ export function Square({ info, size, colors, names, current, onOpen }: Props) {
     buyable ? (ownerName ?? text.ui('forSale')) : null,
     housesLabel,
     info.mortgaged ? text.ui('mortgagedTag') : null,
+    rent && text.ui('rentTag', { rent: rent.long }),
   ].filter(Boolean).join(', ');
 
-  const cls = `bsq bsq--${size} bsq--${info.kind}${info.mortgaged ? ' bsq--mortgaged' : ''}`;
+  const cls = [
+    'bsq', `bsq--${size}`, `bsq--${info.kind}`,
+    facing ? `bsq--face-${facing}` : '',
+    info.owner !== null ? 'bsq--owned' : '',
+    info.mortgaged ? 'bsq--mortgaged' : '',
+  ].filter(Boolean).join(' ');
+  const style = info.owner !== null ? ({ '--owner': colors[info.owner] } as CSSProperties) : undefined;
   return (
-    <button type="button" className={cls} data-sq={info.pos} aria-label={label} onClick={() => onOpen(info.pos)}>
+    <button type="button" className={cls} style={style} data-sq={info.pos} aria-label={label} onClick={() => onOpen(info.pos)}>
       {info.ruaColor && <span className="bsq__awning" style={{ backgroundColor: info.ruaColor }} aria-hidden="true" />}
       <span className="bsq__name">{name}</span>
       {icon && <span className="bsq__icon" aria-hidden="true">{icon}</span>}
       {buyable && info.owner === null && <span className="bsq__price">{money(tr.lang, info.price!)}</span>}
-      {info.owner !== null && <span className="bsq__owner" style={{ backgroundColor: colors[info.owner] }} aria-hidden="true" />}
+      {rent && <span className="bsq__rent" aria-hidden="true">{rent.short}</span>}
       {info.houses > 0 && (
         <span className="bsq__houses" aria-hidden="true">{info.houses === 5 ? '▮' : '⌂'.repeat(info.houses)}</span>
       )}

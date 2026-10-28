@@ -18,6 +18,17 @@ export function ringCell(pos: number): { row: number; col: number } {
   return { row: p - 3 * SIDE, col: SIDE };
 }
 
+/** Which side of square `pos` faces the Pracinha in the middle; null for the four corners. */
+export type Facing = 'up' | 'right' | 'down' | 'left';
+export function ringFacing(pos: number): Facing | null {
+  const { row, col } = ringCell(pos);
+  if ((row === 0 || row === SIDE) && (col === 0 || col === SIDE)) return null;
+  if (row === SIDE) return 'up';
+  if (col === 0) return 'right';
+  if (row === 0) return 'down';
+  return 'left';
+}
+
 /** `size` positions around `center`, wrapping around the board. */
 export function stripWindow(center: number, size: number): number[] {
   const start = center - Math.floor(size / 2);

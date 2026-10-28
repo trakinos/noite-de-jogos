@@ -968,11 +968,15 @@ button.link:hover { color: var(--text); }
 .bsq__icon { font-size: 1.1em; }
 .bsq--strip .bsq__icon { font-size: 1.6em; }
 .bsq__price { color: var(--muted); }
-.bsq__owner { align-self: stretch; height: 4px; margin: auto -2px 0; flex: none; }
+.bsq__rent { font-weight: 800; font-variant-numeric: tabular-nums; }
+/* An owned tile takes on a soft tint of its owner's color, with a thin ring of it. */
+.bsq { --owner-tint: 28%; }
+@media (prefers-color-scheme: dark) { .bsq { --owner-tint: 40%; } }
+.bsq--owned { background-color: color-mix(in srgb, var(--owner) var(--owner-tint), var(--surface)); box-shadow: inset 0 0 0 2px var(--owner); }
 .bsq__houses { font-size: 0.8em; letter-spacing: -0.1em; }
 /* Mortgaged: striped and faded, but the text stays at full contrast. */
 .bsq--mortgaged { background-color: var(--surface-2); background-image: repeating-linear-gradient(135deg, transparent 0 6px, var(--border) 6px 8px); }
-.bsq--mortgaged .bsq__awning, .bsq--mortgaged .bsq__icon, .bsq--mortgaged .bsq__owner { opacity: 0.45; }
+.bsq--mortgaged .bsq__awning, .bsq--mortgaged .bsq__icon { opacity: 0.45; }
 .bsq__tokens { position: absolute; right: 2px; bottom: 6px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px; max-width: 70%; }
 .bsq__token { width: 0.7em; height: 0.7em; border-radius: 50%; border: 1px solid var(--surface); box-shadow: 0 0 0 1px var(--text); }
 .bsq--strip .bsq__token { width: 1em; height: 1em; }
@@ -1004,6 +1008,22 @@ button.link:hover { color: var(--text); }
 .bmap__cell { display: grid; min-width: 0; min-height: 0; }
 .bmap__ring .bsq { font-size: 0.66rem; border: 0; border-radius: 6px 6px 2px 2px; box-shadow: 0 1px 0 rgb(0 0 0 / 0.15); }
 .bmap__ring .bsq__awning { height: 22%; }
+.bmap__ring .bsq--owned { box-shadow: inset 0 0 0 2px var(--owner), 0 1px 0 rgb(0 0 0 / 0.15); }
+/* On the map the rua color always faces the Pracinha: on top along the bottom row, then right, below and left
+   around the other sides. The rounded corners follow it. */
+.bmap__ring .bsq--face-down { border-radius: 2px 2px 6px 6px; }
+.bmap__ring .bsq--face-down .bsq__awning { order: 99; margin-top: auto; }
+.bmap__ring .bsq--face-down .bsq__tokens { bottom: auto; top: 2px; }
+.bmap__ring .bsq--face-left, .bmap__ring .bsq--face-right { justify-content: center; }
+.bmap__ring .bsq--face-left .bsq__awning, .bmap__ring .bsq--face-right .bsq__awning {
+  position: absolute; top: 0; bottom: 0; width: 15%; height: auto; margin: 0;
+  background-image: repeating-linear-gradient(0deg, transparent 0 5px, rgb(255 255 255 / 0.45) 5px 10px);
+}
+.bmap__ring .bsq--face-right { border-radius: 2px 6px 6px 2px; padding-right: calc(15% + 2px); }
+.bmap__ring .bsq--face-right .bsq__awning { right: 0; }
+.bmap__ring .bsq--face-right .bsq__tokens { right: calc(15% + 2px); }
+.bmap__ring .bsq--face-left { border-radius: 6px 2px 2px 6px; padding-left: calc(15% + 2px); }
+.bmap__ring .bsq--face-left .bsq__awning { left: 0; }
 .bmap__park {
   grid-row: 2 / 11; grid-column: 2 / 11; display: grid; place-items: center; margin: 10px; min-height: 0;
   border-radius: 50%; box-shadow: inset 0 0 0 6px var(--bairro-path);

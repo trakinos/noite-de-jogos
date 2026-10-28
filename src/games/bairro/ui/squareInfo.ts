@@ -15,6 +15,26 @@ export interface SquareInfo {
   mortgaged: boolean;
   /** Seats standing here; bankrupt players are left out. */
   tokens: number[];
+  /**
+   * What landing here costs right now: an amount for a ponto, the dice multiplier for a serviço.
+   * Null when nobody collects (no owner, mortgaged, or the owner went bust). Mirrors the engine's rentFor.
+   */
+  rent: { amount: number } | { perDice: number } | null;
+}
+
+function rentNow(view: BairroView, pos: number): SquareInfo['rent'] {
+  const sq = BOARD[pos]!;
+  const own = view.owned[pos];
+  if (!own || own.mortgaged || view.players[own.owner]?.bankrupt) return null;
+  const owns = (i: number) => view.owned[i]?.owner === own.owner;
+  if (sq.kind === 'servico') {
+    const all = BOARD.every((x, i) => x.kind !== 'servico' || owns(i));
+    return { perDice: sq.multiplier * (all ? 2 : 1) };
+  }
+  if (sq.kind !== 'ponto') return null;
+  if (own.houses > 0) return { amount: sq.rent[own.houses]! };
+  const whole = BOARD.every((x, i) => x.kind !== 'ponto' || x.rua !== sq.rua || (owns(i) && view.owned[i]!.houses === 0));
+  return { amount: sq.rent[0] * (whole ? 2 : 1) };
 }
 
 export function squareInfo(view: BairroView, pos: number): SquareInfo {
@@ -30,5 +50,6 @@ export function squareInfo(view: BairroView, pos: number): SquareInfo {
     houses: own?.houses ?? 0,
     mortgaged: own?.mortgaged ?? false,
     tokens: view.players.flatMap((p, i) => (!p.bankrupt && p.pos === pos ? [i] : [])),
+    rent: rentNow(view, pos),
   };
 }

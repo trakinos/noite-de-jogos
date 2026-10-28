@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ringCell, ringGridArea, stripWindow } from './geometry';
+import { ringCell, ringFacing, ringGridArea, stripWindow } from './geometry';
 
 describe('ringCell', () => {
   it('puts the corners and mid-sides in place', () => {
@@ -36,5 +36,15 @@ describe('ringCell wrapping and ringGridArea', () => {
     expect(ringGridArea(0)).toEqual({ gridRow: 11, gridColumn: 11 });
     expect(ringGridArea(20)).toEqual({ gridRow: 1, gridColumn: 1 });
     expect(ringGridArea(-1)).toEqual(ringGridArea(39));
+  });
+});
+
+describe('ringFacing', () => {
+  it('points every side square at the Pracinha, and leaves the corners alone', () => {
+    expect([0, 10, 20, 30].map(ringFacing)).toEqual([null, null, null, null]);
+    expect([1, 9].map(ringFacing)).toEqual(['up', 'up']);
+    expect([11, 19].map(ringFacing)).toEqual(['right', 'right']);
+    expect([21, 29].map(ringFacing)).toEqual(['down', 'down']);
+    expect([31, 39].map(ringFacing)).toEqual(['left', 'left']);
   });
 });

@@ -28,4 +28,25 @@ describe('squareInfo', () => {
     s.players[0]!.pos = 2; s.players[1]!.pos = 2; s.players[1]!.bankrupt = true;
     expect(squareInfo(viewFor(s, 0), 2).tokens).toEqual([0]);
   });
+  it('shows the rent landing here costs now', () => {
+    const s = game(2);
+    give(s, 0, 1);
+    expect(squareInfo(viewFor(s, 0), 1).rent).toEqual({ amount: 2 });
+    give(s, 0, 3);
+    expect(squareInfo(viewFor(s, 0), 1).rent).toEqual({ amount: 4 }); // whole rua, no buildings: doubled
+    s.owned[1]!.houses = 2;
+    expect(squareInfo(viewFor(s, 0), 1).rent).toEqual({ amount: 30 });
+    s.owned[3]!.mortgaged = true;
+    expect(squareInfo(viewFor(s, 0), 3).rent).toBeNull();
+    expect(squareInfo(viewFor(s, 0), 6).rent).toBeNull(); // nobody owns it
+  });
+  it('gives a serviço\'s rent per dice point, doubled with all six', () => {
+    const s = game(2);
+    give(s, 1, 5);
+    expect(squareInfo(viewFor(s, 0), 5).rent).toEqual({ perDice: 8 });
+    for (const i of [15, 25, 35, 12, 28]) give(s, 1, i);
+    expect(squareInfo(viewFor(s, 0), 5).rent).toEqual({ perDice: 16 });
+    s.players[1]!.bankrupt = true;
+    expect(squareInfo(viewFor(s, 0), 5).rent).toBeNull();
+  });
 });

@@ -124,6 +124,7 @@ export const pt: BairroDictionary = {
   ui: {
     log: 'Registro', logSheet: 'Ver o registro da partida',
     ownerFallback: 'dono',
+    rentTag: 'aluguel {rent}', rentDice: '{n} vezes os dados',
     forSale: 'à venda', houses: '{n} puxadinhos', houseOne: '1 puxadinho', predio: 'prédio', mortgagedTag: 'hipotecado',
     actRoll: 'Rolar os dados', actRollAgain: 'Rolar de novo', actBuy: 'Comprar por {amount}', actDecline: 'Deixar pra lá',
     actEndTurn: 'Encerrar vez', actPayJailFine: 'Pagar fiança de {amount}', actUseLawyer: 'Usar Carta do Advogado',
