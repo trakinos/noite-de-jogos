@@ -66,7 +66,7 @@ Full list and notes: `docs/playtest-26.10.27.md`.
 Full list and notes: `docs/playtest-26.10.29.md`.
 - [x] **Timing:** turn information (log, money, dialogs) waits until the dice, the walk and any Tigrinho card are done; the mortgage window opens after the card, not before.
 - [x] **Tigrinho:** the card stays up longer.
-- [ ] **Cards in hand:** show each player's Cartas do Advogado.
+- [x] **Cards in hand:** show each player's Cartas do Advogado.
 - [ ] **Mortgage:** animations for mortgaging and paying a mortgage off.
 - [x] **Debts:** pick several escrituras to mortgage, then confirm, so a misclick can't mortgage the wrong one.
 - [ ] **Pracinha:** a little lit-cigarette animation.

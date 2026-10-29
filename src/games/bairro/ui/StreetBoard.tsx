@@ -7,7 +7,7 @@ import { BOARD_SIZE } from './geometry';
 import type { LayoutProps } from './MapBoard';
 import { MiniMap } from './MiniMap';
 import { withPositions } from './motion';
-import { PlayersPanel } from './PlayersPanel';
+import { LawyerTag, PlayersPanel } from './PlayersPanel';
 import { Pracinha } from './Pracinha';
 import { Square } from './Square';
 import { squareInfo } from './squareInfo';
@@ -61,6 +61,7 @@ export function StreetBoard({ view, live, moving, names, colors, awaiting, onInt
         {me && (
           <span className="bsummary__me">
             <b>{money(tr.lang, me.cash)}</b>
+            {me.lawyerCards > 0 && <LawyerTag n={me.lawyerCards} />}
           </span>
         )}
         {others.map(({ p, i }) => (

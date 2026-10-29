@@ -140,6 +140,7 @@ export const pt: BairroDictionary = {
     yourTurn: 'Sua vez', turnOf: 'Vez de {name}', dice: 'Dados: {d1} e {d2}', noRollYet: 'Ninguém rolou ainda',
     players: 'Jogadores', youTag: 'você', deeds: '{n} escrituras', deedOne: '1 escritura',
     streetStrip: 'Ruas do bairro', playersSheet: 'Ver jogadores e escrituras', bankruptTag: 'faliu',
+    cardsInHand: 'Cartas na mão', lawyerCardOne: 'Carta do Advogado', lawyerCardMany: '{n} Cartas do Advogado', lawyerCardHint: 'Tira da Papuda de graça. Use na hora de sair.',
     theirDeeds: 'Escrituras de {name}', playersHint: 'Toque em um jogador para ver as escrituras.', yourDeeds: 'Suas escrituras', noDeeds: 'Nenhuma ainda', servicos: 'Serviços', wholeRua: 'rua completa',
     escOwner: 'Dono: {name}', escPrice: 'Preço {amount}', escRent: 'Aluguel', escNow: 'agora',
     escBase: 'Sem construções', escDoubled: '×2 com a rua completa', escDoubledNote: 'Com a rua completa e sem construções, o aluguel base dobra',

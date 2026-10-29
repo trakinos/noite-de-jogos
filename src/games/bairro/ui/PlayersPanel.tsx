@@ -17,6 +17,18 @@ interface Props {
   onOpenSquare(pos: number): void;
 }
 
+/** A player's Cartas do Advogado, as a small tag: 📜 and how many. */
+export function LawyerTag({ n }: { n: number }) {
+  const text = useBairroText();
+  const label = n === 1 ? text.ui('tradeCardsOne') : text.ui('tradeCardsMany', { n });
+  return (
+    <span className="bplayer__tag bplayer__tag--card" title={label}>
+      <span aria-hidden="true">📜{n > 1 ? ` ${n}` : ''}</span>
+      <span className="sr-only">{label}</span>
+    </span>
+  );
+}
+
 /** Everyone's money and status, then one player's escrituras by rua: yours, or whoever you tap in the list. */
 export function PlayersPanel({ view, names, colors, onOpenSquare }: Props) {
   const { tr } = useLang();
@@ -26,6 +38,7 @@ export function PlayersPanel({ view, names, colors, onOpenSquare }: Props) {
   const mine = (positions: number[]) => positions.filter(p => view.owned[p]?.owner === shown);
   const ruas = (Object.keys(RUAS) as RuaId[]).map(rua => ({ rua, positions: mine(ruaPositions(rua)) })).filter(g => g.positions.length > 0);
   const servicos = mine(BOARD.flatMap((sq, i) => (sq.kind === 'servico' ? [i] : [])));
+  const cards = view.players[shown]?.lawyerCards ?? 0;
 
   const deedsTitle = shown === view.you ? text.ui('yourDeeds') : text.ui('theirDeeds', { name: names[shown] || text.ui('ownerFallback') });
 
@@ -76,6 +89,7 @@ export function PlayersPanel({ view, names, colors, onOpenSquare }: Props) {
                       <span className="bplayer__meta">
                         <span className="muted">{n === 1 ? text.ui('deedOne') : text.ui('deeds', { n })}</span>
                         {p.jailTurns !== null && <span className="bplayer__tag">{text.square(JAIL_POS)}</span>}
+                        {p.lawyerCards > 0 && <LawyerTag n={p.lawyerCards} />}
                       </span>
                     </>
                   )}
@@ -87,7 +101,7 @@ export function PlayersPanel({ view, names, colors, onOpenSquare }: Props) {
       </section>
       <section className="panel bpanel__box" aria-label={deedsTitle}>
         <h2>{deedsTitle}</h2>
-        {ruas.length === 0 && servicos.length === 0 && <p className="muted">{text.ui('noDeeds')}</p>}
+        {ruas.length === 0 && servicos.length === 0 && cards === 0 && <p className="muted">{text.ui('noDeeds')}</p>}
         {ruas.map(({ rua, positions }) => (
           <div key={rua} className="bdeeds">
             <h3>
@@ -102,6 +116,18 @@ export function PlayersPanel({ view, names, colors, onOpenSquare }: Props) {
           <div className="bdeeds">
             <h3>{text.ui('servicos')}</h3>
             <ul>{servicos.map(deed)}</ul>
+          </div>
+        )}
+        {cards > 0 && (
+          <div className="bdeeds">
+            <h3>{text.ui('cardsInHand')}</h3>
+            <p className="bcard">
+              <span className="bcard__icon" aria-hidden="true">📜</span>
+              <span>
+                <b>{cards === 1 ? text.ui('lawyerCardOne') : text.ui('lawyerCardMany', { n: cards })}</b>
+                <small className="muted">{text.ui('lawyerCardHint')}</small>
+              </span>
+            </p>
           </div>
         )}
       </section>
