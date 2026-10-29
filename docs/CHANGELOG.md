@@ -2,6 +2,12 @@
 
 What changed for players, newest first. Every push to `main` deploys to https://trakinos.github.io/noite-de-jogos/.
 
+## Unreleased — Dono do Bairro, after the second playtest
+
+### Changed
+- **The board waits for the dice.** The log line, everyone's money, the owners and every dialog (buying, debts, trades) now update only once the dice have landed, the token has walked and any Tigrinho card has been read. So "pagou $X a Y" no longer shows before the roll, and a debt's mortgage window opens after the card that caused it. Your buttons come back at the same moment, so a turn can't be ended mid-walk.
+- **Longer Tigrinho cards.** The card now stays face up for about 3 seconds, up from about 1.
+
 ## Unreleased — Dono do Bairro, after the first playtest
 
 ### Added

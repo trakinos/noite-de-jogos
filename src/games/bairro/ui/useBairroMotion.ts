@@ -28,7 +28,7 @@ export const GRAB_MS = 450;
 const CARRIED = -1;
 
 /** A Tigrinho card on screen: it rises from its square, flips over and stays long enough to read. */
-export const CARD_MS = 2600;
+export const CARD_MS = 4600;
 /** Money from the board: the amount pops off the square and floats up. */
 export const BONUS_MS = 1600;
 
@@ -41,18 +41,31 @@ export interface BoardScenes {
   onBonus?: (move: TokenMove, bonus: Bonus) => void;
 }
 
+export interface BoardMotion {
+  /** Where each seat's token is drawn right now. */
+  positions: number[];
+  /**
+   * The view the rest of the board shows: the latest one once the dice, the walk and its scenes are done,
+   * the one from before until then. So the log, money and dialogs never run ahead of the tokens.
+   */
+  settled: BairroView;
+}
+
 /**
- * Where each seat's token is drawn: walks through `steps` after a move (after the dice have shaken),
- * and ends on the real position. A Tigrinho card holds the walk on its square for CARD_MS. An arrest calls
- * `onArrest` on the arrest square, and the token is carried (drawn nowhere) until the cop drops it in the Papuda.
- * Board money (`onBonus`) fires as the token reaches its square. Views that move nobody don't cut a walk short.
- * Reduced motion and hidden tabs show the real position at once.
+ * Board motion for a new view. Tokens walk through `steps` after a move (after the dice have shaken) and end on
+ * the real position. A Tigrinho card holds the walk on its square for CARD_MS. An arrest calls `onArrest` on the
+ * arrest square, and the token is carried (drawn nowhere) until the cop drops it in the Papuda. Board money
+ * (`onBonus`) fires as the token reaches its square. Views that move nobody don't cut a walk short, and a roll
+ * that moves nobody (still in the Papuda) holds the board for the dice. Reduced motion and hidden tabs show it
+ * all at once.
  */
-export function useDisplayedPositions(view: BairroView, scenes: BoardScenes = {}): number[] {
+export function useBoardMotion(view: BairroView, scenes: BoardScenes = {}): BoardMotion {
   const [shown, setShown] = useState(() => positionsOf(view));
+  const [settled, setSettled] = useState(view);
+  const latest = useRef(view);
   const prev = useRef(view);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  /** Where the walk under way ends; null when nothing is walking. */
+  /** Where the motion under way ends; null when nothing is moving. */
   const walkingTo = useRef<number[] | null>(null);
   const cb = useRef(scenes);
   cb.current = scenes;
@@ -60,23 +73,27 @@ export function useDisplayedPositions(view: BairroView, scenes: BoardScenes = {}
   useLayoutEffect(() => {
     const before = prev.current;
     prev.current = view;
+    latest.current = view;
     const real = positionsOf(view);
     const moves = movesBetween(before, view);
-    // A view that moves nobody (ending the turn, buying) lets the walk under way finish, scenes and all.
+    const rolled = rolledBetween(before, view);
+    // A view that moves nobody (ending the turn, buying) lets the motion under way finish, scenes and all;
+    // the board catches up with it at the end.
     const same = (a: number[]) => a.length === real.length && a.every((p, i) => p === real[i]);
-    if (moves.length === 0 && walkingTo.current && same(walkingTo.current) && !stayStill()) return;
+    if (moves.length === 0 && !rolled && walkingTo.current && same(walkingTo.current) && !stayStill()) return;
     timers.current.forEach(clearTimeout);
     timers.current = [];
     walkingTo.current = null;
-    if (moves.length === 0 || stayStill()) {
+    if (stayStill() || (moves.length === 0 && !rolled)) {
       setShown(real);
+      setSettled(view);
       return;
     }
     // Start from the old squares so the walk begins where the token was.
     const start = [...real];
     for (const m of moves) start[m.player] = m.from;
     setShown(start);
-    let end = 0;
+    let end = rolled ? ROLL_MS : 0;
     const later = (ms: number, fn: () => void) => {
       end = Math.max(end, ms);
       timers.current.push(setTimeout(fn, ms));
@@ -84,7 +101,7 @@ export function useDisplayedPositions(view: BairroView, scenes: BoardScenes = {}
     const at = (ms: number, player: number, pos: number) =>
       later(ms, () => setShown(cur => cur.map((p, i) => (i === player ? pos : p))));
     for (const m of moves) {
-      let t = rolledBetween(before, view) ? ROLL_MS : 0;
+      let t = rolled ? ROLL_MS : 0;
       m.steps.forEach((pos, k) => {
         if (m.card && k === m.card.after) {
           later(t, () => cb.current.onCard?.(m));
@@ -100,16 +117,21 @@ export function useDisplayedPositions(view: BairroView, scenes: BoardScenes = {}
         for (const b of m.bonuses ?? []) if (b.at === k) later(t, () => cb.current.onBonus?.(m, b));
         t += STEP_MS;
       });
-      if (m.card && m.card.after === m.steps.length) later(t, () => cb.current.onCard?.(m));
+      // A card drawn on the last square holds the board until it has been read.
+      if (m.card && m.card.after === m.steps.length) {
+        later(t, () => cb.current.onCard?.(m));
+        end = Math.max(end, t + CARD_MS);
+      }
     }
     walkingTo.current = real;
-    later(end + 1, () => {
+    later(end, () => {
       walkingTo.current = null;
+      setSettled(latest.current);
     });
   }, [view]);
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
-  return shown;
+  return { positions: shown, settled };
 }
 
 /**

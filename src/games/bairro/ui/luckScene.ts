@@ -2,6 +2,12 @@ import { arrestLayer, squareRect } from './jailScenes';
 import { CARD_MS } from './useBairroMotion';
 
 const EASE = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+/** The card's moments, in ms from the start: it reaches the middle, settles, flips over, and starts to fade. */
+const ARRIVE_MS = 570;
+const SETTLE_MS = 700;
+const FLIP_FROM_MS = 620;
+const FLIP_TO_MS = 940;
+const FADE_MS = 310;
 
 export interface LuckCardText {
   /** "Deu bom!" or "Deu ruim!". */
@@ -36,16 +42,27 @@ export function playLuckCard(pos: number, tone: 'bom' | 'ruim', text: LuckCardTe
   const dx = from.left + from.width / 2 - (box.left + box.width / 2);
   const dy = from.top + from.height / 2 - (box.top + box.height / 2);
   const small = Math.max(0.15, from.width / box.width);
+  // Offsets from the moments above, so a longer CARD_MS only means more time to read.
+  const at = (ms: number) => ms / CARD_MS;
   const anim = el.animate(
     [
       { offset: 0, easing: EASE, transform: `translate(${dx}px, ${dy}px) scale(${small})`, opacity: 0 },
-      { offset: 0.06, easing: EASE, transform: `translate(${dx}px, ${dy - 20}px) scale(${small * 1.3})`, opacity: 1 },
-      { offset: 0.22, easing: EASE, transform: 'translate(0, 0) scale(1.05)' },
-      { offset: 0.27, easing: EASE, transform: 'translate(0, 0) scale(1)' },
-      { offset: 0.88, easing: EASE, transform: 'translate(0, 0) scale(1)', opacity: 1 },
+      { offset: at(150), easing: EASE, transform: `translate(${dx}px, ${dy - 20}px) scale(${small * 1.3})`, opacity: 1 },
+      { offset: at(ARRIVE_MS), easing: EASE, transform: 'translate(0, 0) scale(1.05)' },
+      { offset: at(SETTLE_MS), easing: EASE, transform: 'translate(0, 0) scale(1)' },
+      { offset: at(CARD_MS - FADE_MS), easing: EASE, transform: 'translate(0, 0) scale(1)', opacity: 1 },
       { offset: 1, easing: EASE, transform: 'translate(0, -16px) scale(0.92)', opacity: 0 },
     ],
     // Ease each leg, not the whole timeline, so the card holds as long as the offsets say.
+    { duration: CARD_MS, fill: 'both' },
+  );
+  el.querySelector('.bluck__inner')!.animate(
+    [
+      { offset: 0, transform: 'rotateY(0)' },
+      { offset: at(FLIP_FROM_MS), easing: 'ease-in-out', transform: 'rotateY(0)' },
+      { offset: at(FLIP_TO_MS), transform: 'rotateY(180deg)' },
+      { offset: 1, transform: 'rotateY(180deg)' },
+    ],
     { duration: CARD_MS, fill: 'both' },
   );
   const end = () => el.remove();

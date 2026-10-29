@@ -1,6 +1,6 @@
 # Noite de Jogos — Roadmap
 
-Last updated: 2026-10-28
+Last updated: 2026-10-29
 
 Noite de Jogos (formerly Dominion Friends) is a site where one group of friends plays board games online, each person on their own device, usually while on a call. It has two games:
 - **Dominion Friends:** Dominion with the Feira theme. Playable now.
@@ -62,8 +62,20 @@ Full list and notes: `docs/playtest-26.10.27.md`.
 - [ ] **Lobby settings:** game acceleration (brainstorm later).
 - [ ] **Custom rules** (a toggle, then a list to pick from; later): shuffled street positions, objective cards, shuffled hidden street values, Tigrinho wildcards (forced trade, forced mortgage…), a bribe to skip rent.
 
+### B3. Dono do Bairro, playtest 2026-10-29
+Full list and notes: `docs/playtest-26.10.29.md`.
+- [x] **Timing:** turn information (log, money, dialogs) waits until the dice, the walk and any Tigrinho card are done; the mortgage window opens after the card, not before.
+- [x] **Tigrinho:** the card stays up longer.
+- [ ] **Cards in hand:** show each player's Cartas do Advogado.
+- [ ] **Mortgage:** animations for mortgaging and paying a mortgage off.
+- [ ] **Debts:** pick several escrituras to mortgage, then confirm, so a misclick can't mortgage the wrong one.
+- [ ] **Pracinha:** a little lit-cigarette animation.
+
 ### C. Dono do Bairro, later
 - [ ] Replace the working values with the checked classic numbers and Sorte ou Revés cards.
+- [ ] **New theme:** Brazil's corrupt politicians.
+- [ ] **Player tokens:** a shaped, on-theme token instead of the dot; each player picks theirs next to their name.
+- [ ] **Bankruptcy auction:** a bankrupt player's escrituras go up for auction.
 - [ ] Bots to fill seats.
 - [ ] Sounds (dice, buying, rent, going to the Xilindró).
 

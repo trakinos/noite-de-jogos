@@ -19,7 +19,7 @@ const POSITIONS = Array.from({ length: BOARD_SIZE }, (_, p) => p);
 const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** The phone board: a mini-map, the street in focus as a snapping row, the Pracinha and a players summary. */
-export function StreetBoard({ view, names, colors, awaiting, onIntent, onOpenSquare, onTrade, positions }: LayoutProps) {
+export function StreetBoard({ view, live, moving, names, colors, awaiting, onIntent, onOpenSquare, onTrade, positions }: LayoutProps) {
   const { tr } = useLang();
   const text = useBairroText();
   const strip = useRef<HTMLDivElement>(null);
@@ -55,7 +55,7 @@ export function StreetBoard({ view, names, colors, awaiting, onIntent, onOpenSqu
           <Square key={pos} info={squareInfo(drawn, pos)} size="strip" colors={colors} names={names} current={view.current} onOpen={onOpenSquare} />
         ))}
       </div>
-      <Pracinha view={view} names={names} awaiting={awaiting} onIntent={onIntent} onTrade={onTrade} compact />
+      <Pracinha view={view} live={live} moving={moving} names={names} awaiting={awaiting} onIntent={onIntent} onTrade={onTrade} compact />
       <div className="bline">
       <button type="button" className="bsummary" aria-label={text.ui('playersSheet')} onClick={() => setSheet(true)}>
         {me && (

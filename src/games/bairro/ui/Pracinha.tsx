@@ -14,7 +14,12 @@ import { waitingFor } from './waiting';
 const PRACINHA_POS = BOARD.findIndex(sq => sq.kind === 'pracinha');
 
 interface Props {
+  /** The board as it stands once the motion is done; the dice come from `live`. */
   view: BairroView;
+  /** The latest view: the dice roll and land on it. */
+  live?: BairroView;
+  /** The dice, a walk or a scene is under way: the buttons wait for it. */
+  moving?: boolean;
   names: string[];
   awaiting: boolean;
   onIntent(intent: BairroIntent): void;
@@ -25,15 +30,15 @@ interface Props {
 }
 
 /** The middle of the board: whose turn, the dice, the last move and your buttons. */
-export function Pracinha({ view, names, awaiting, onIntent, onTrade, compact = false }: Props) {
+export function Pracinha({ view, live = view, moving = false, names, awaiting, onIntent, onTrade, compact = false }: Props) {
   const { tr } = useLang();
   const text = useBairroText();
   // The debt dialog owns Pay and Faliu while you owe.
-  const actions = view.pending === 'debt' ? [] : actionsFor(view, awaiting);
+  const actions = view.pending === 'debt' || moving ? [] : actionsFor(view, awaiting);
   const waiting = waitingFor(view, names, tr.lang);
   const last = [...view.log].reverse().find(e => e.key !== 'turnStarted');
-  const faces = useDiceFaces(view);
-  const burst = useDoublesBurst(view);
+  const faces = useDiceFaces(live);
+  const burst = useDoublesBurst(live);
   const label = (a: Action) => text.ui(a.label, a.amount === undefined ? undefined : { amount: money(tr.lang, a.amount) });
 
   return (
@@ -42,15 +47,15 @@ export function Pracinha({ view, names, awaiting, onIntent, onTrade, compact = f
       <p className="pracinha__turn">
         {view.current === view.you ? text.ui('yourTurn') : text.ui('turnOf', { name: names[view.current] ?? '' })}
       </p>
-      {view.lastRoll && faces ? (
+      {live.lastRoll && faces ? (
         <div className={`pracinha__dice${burst ? ` pracinha__dice--${burst}` : ''}`}>
-          <div className="pracinha__dicepair" role="img" aria-label={text.ui('dice', { d1: view.lastRoll[0], d2: view.lastRoll[1] })}>
-            <Die face={faces[0]} rolling={faces !== view.lastRoll} />
-            <Die face={faces[1]} rolling={faces !== view.lastRoll} />
+          <div className="pracinha__dicepair" role="img" aria-label={text.ui('dice', { d1: live.lastRoll[0], d2: live.lastRoll[1] })}>
+            <Die face={faces[0]} rolling={faces !== live.lastRoll} />
+            <Die face={faces[1]} rolling={faces !== live.lastRoll} />
           </div>
           {/* The numbers come in once the dice have landed; the pair's label already says them. */}
-          {faces === view.lastRoll && (
-            <p key={view.logTotal} className="pracinha__sum" aria-hidden="true">
+          {faces === live.lastRoll && (
+            <p key={live.logTotal} className="pracinha__sum" aria-hidden="true">
               {text.ui('diceSum', { d1: faces[0], d2: faces[1], sum: faces[0] + faces[1] })}
             </p>
           )}

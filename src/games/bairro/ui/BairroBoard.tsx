@@ -19,7 +19,7 @@ import { StreetBoard } from './StreetBoard';
 import { TradeAnswerDialog } from './TradeAnswerDialog';
 import { TradeDialog } from './TradeDialog';
 import { TradeWatch } from './TradeWatch';
-import { BARS_AT_MS, useDisplayedPositions, useReleases } from './useBairroMotion';
+import { BARS_AT_MS, useBoardMotion, useReleases } from './useBairroMotion';
 import { playArrest, playJailedScreen, playRelease } from './jailScenes';
 import { playLuckCard } from './luckScene';
 import { playBonus } from './bonusScene';
@@ -49,14 +49,38 @@ export interface BairroBoardProps {
   onRules?(): void;
 }
 
-export function BairroBoard({ view, lobby, code, error, clock, awaiting, onIntent, onDismissError, onEndGame, onRules }: BairroBoardProps) {
+export function BairroBoard({ view: live, lobby, code, error, clock, awaiting, onIntent, onDismissError, onEndGame, onRules }: BairroBoardProps) {
   const { tr, lang } = useLang();
   const text = useBairroText();
   const wide = useMediaQuery(WIDE);
   const [confirmEnd, setConfirmEnd] = useState(false);
   const menu = useRef<HTMLDetailsElement>(null);
-  const names = view.players.map(p => p.name);
-  const colors = view.players.map(p => playerColor(lobby, p.id));
+  const names = live.players.map(p => p.name);
+  const colors = live.players.map(p => playerColor(lobby, p.id));
+  const colorOf = (player: number) => colors[player] ?? 'currentColor';
+
+  // The tokens and dice follow the live view; everything else shows `view`, which waits for them to finish.
+  const { positions, settled: view } = useBoardMotion(live, {
+    onArrest: m => {
+      playArrest(m.arrestAt!, m.to, colorOf(m.player));
+      if (m.player === live.you) setTimeout(() => playJailedScreen(text.ui('jailedTitle'), text.ui('jailedSub')), BARS_AT_MS);
+    },
+    onCard: m => {
+      const tone = DECK.find(c => c.id === m.card!.id)?.tone ?? 'bom';
+      playLuckCard(m.card!.pos, tone, {
+        title: text.ui(tone === 'bom' ? 'luckGood' : 'luckBad'),
+        who: m.player === live.you ? text.ui('luckYouDrew') : text.ui('luckDrew', { name: names[m.player] ?? '' }),
+        body: text.card(m.card!.id),
+      });
+    },
+    onBonus: (_m, b) => playBonus(b.pos, b.kind, b.amount > 0, `${b.amount > 0 ? '+' : '-'}${money(lang, Math.abs(b.amount))}`),
+  });
+  const moving = view !== live;
+  useReleases(live, r => {
+    const label = r.kind === 'fine' ? `-${money(lang, JAIL_FINE)}` : '';
+    playRelease(JAIL_POS, colorOf(r.player), r.kind, label);
+  });
+
   // Tapping a square or an escritura opens its escritura; squares that are not deeds do nothing.
   const [deedPos, setDeedPos] = useState<number | null>(null);
   // An escritura left open is closed by the next turn.
@@ -73,26 +97,6 @@ export function BairroBoard({ view, lobby, code, error, clock, awaiting, onInten
   useEffect(() => {
     if (!proposing || myOffer) setTradeOpen(false);
   }, [proposing, myOffer]);
-  const colorOf = (player: number) => colors[player] ?? 'currentColor';
-  const positions = useDisplayedPositions(view, {
-    onArrest: m => {
-      playArrest(m.arrestAt!, m.to, colorOf(m.player));
-      if (m.player === view.you) setTimeout(() => playJailedScreen(text.ui('jailedTitle'), text.ui('jailedSub')), BARS_AT_MS);
-    },
-    onCard: m => {
-      const tone = DECK.find(c => c.id === m.card!.id)?.tone ?? 'bom';
-      playLuckCard(m.card!.pos, tone, {
-        title: text.ui(tone === 'bom' ? 'luckGood' : 'luckBad'),
-        who: m.player === view.you ? text.ui('luckYouDrew') : text.ui('luckDrew', { name: names[m.player] ?? '' }),
-        body: text.card(m.card!.id),
-      });
-    },
-    onBonus: (_m, b) => playBonus(b.pos, b.kind, b.amount > 0, `${b.amount > 0 ? '+' : '-'}${money(lang, Math.abs(b.amount))}`),
-  });
-  useReleases(view, r => {
-    const label = r.kind === 'fine' ? `-${money(lang, JAIL_FINE)}` : '';
-    playRelease(JAIL_POS, colorOf(r.player), r.kind, label);
-  });
 
   useEffect(() => {
     if (!error) return;
@@ -102,7 +106,7 @@ export function BairroBoard({ view, lobby, code, error, clock, awaiting, onInten
 
   const reasons = BAIRRO_DICTIONARIES[lang].reasons;
   const errorText = error && (Object.hasOwn(reasons, error) ? reasons[error] : tr.reason(error));
-  const layout = { view, positions, names, colors, awaiting, onIntent, onOpenSquare, onTrade: () => setTradeOpen(true) };
+  const layout = { view, live, moving, positions, names, colors, awaiting, onIntent, onOpenSquare, onTrade: () => setTradeOpen(true) };
 
   return (
     <main className={`bboard ${wide ? 'bboard--wide' : 'bboard--narrow'}`}>

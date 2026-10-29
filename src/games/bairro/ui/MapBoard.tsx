@@ -12,7 +12,12 @@ import { useBairroText } from './useBairroText';
 const POSITIONS = Array.from({ length: BOARD_SIZE }, (_, p) => p);
 
 export interface LayoutProps {
+  /** What the board shows: it waits for the dice, the walk and its scenes (see useBoardMotion). */
   view: BairroView;
+  /** The latest view, for the dice. */
+  live: BairroView;
+  /** True while the dice, a walk or a scene is under way: no buttons until it ends. */
+  moving: boolean;
   names: string[];
   /** CSS color per seat. */
   colors: string[];
@@ -20,12 +25,12 @@ export interface LayoutProps {
   onIntent(intent: BairroIntent): void;
   onOpenSquare(pos: number): void;
   onTrade(): void;
-  /** Where each seat's token is drawn right now (see useDisplayedPositions). */
+  /** Where each seat's token is drawn right now (see useBoardMotion). */
   positions: number[];
 }
 
 /** The computer board: the bairro seen from above, a road around the ring and the Pracinha in the middle. */
-export function MapBoard({ view, names, colors, awaiting, onIntent, onOpenSquare, onTrade, positions }: LayoutProps) {
+export function MapBoard({ view, live, moving, names, colors, awaiting, onIntent, onOpenSquare, onTrade, positions }: LayoutProps) {
   const text = useBairroText();
   const drawn = withPositions(view, positions);
   return (
@@ -37,7 +42,7 @@ export function MapBoard({ view, names, colors, awaiting, onIntent, onOpenSquare
           </div>
         ))}
         <div className="bmap__park">
-          <Pracinha view={view} names={names} awaiting={awaiting} onIntent={onIntent} onTrade={onTrade} />
+          <Pracinha view={view} live={live} moving={moving} names={names} awaiting={awaiting} onIntent={onIntent} onTrade={onTrade} />
         </div>
       </div>
       <div className="bmap__side">
