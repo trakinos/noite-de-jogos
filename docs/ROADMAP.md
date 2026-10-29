@@ -69,7 +69,7 @@ Full list and notes: `docs/playtest-26.10.29.md`.
 - [x] **Cards in hand:** show each player's Cartas do Advogado.
 - [x] **Mortgage:** animations for mortgaging and paying a mortgage off.
 - [x] **Debts:** pick several escrituras to mortgage, then confirm, so a misclick can't mortgage the wrong one.
-- [ ] **Pracinha:** a little lit-cigarette animation.
+- [x] **Pracinha:** a little lit-cigarette animation.
 
 ### C. Dono do Bairro, later
 - [ ] Replace the working values with the checked classic numbers and Sorte ou Revés cards.

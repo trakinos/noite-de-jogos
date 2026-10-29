@@ -6,6 +6,7 @@ import type { BairroView } from '../view';
 import { actionsFor } from './actions';
 import type { Action } from './actions';
 import { useDiceFaces, useDoublesBurst } from './useBairroMotion';
+import { Cigarette } from './Cigarette';
 import { Die } from './Die';
 import { money } from './text';
 import { useBairroText } from './useBairroText';
@@ -43,6 +44,7 @@ export function Pracinha({ view, live = view, moving = false, names, awaiting, o
 
   return (
     <div className={`pracinha${compact ? ' pracinha--compact' : ''}`}>
+      {compact && <Cigarette small />}
       {!compact && <h2 className="pracinha__title">{text.square(PRACINHA_POS)}</h2>}
       <p className="pracinha__turn">
         {view.current === view.you ? text.ui('yourTurn') : text.ui('turnOf', { name: names[view.current] ?? '' })}

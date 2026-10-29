@@ -3,6 +3,7 @@ import type { BairroView } from '../view';
 import { BairroLog } from './BairroLog';
 import { BOARD_SIZE, ringFacing, ringGridArea } from './geometry';
 import { PlayersPanel } from './PlayersPanel';
+import { Cigarette } from './Cigarette';
 import { Pracinha } from './Pracinha';
 import { Square } from './Square';
 import { withPositions } from './motion';
@@ -42,6 +43,7 @@ export function MapBoard({ view, live, moving, names, colors, awaiting, onIntent
           </div>
         ))}
         <div className="bmap__park">
+          <Cigarette />
           <Pracinha view={view} live={live} moving={moving} names={names} awaiting={awaiting} onIntent={onIntent} onTrade={onTrade} />
         </div>
       </div>

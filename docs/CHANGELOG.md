@@ -10,6 +10,7 @@ What changed for players, newest first. Every push to `main` deploys to https://
 - **Paying a debt: pick, then confirm.** The debt window now has a checkbox for each building to sell and each escritura to mortgage. A tally shows what the picks raise and whether that covers the debt; "Confirmar" then sells and mortgages them all (buildings first). A stray tap no longer mortgages anything by itself.
 - **Cards in hand.** A Carta do Advogado now shows as a 📜 tag next to its holder in the players list ("📜 2" for two), on your money line on phones, and in a "Cartas na mão" box under the escrituras of whoever you're looking at, with what it does.
 - **Mortgage stamps.** Mortgaging an escritura slams a red "HIPOTECADA" stamp onto it, with the cash floating up in green; paying it off lands a green "QUITADA" stamp that lifts away, with the payment in red. Everyone sees it, one stamp after another when several land at once.
+- **Someone's been in the Pracinha.** A park bench on the Pracinha's lawn has a cigarette left burning on it: the ember glows and smoke curls up. On phones the cigarette sits in the corner of the Pracinha panel. It stays still under reduced motion.
 
 ## Unreleased — Dono do Bairro, after the first playtest
 

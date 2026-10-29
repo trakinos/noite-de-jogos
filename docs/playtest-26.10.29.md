@@ -5,7 +5,7 @@ Notes from the second playtest of Dono do Bairro.
 ## Improvements
 
 - [x] Show the Tigrinho card for longer.
-- [ ] Pracinha: a little animation of a lit cigarette.
+- [x] Pracinha: a little animation of a lit cigarette.
 - [x] Show the cards you hold, such as the Carta do Advogado (get out of the Papuda).
 - [x] Mortgage and mortgage-payoff animations.
 - [x] Hold the turn information until the movement animation ends. Today "paid $X to Y" shows even before the dice roll; it should show after the token stops.

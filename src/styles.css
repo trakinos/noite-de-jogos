@@ -1034,7 +1034,7 @@ button.link:hover { color: var(--text); }
 .bmap__ring .bsq--face-left { border-radius: 6px 2px 2px 6px; padding-left: calc(15% + 2px); }
 .bmap__ring .bsq--face-left .bsq__awning { left: 0; }
 .bmap__park {
-  grid-row: 2 / 11; grid-column: 2 / 11; display: grid; place-items: center; margin: 10px; min-height: 0;
+  position: relative; grid-row: 2 / 11; grid-column: 2 / 11; display: grid; place-items: center; margin: 10px; min-height: 0;
   border-radius: 50%; box-shadow: inset 0 0 0 6px var(--bairro-path);
   background: radial-gradient(circle, var(--bairro-lawn) 0 45%, var(--bairro-lawn-edge) 46% 60%, var(--bairro-path) 61%);
 }
@@ -1117,7 +1117,33 @@ button.link:hover { color: var(--text); }
 }
 .bstrip::-webkit-scrollbar { display: none; }
 .bstrip .bsq { flex: none; scroll-snap-align: center; width: 5.5rem; min-height: 8rem; }
-.pracinha--compact { max-width: none; width: 100%; box-sizing: border-box; padding: 10px 12px; gap: 6px; }
+.pracinha--compact { position: relative; max-width: none; width: 100%; box-sizing: border-box; padding: 10px 12px; gap: 6px; }
+/* Pracinha scenery: a bench on the lawn with a cigarette left burning, the smoke curling up (map); on phones, just
+   the cigarette in the panel's corner. */
+.bsmoke { position: absolute; left: 84%; bottom: 3%; width: 16%; min-width: 72px; transform: translateX(-50%); pointer-events: none; }
+.bmap__park .pracinha { position: relative; z-index: 1; }
+.bsmoke--small { left: auto; right: 10px; top: 8px; bottom: auto; width: 44px; min-width: 0; transform: none; }
+.bsmoke__art { display: block; width: 100%; height: auto; overflow: visible; }
+.bsmoke__bench { fill: #8a5a2f; }
+.bsmoke__ember { fill: #ff6a1f; filter: drop-shadow(0 0 2px #ff9a3c); animation: bsmoke-ember 2.4s ease-in-out infinite; }
+.bsmoke__wisp {
+  position: absolute; left: 81%; top: 22%; width: 7px; height: 7px; border-radius: 50%;
+  background: rgb(230 230 230 / 0.55); filter: blur(2px); opacity: 0;
+  animation: bsmoke-rise 3.6s ease-out infinite; animation-delay: calc(var(--i) * 1.2s);
+}
+.bsmoke--small .bsmoke__wisp { left: 88%; top: 34%; width: 5px; height: 5px; }
+@keyframes bsmoke-ember {
+  0%, 100% { fill: #e2521a; filter: drop-shadow(0 0 1px #ff9a3c); }
+  45% { fill: #ffb347; filter: drop-shadow(0 0 4px #ffb347); }
+}
+@keyframes bsmoke-rise {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+  15% { opacity: 0.8; }
+  45% { transform: translate(-6px, -22px) scale(1.4); }
+  75% { transform: translate(5px, -40px) scale(2.1); opacity: 0.35; }
+  100% { transform: translate(-3px, -56px) scale(2.8); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .bsmoke__ember, .bsmoke__wisp { animation: none; } }
 .pracinha--compact .pracinha__actions { width: 100%; }
 .pracinha--compact .pracinha__actions button { flex: 1 1 8rem; min-height: 48px; }
 .bsummary {
