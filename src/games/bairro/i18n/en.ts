@@ -176,6 +176,8 @@ export const en: BairroDictionary = {
     endTitle: '{name} is the Dono do Bairro!', endNoWinner: 'Game over', endPlayAgain: 'Play again', endPlace: 'Place {n}', endBust: 'bust',
     answerCounter: 'Counter-offer', answerCounterTitle: 'Counter-offer', answerCounterIntro: '{name} answered with a counter-offer',
     counterTitle: 'Your counter-offer', counterIntro: 'Change whatever you like and send it back to {name}.', counterSend: 'Send counter-offer', counterBack: 'Back',
+    lobbyTheme: 'Theme', theme_bairro: 'Bairro (neighborhood)', theme_esquema: 'Esquema (crime and politics)',
+    themeHint_bairro: 'The neighborhood and its little shops.', themeHint_esquema: 'Illegal businesses and the politicians who protect them. Only the names change; the rules are the same.',
     lobbyOpenTrades: 'Open trades', lobbyOpenTradesOn: 'Open trades', lobbyOpenTradesOff: 'Private trades',
     lobbyOpenTradesHint: 'With open trades, everyone sees the offers, not just the players trading.',
     watchTitle: 'Trade on the table', watchIntro: '{from} offers {to} a trade', watchCounter: '{from} made {to} a counter-offer', watchGives: '{name} gives',

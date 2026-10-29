@@ -1242,6 +1242,9 @@ button.link:hover { color: var(--text); }
 .bauction__last { margin: 0; padding: 6px 10px; border-radius: var(--r-md); border: 1px dashed var(--border); font-weight: 700; }
 .bauction__left { margin: 0; font-size: 13px; }
 .bsetting { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; font-weight: 700; }
+.bsetting__select { display: inline-flex; align-items: center; gap: 8px; }
+.bsetting__select select { min-height: 40px; padding: 4px 10px; border-radius: var(--r-md); border: 2px solid var(--border); background: var(--surface); color: var(--text); font: inherit; }
+.bsetting + .bsetting { margin-top: 12px; }
 .bsetting__switch { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
 .bsetting__switch input { width: 20px; height: 20px; min-height: 0; margin: 0; }
 /* Open trades: the offer on the table, for everyone not in it. Sits low and out of the way, above the board. */

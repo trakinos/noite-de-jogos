@@ -9,7 +9,6 @@ import { playerColor } from '../../../ui/playerColor';
 import { pieceEmoji } from '../../../theme/playerPieces';
 import { JAIL_FINE, JAIL_POS } from '../board';
 import { DECK } from '../deck';
-import { BAIRRO_DICTIONARIES } from '../i18n';
 import type { BairroIntent } from '../types';
 import type { BairroView } from '../view';
 import { AuctionDialog } from './AuctionDialog';
@@ -112,8 +111,7 @@ export function BairroBoard({ view: live, lobby, code, error, clock, awaiting, o
     return () => clearTimeout(timer);
   }, [error]);
 
-  const reasons = BAIRRO_DICTIONARIES[lang].reasons;
-  const errorText = error && (Object.hasOwn(reasons, error) ? reasons[error] : tr.reason(error));
+  const errorText = error && (text.hasReason(error) ? text.reason(error) : tr.reason(error));
   const layout = { view, live, moving, positions, names, colors, pieces, awaiting, onIntent, onOpenSquare, onTrade: () => setTradeOpen(true) };
 
   return (

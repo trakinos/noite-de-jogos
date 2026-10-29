@@ -1,13 +1,20 @@
 import type { CSSProperties } from 'react';
-import { useBairroText } from './useBairroText';
+import type { BairroTheme } from '../i18n/themes';
+import { useBairroText, useBairroTheme } from './useBairroText';
 import { money } from './text';
 import { useLang } from '../../../i18n/LangProvider';
 import type { Facing } from './geometry';
 import type { SquareInfo } from './squareInfo';
 
-const ICONS: Record<string, string> = {
-  start: '🧦', luck: '🐯', iptu: '🧾', jail: '🚓', pracinha: '🌳', 'go-to-jail': '👮', bolao: '🎟️',
-  kombi: '🚐', mototaxi: '🛵', 'carro-do-ovo': '🥚', 'caminhao-do-gas': '🛢️', 'carro-da-pamonha': '🌽', 'van-escolar': '🚌',
+const ICONS: Record<BairroTheme, Record<string, string>> = {
+  bairro: {
+    start: '🧦', luck: '🐯', iptu: '🧾', jail: '🚓', pracinha: '🌳', 'go-to-jail': '👮', bolao: '🎟️',
+    kombi: '🚐', mototaxi: '🛵', 'carro-do-ovo': '🥚', 'caminhao-do-gas': '🛢️', 'carro-da-pamonha': '🌽', 'van-escolar': '🚌',
+  },
+  esquema: {
+    start: '💰', luck: '🐯', iptu: '🕵️', jail: '🚓', pracinha: '🔊', 'go-to-jail': '🚨', bolao: '🐓',
+    kombi: '🚐', mototaxi: '🛵', 'carro-do-ovo': '📡', 'caminhao-do-gas': '🛢️', 'carro-da-pamonha': '💡', 'van-escolar': '🚚',
+  },
 };
 
 interface Props {
@@ -30,7 +37,7 @@ export function Square({ info, size, colors, pieces = [], names, current, facing
   const { tr } = useLang();
   const text = useBairroText();
   const name = text.square(info.pos);
-  const icon = ICONS[info.name];
+  const icon = ICONS[useBairroTheme()][info.name];
   const buyable = info.price !== null;
   const ownerName = info.owner === null ? null : (names[info.owner] || text.ui('ownerFallback'));
   // The rent on the tile is short; the label spells it out.

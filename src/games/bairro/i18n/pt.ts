@@ -176,6 +176,8 @@ export const pt: BairroDictionary = {
     endTitle: '{name} é o Dono do Bairro!', endNoWinner: 'Fim de jogo', endPlayAgain: 'Jogar de novo', endPlace: '{n}º lugar', endBust: 'faliu',
     answerCounter: 'Contraproposta', answerCounterTitle: 'Contraproposta', answerCounterIntro: '{name} respondeu com uma contraproposta',
     counterTitle: 'Sua contraproposta', counterIntro: 'Mude o que quiser e mande de volta para {name}.', counterSend: 'Enviar contraproposta', counterBack: 'Voltar',
+    lobbyTheme: 'Tema', theme_bairro: 'Bairro', theme_esquema: 'Esquema (contravenção e política)',
+    themeHint_bairro: 'O bairro com seus pontos de comércio.', themeHint_esquema: 'Os negócios ilegais e os políticos que protegem. Só os nomes mudam; as regras são as mesmas.',
     lobbyOpenTrades: 'Trocas abertas', lobbyOpenTradesOn: 'Trocas abertas', lobbyOpenTradesOff: 'Trocas fechadas',
     lobbyOpenTradesHint: 'Com trocas abertas, todo mundo vê as propostas, não só quem está trocando.',
     watchTitle: 'Troca na mesa', watchIntro: '{from} propõe uma troca a {to}', watchCounter: '{from} fez uma contraproposta a {to}', watchGives: '{name} dá',

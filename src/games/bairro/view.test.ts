@@ -139,10 +139,10 @@ describe('clock input', () => {
 describe('bairroModule', () => {
   it('seats 2 to 6 players with no options', () => {
     expect(bairroModule).toMatchObject({ id: 'bairro', minPlayers: 2, maxPlayers: 6 });
-    expect(bairroModule.defaultOptions()).toEqual({ openTrades: false });
-    expect(bairroModule.parseOptions({})).toEqual({ openTrades: false });
-    expect(bairroModule.parseOptions({ openTrades: true, anything: 1 })).toEqual({ openTrades: true });
-    expect(bairroModule.parseOptions({ openTrades: 'yes' })).toEqual({ openTrades: false });
+    expect(bairroModule.defaultOptions()).toEqual({ openTrades: false, theme: 'bairro' });
+    expect(bairroModule.parseOptions({})).toEqual({ openTrades: false, theme: 'bairro' });
+    expect(bairroModule.parseOptions({ openTrades: true, theme: 'esquema', anything: 1 })).toEqual({ openTrades: true, theme: 'esquema' });
+    expect(bairroModule.parseOptions({ openTrades: 'yes', theme: 'castelo' })).toEqual({ openTrades: false, theme: 'bairro' });
     for (const raw of [null, undefined, 3, 'x', []]) expect(bairroModule.parseOptions(raw)).toHaveProperty('error');
   });
 
@@ -186,7 +186,7 @@ describe('trade privacy', () => {
 
   it('starts a room with the lobby setting', () => {
     const seats = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }];
-    expect(bairroModule.create(seats, { openTrades: true }, 1)).toMatchObject({ state: { openTrades: true } });
+    expect(bairroModule.create(seats, { openTrades: true, theme: 'bairro' }, 1)).toMatchObject({ state: { openTrades: true } });
     expect(bairroModule.create(seats, bairroModule.defaultOptions(), 1)).toMatchObject({ state: { openTrades: false } });
   });
 });

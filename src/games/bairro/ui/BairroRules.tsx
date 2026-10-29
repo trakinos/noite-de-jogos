@@ -1,11 +1,10 @@
-import { interpolate } from '../../../i18n';
 import { useLang } from '../../../i18n/LangProvider';
-import { BAIRRO_DICTIONARIES } from '../i18n';
 import { BOARD, JAIL_FINE, MORTGAGE_INTEREST, PASS_START, START_MONEY } from '../board';
 import { MAX_COUNTERS, MAX_TRADES_PER_TURN } from '../trades';
 import { BairroDialog } from './BairroDialog';
 import { RULES_LAYOUT } from './rulesLayout';
 import { money } from './text';
+import { useBairroText } from './useBairroText';
 
 /** The numbers the rules text quotes, straight from the game's constants. */
 function ruleParams(lang: 'pt' | 'en'): Record<string, string | number> {
@@ -23,9 +22,9 @@ function ruleParams(lang: 'pt' | 'en'): Record<string, string | number> {
 /** The rulebook for Dono do Bairro, from the `rules` section of the bairro dictionary. */
 export function BairroRules({ onClose }: { onClose(): void }) {
   const { tr, lang } = useLang();
-  const rules = BAIRRO_DICTIONARIES[lang].rules;
+  const text = useBairroText();
   const params = ruleParams(lang);
-  const say = (key: string) => interpolate(rules[key] ?? key, params);
+  const say = (key: string) => text.rule(key, params);
   return (
     <BairroDialog title={tr.t('rules')} onClose={onClose} className="brules">
       {RULES_LAYOUT.map(section => (

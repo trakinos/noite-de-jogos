@@ -4,6 +4,8 @@ import { BairroBoard } from './BairroBoard';
 import type { BairroBoardProps } from './BairroBoard';
 import { BairroEnd } from './BairroEnd';
 import { BairroRules } from './BairroRules';
+import { roomTheme } from './roomTheme';
+import { BairroThemeContext } from './useBairroText';
 
 type Props = Omit<BairroBoardProps, 'onRules'> & {
   lobby: LobbyState;
@@ -18,13 +20,16 @@ export function BairroScreens({ isHost, onPlayAgain, onBackToLobby, onLeave, ...
   const [rules, setRules] = useState(false);
   // Close the rulebook when a game ends or restarts, so it can't reappear over the next board.
   useEffect(() => setRules(false), [board.view.winner]);
-  if (board.view.winner !== null) {
-    return <BairroEnd view={board.view} lobby={board.lobby} isHost={isHost} onPlayAgain={onPlayAgain} onBackToLobby={onBackToLobby} onLeave={onLeave} />;
-  }
   return (
-    <>
-      <BairroBoard {...board} onRules={() => setRules(true)} />
-      {rules && <BairroRules onClose={() => setRules(false)} />}
-    </>
+    <BairroThemeContext.Provider value={roomTheme(board.lobby)}>
+      {board.view.winner !== null ? (
+        <BairroEnd view={board.view} lobby={board.lobby} isHost={isHost} onPlayAgain={onPlayAgain} onBackToLobby={onBackToLobby} onLeave={onLeave} />
+      ) : (
+        <>
+          <BairroBoard {...board} onRules={() => setRules(true)} />
+          {rules && <BairroRules onClose={() => setRules(false)} />}
+        </>
+      )}
+    </BairroThemeContext.Provider>
   );
 }

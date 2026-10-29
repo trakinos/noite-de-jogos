@@ -2,6 +2,7 @@ import type { ClockInput, ClockKind } from '../../net/turnClock';
 import type { GameInstance, GameModule, SeatInfo } from '../module';
 import { bidders } from './auction';
 import { apply } from './engine';
+import { isBairroTheme, type BairroTheme } from './i18n/themes';
 import { createBairro } from './setup';
 import { expire } from './timeout';
 import type { BairroIntent, BairroState } from './types';
@@ -83,6 +84,8 @@ export class BairroInstance implements GameInstance {
 export interface BairroOptions {
   /** Everyone sees the terms of an open trade offer, not just the two players in it. */
   openTrades: boolean;
+  /** The board's names and look; the rules are the same in every theme. */
+  theme: BairroTheme;
 }
 
 /** The guest receives views as unknown; in a bairro room they are this game's views. */
@@ -94,11 +97,13 @@ export const bairroModule: GameModule<BairroOptions> = {
   id: 'bairro',
   minPlayers: 2,
   maxPlayers: 6,
-  defaultOptions: () => ({ openTrades: false }),
+  defaultOptions: () => ({ openTrades: false, theme: 'bairro' }),
   parseOptions(raw): BairroOptions | { error: string } {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { error: 'Bad options' };
-    // Anything but a real true leaves trades private, so a room from before the setting reads as off.
-    return { openTrades: (raw as { openTrades?: unknown }).openTrades === true };
+    // Anything but a real true leaves trades private, and an unknown theme is the neighborhood, so a room
+    // from before these settings reads as it always did.
+    const { openTrades, theme } = raw as { openTrades?: unknown; theme?: unknown };
+    return { openTrades: openTrades === true, theme: isBairroTheme(theme) ? theme : 'bairro' };
   },
   create(seats: SeatInfo[], options, seed) {
     return new BairroInstance(createBairro(seats, seed, options));

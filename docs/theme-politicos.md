@@ -1,6 +1,6 @@
 # Dono do Bairro — Politicians and crime theme (draft list)
 
-A draft for the roadmap's "new theme". The board becomes the neighborhood's illegal businesses, and the politicians are who protects them: the ruas and escrituras are the crime, the Tigrinho cards are the politics. It keeps the board exactly as it is: 8 ruas, 22 escrituras, 6 serviços, the 10 special squares and the 30 Tigrinho cards, each card with the same effect as today. So the theme is only new names and text; no rule or value changes.
+Built into the game as the **Esquema** theme, picked in the lobby (`src/games/bairro/i18n/esquema.ts`); change the names there. The board becomes the neighborhood's illegal businesses, and the politicians are who protects them: the ruas and escrituras are the crime, the Tigrinho cards are the politics. It keeps the board exactly as it is: 8 ruas, 22 escrituras, 6 serviços, the 10 special squares and the 30 Tigrinho cards, each card with the same effect as today. So the theme is only new names and text; no rule or value changes.
 
 Decided by you (2026-10-29): the ruas are illegal businesses; Mensalinho, Pagamento do Fiscal, Jogo do Bicho and Pagamento pro Ministro as special-square names; a top rua of illegal properties with the Mansão com Dinheiro Vivo and the Ilha do Jogador de Futebol.
 
@@ -89,7 +89,9 @@ Spare ideas, to swap in: Rinha de Cachorro, Bingo Clandestino, Bets Pirata, Rasp
 
 ## Log and screen words that would change with it
 
+Built: the winner is the **Dono do Esquema**, buildings are **laranjas** (up to 4) and then **o esquema montado**, and the lawyer card reads **Pagamento pro Ministro** everywhere. The game keeps its name, Dono do Bairro; the theme is a lobby option.
+
+Not built yet, ideas for later:
 - "pagou aluguel a" → "pagou propina a" (rent between players)
 - "comprou" → "loteou" (buying an escritura)
-- "faliu" → "foi cassado" (bankruptcy), and the winner, "Dono do Bairro", becomes **"Dono de Brasília"**
-- The game's name on the front page: "Dono de Brasília" or keep "Dono do Bairro" with the theme as a lobby option
+- "faliu" → "foi cassado" (bankruptcy)
