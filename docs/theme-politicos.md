@@ -1,58 +1,63 @@
-# Dono do Bairro — Politicians theme (draft list)
+# Dono do Bairro — Politicians and crime theme (draft list)
 
-A draft for the roadmap's "new theme: Brazil's corrupt politicians". It keeps the board exactly as it is: 8 ruas, 22 escrituras, 6 serviços, the 10 special squares and the 30 Tigrinho cards, each card with the same effect as today. So the theme is only new names and text; no rule or value changes.
+A draft for the roadmap's "new theme". The board becomes the neighborhood's illegal businesses, and the politicians are who protects them: the ruas and escrituras are the crime, the Tigrinho cards are the politics. It keeps the board exactly as it is: 8 ruas, 22 escrituras, 6 serviços, the 10 special squares and the 30 Tigrinho cards, each card with the same effect as today. So the theme is only new names and text; no rule or value changes.
+
+Decided by you (2026-10-29): the ruas are illegal businesses; Mensalinho, Pagamento do Fiscal, Jogo do Bicho and Pagamento pro Ministro as special-square names; a top rua of illegal properties with the Mansão com Dinheiro Vivo and the Ilha do Jogador de Futebol.
 
 My calls, for you to check:
-- **Archetypes, not people.** Everything mocks well-known schemes and habits (rachadinha, emenda Pix, laranjas, dinheiro na cueca), never a real, named politician. It keeps the joke on the system and keeps the game out of defamation territory.
-- **Cheap to expensive is small to big power.** The ruas climb from a city hall in the interior to offshore accounts, like the neighborhood climbs from the Beco to the Alameda das Mansões.
-- **Some names stay.** The Papuda and the Tigrinho already fit, so they stay.
-- **Alternatives** are listed after "or" where I wasn't sure; pick one.
+- **Archetypes, not people.** It mocks well-known schemes and habits, never a real, named person. It keeps the joke on the system and keeps the game out of defamation territory.
+- **Cheap to expensive is small hustle to big money.** The ruas climb from a camelô stall to illegal property, like the neighborhood climbs from the Beco to the Alameda das Mansões.
+- **The milícia runs the serviços**, since their rent comes from the dice: the neighborhood pays for gas, light and transport whether it wants to or not.
+- **Some names stay.** The Papuda and the Tigrinho already fit.
+- **Alternatives** are listed after "or" where it's still open; pick one.
 
 ## Special squares
 
-| Today | Politicians | Notes |
+| Today | New name | Notes |
 |---|---|---|
-| Pé de Meia (start, +$200) | **Mensalinho** | or "Dia do Holerite"; you get it every lap |
-| Tigrinho (cards) | **Tigrinho** | stays; or "Caixa 2" |
-| IPTU (pay $200) | **Multa do TCU** | or "Devolução ao Erário" |
+| Pé de Meia (start, +$200) | **Mensalinho** | you get it every lap |
+| Tigrinho (cards) | **Tigrinho** | stays |
+| IPTU (pay $200) | **Pagamento do Fiscal** | |
 | Papuda (jail) | **Papuda** | stays |
-| Vá pra Papuda | **Operação da PF** | or "Busca e Apreensão às 6h" |
-| Pracinha (free parking) | **Recesso Parlamentar** | or "Cafezinho do Senado" |
-| Bolão (collect $200) | **Fundo Partidário** | or "Fundão Eleitoral" |
-| Carta do Advogado | **Habeas Corpus** | the get-out-of-jail card |
-| Prefeitura (the bank) | **Tesouro Nacional** | or keep "Prefeitura" |
-| Puxadinho / Prédio | **Assessor / Gabinete** | building up = hiring more advisers |
+| Vá pra Papuda | **Batida Policial** | or "Operação da PF" |
+| Pracinha (free parking) | **Baile** | or "Laje" |
+| Bolão (collect $200) | **Jogo do Bicho** | deu o seu bicho: receba $200 |
+| Carta do Advogado | **Pagamento pro Ministro** | the get-out-of-the-Papuda card |
+| Prefeitura (the bank) | **Prefeitura** | stays; or "Tesouro Nacional" |
+| Puxadinho / Prédio | **Laranja / Esquema** | building up = putting more laranjas on the deed; or "Puxadinho / Prédio" |
 
 ## Ruas and escrituras (cheapest first)
 
-| Rua today | Politicians rua | Escrituras |
+| Rua today | New rua | Escrituras |
 |---|---|---|
-| Beco do Samba | **Prefeitura do Interior** | Licitação da Merenda · Obra Inacabada |
-| Rua do Campinho | **Câmara de Vereadores** | Cabide de Emprego · Assessor Fantasma · Gabinete do Vereador |
-| Travessa da Feira | **Assembleia Legislativa** | Diária de Viagem · Carro Oficial · Verba Indenizatória |
-| Rua das Flores | **Esquema da Rachadinha** | Funcionário Laranja · Salário Devolvido · Conta no Nome da Sogra |
-| Rua da Igreja | **Câmara dos Deputados** | Auxílio-Paletó · Emenda Pix · Orçamento Secreto |
-| Rua do Comércio | **Senado Federal** | Jetom · Cotão Parlamentar · Foro Privilegiado |
-| Praça Central | **Esplanada dos Ministérios** | Superfaturamento · Estatal Loteada · Ministério de Porteira Fechada |
-| Alameda das Mansões | **Paraíso Fiscal** | Conta nas Ilhas Cayman · Fundação na Suíça |
+| Beco do Samba | **Camelódromo** | Barraca de DVD Pirata · Bolsa de Grife Falsificada |
+| Rua do Campinho | **Jogatina de Esquina** | Caça-Níquel no Boteco · Carteado no Fundo do Bar · Rinha de Galo |
+| Travessa da Feira | **Biqueira** | Ponto de Rua · Biqueira · Casa do Traficante |
+| Rua das Flores | **Vida Noturna Sem Alvará** | Casa de Massagem · Boate Sem Alvará · Cabaré |
+| Rua da Igreja | **Agiotagem e Falsificação** | Agiota do Bairro · Diploma Comprado · Gráfica de Nota Falsa |
+| Rua do Comércio | **Contrabando** | Cigarro do Paraguai · Muamba na Fronteira · Desmanche de Carro |
+| Praça Central | **Lavagem de Dinheiro** | Posto de Fachada · Empresa de Fachada · Cassino Clandestino |
+| Alameda das Mansões | **Patrimônio Ilegal** | Mansão com Dinheiro Vivo · Ilha do Jogador de Futebol |
 
-## Serviços (rent from the dice)
+Spare ideas, to swap in: Rinha de Cachorro, Bingo Clandestino, Bets Pirata, Raspadinha Fajuta, Corrida de Cavalo Clandestina, Laboratório no Mato, Plantação no Sítio, Motel de Fachada, Festa Clandestina, Desvio de Carga, Combustível Batizado, Garimpo Ilegal, Madeira de Desmatamento, Fazenda no Nome do Laranja, Flanelinha, Cambista, Rifa Fajuta. More for the top rua: Cobertura no Nome do Laranja, Jatinho Apreendido, Haras de Fachada, Fazenda com Pista de Pouso.
 
-| Today | Politicians |
+## Serviços (rent from the dice): the milícia's
+
+| Today | New name |
 |---|---|
-| Kombi | **Mala de Dinheiro** |
-| Mototáxi | **Cueca Recheada** |
-| Carro do Ovo | **Doleiro** |
-| Caminhão do Gás | **Carro-Forte** |
-| Carro da Pamonha | **Bolsa de Grife** |
-| Van Escolar | **Jatinho da FAB** |
+| Kombi | **Van Pirata** |
+| Mototáxi | **Mototáxi Clandestino** |
+| Carro do Ovo | **Gatonet** |
+| Caminhão do Gás | **Botijão da Milícia** |
+| Carro da Pamonha | **Gato de Luz** |
+| Van Escolar | **Caminhão-Pipa da Milícia** |
 
 ## Tigrinho cards (same effect as today's card with the same number)
 
 | # | Effect | Card text |
 |---|---|---|
-| c01 | Habeas Corpus | Habeas Corpus: saia da Papuda de graça (guarde até usar) |
-| c02 | Habeas Corpus | Liminar do ministro amigo: saia da Papuda de graça (guarde até usar) |
+| c01 | Pagamento pro Ministro | Pagamento pro ministro: saia da Papuda de graça (guarde até usar) |
+| c02 | Pagamento pro Ministro | Liminar do ministro amigo: saia da Papuda de graça (guarde até usar) |
 | c03 | Go to the Papuda | Delação premiada do seu ex-assessor: vá pra Papuda sem passar pelo Mensalinho |
 | c04 | Go to the Papuda | Vazou o áudio no grupo da família: vá pra Papuda sem passar pelo Mensalinho |
 | c05 | Advance to start (+$200) | Jatinho de carona com o empresário: avance até o Mensalinho e receba $200 |
