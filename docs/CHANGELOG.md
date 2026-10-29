@@ -7,6 +7,7 @@ What changed for players, newest first. Every push to `main` deploys to https://
 ### Changed
 - **The board waits for the dice.** The log line, everyone's money, the owners and every dialog (buying, debts, trades) now update only once the dice have landed, the token has walked and any Tigrinho card has been read. So "pagou $X a Y" no longer shows before the roll, and a debt's mortgage window opens after the card that caused it. Your buttons come back at the same moment, so a turn can't be ended mid-walk.
 - **Longer Tigrinho cards.** The card now stays face up for about 3 seconds, up from about 1.
+- **Paying a debt: pick, then confirm.** The debt window now has a checkbox for each building to sell and each escritura to mortgage. A tally shows what the picks raise and whether that covers the debt; "Confirmar" then sells and mortgages them all (buildings first). A stray tap no longer mortgages anything by itself.
 
 ## Unreleased — Dono do Bairro, after the first playtest
 

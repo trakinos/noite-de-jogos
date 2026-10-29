@@ -150,6 +150,8 @@ export const en: BairroDictionary = {
     btnSell: 'Sell a building (+{amount})', btnMortgage: 'Mortgage (+{amount})', btnUnmortgage: 'Pay off the mortgage (-{amount})',
     waitPlaying: '{name} is playing', waitDebts: '{names} must pay their debts', waitTrade: '{name} is answering a trade', gameOver: 'Game over',
     debtTitle: 'You owe money', debtOwesTo: 'to {to}', debtTotal: 'Total: {amount}', debtCash: 'Your cash: {amount}',
+    debtPick: 'Tick what to sell or mortgage, then confirm.', debtSelected: 'Selected: +{amount}', debtAfter: 'You would have {amount}',
+    debtEnough: 'enough to pay', debtShort: '{amount} short', debtConfirm: 'Confirm (+{amount})',
     debtRaise: 'Raise money', debtRaiseNone: 'You have nothing left to sell or mortgage.', debtOpenHint: 'You have a debt to pay.',
     actTrade: 'Propose a trade',
     tradeTitle: 'Trade', tradeWith: 'Trade with', tradeIGive: 'I give', tradeIGet: 'I get',

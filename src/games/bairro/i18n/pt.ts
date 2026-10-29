@@ -150,6 +150,8 @@ export const pt: BairroDictionary = {
     btnSell: 'Vender construção (+{amount})', btnMortgage: 'Hipotecar (+{amount})', btnUnmortgage: 'Pagar a hipoteca (-{amount})',
     waitPlaying: '{name} está jogando', waitDebts: '{names} precisam pagar dívidas', waitTrade: '{name} está respondendo a uma troca', gameOver: 'Fim de jogo',
     debtTitle: 'Você está devendo', debtOwesTo: 'para {to}', debtTotal: 'Total: {amount}', debtCash: 'Seu dinheiro: {amount}',
+    debtPick: 'Marque o que vender ou hipotecar e confirme.', debtSelected: 'Selecionado: +{amount}', debtAfter: 'Você ficaria com {amount}',
+    debtEnough: 'dá para pagar', debtShort: 'faltariam {amount}', debtConfirm: 'Confirmar (+{amount})',
     debtRaise: 'Levante dinheiro', debtRaiseNone: 'Você não tem mais nada para vender ou hipotecar.', debtOpenHint: 'Você tem uma dívida para pagar.',
     actTrade: 'Propor troca',
     tradeTitle: 'Troca', tradeWith: 'Trocar com', tradeIGive: 'Eu dou', tradeIGet: 'Eu recebo',
