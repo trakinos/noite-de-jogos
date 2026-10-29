@@ -4,6 +4,7 @@ import { BOARD, JAIL_FINE, RUAS, unmortgageCost } from './board';
 import type { PontoSquare, RuaId, ServicoSquare } from './board';
 import { liquidate } from './engine';
 import { MAX_TRADES_PER_TURN } from './trades';
+import { bidders } from './auction';
 import type { BairroIntent, BairroState, Offer, OfferSide, OfferTerms } from './types';
 
 /** Cash a bot keeps after buying a square. */
@@ -54,8 +55,20 @@ function completingTrade(s: BairroState, player: number): OfferTerms | null {
   return null;
 }
 
+/** A bot bids up to 70% of the price, keeping its buying reserve; less than that and it passes. */
+function auctionBid(s: BairroState, player: number, pos: number): number {
+  const price = (BOARD[pos] as PontoSquare | ServicoSquare).price;
+  const spare = s.players[player]!.cash - BUY_RESERVE;
+  const bid = Math.floor((price * 0.7) / 10) * 10;
+  return spare >= bid ? bid : 0;
+}
+
 /** Who acts next and what they do. The game must not be over. */
 export function botMove(s: BairroState): { player: number; intent: BairroIntent } {
+  if (s.auction) {
+    const player = bidders(s).find(i => s.auction!.bids[i] === null)!;
+    return { player, intent: { type: 'bid', amount: auctionBid(s, player, s.auction.lots[0]!) } };
+  }
   if (s.offer) return { player: s.offer.to, intent: { type: 'answerTrade', accept: accepts(s.offer) } };
   if (s.debts.length > 0) {
     const player = s.debts[0].debtor;

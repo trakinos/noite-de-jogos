@@ -1229,6 +1229,18 @@ button.link:hover { color: var(--text); }
 .btrade__cards b { min-width: 1.5em; text-align: center; font-variant-numeric: tabular-nums; }
 .btrade__summary { margin: 0; font-weight: 800; }
 .btrade__used { margin: 0; }
+.bauction { max-width: 440px; }
+.bauction__lot { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--r-md); background: var(--surface-2); }
+.bauction__lot > div { display: grid; gap: 2px; }
+.bauction__swatch { width: 10px; align-self: stretch; border-radius: 3px; }
+.bauction__name { font-size: 17px; }
+.bauction__bidders { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.bauction__bidders li { display: flex; align-items: center; gap: 8px; }
+.bauction__who { flex: 1; font-weight: 700; }
+.bauction__state { font-weight: 800; font-size: 13px; }
+.bauction__state.is-thinking { color: var(--muted); font-weight: 600; }
+.bauction__last { margin: 0; padding: 6px 10px; border-radius: var(--r-md); border: 1px dashed var(--border); font-weight: 700; }
+.bauction__left { margin: 0; font-size: 13px; }
 .bsetting { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; font-weight: 700; }
 .bsetting__switch { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
 .bsetting__switch input { width: 20px; height: 20px; min-height: 0; margin: 0; }

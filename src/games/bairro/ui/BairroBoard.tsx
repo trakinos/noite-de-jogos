@@ -12,6 +12,7 @@ import { DECK } from '../deck';
 import { BAIRRO_DICTIONARIES } from '../i18n';
 import type { BairroIntent } from '../types';
 import type { BairroView } from '../view';
+import { AuctionDialog } from './AuctionDialog';
 import { DebtDialog } from './DebtDialog';
 import { EscrituraDialog } from './EscrituraDialog';
 import { escrituraFor } from './escritura';
@@ -157,7 +158,11 @@ export function BairroBoard({ view: live, lobby, code, error, clock, awaiting, o
         <EscrituraDialog view={view} pos={deedPos} names={names} awaiting={awaiting} onIntent={onIntent} onClose={() => setDeedPos(null)} />
       )}
 
-      {view.pending === 'debt' && <DebtDialog view={view} names={names} awaiting={awaiting} onIntent={onIntent} />}
+      {view.auction && (
+        <AuctionDialog view={view} names={names} colors={colors} pieces={pieces} clock={clock} awaiting={awaiting} onIntent={onIntent} />
+      )}
+
+      {!view.auction && view.pending === 'debt' && <DebtDialog view={view} names={names} awaiting={awaiting} onIntent={onIntent} />}
 
       {((tradeOpen && proposing) || myOffer) && (
         <TradeDialog view={view} names={names} awaiting={awaiting} onIntent={onIntent} onClose={() => setTradeOpen(false)} />

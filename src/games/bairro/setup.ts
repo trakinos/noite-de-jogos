@@ -16,5 +16,6 @@ export function createBairro(seats: SeatInfo[], seed: number, options: { openTra
     debts: [], offer: null,
     bankruptOrder: [], log: [], rng, winner: null, turnNumber: 0, tradesThisTurn: 0,
     openTrades: options.openTrades ?? false,
+    auction: null,
   };
 }

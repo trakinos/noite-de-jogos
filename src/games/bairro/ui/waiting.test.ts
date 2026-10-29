@@ -45,3 +45,13 @@ describe('waitingFor', () => {
     expect(bairroText('pt').ui('gameOver')).not.toBe('gameOver');
   });
 });
+
+describe('waitingFor during an auction', () => {
+  it('says the auction is on, for whoever has already bid', () => {
+    const s = game(3);
+    s.auction = { from: 0, lots: [1], bids: [null, 40, null] };
+    s.players[0].bankrupt = true;
+    expect(waitingFor(viewFor(s, 1), ['A', 'B', 'C'], 'pt')).toEqual({ key: 'waitAuction', params: {} });
+    expect(waitingFor(viewFor(s, 2), ['A', 'B', 'C'], 'pt')).toBeNull();
+  });
+});

@@ -61,6 +61,8 @@ describe('bairro log and reason keys', () => {
   const UNREACHED_REASONS: Record<string, string> = {
     debtOpen: 'the debt gate in apply answers waitingForDebts before any asset rule runs; covered in engine.test.ts via canBuild',
     tooManyTrades: 'the bots stop at the cap and the fuzz rarely stacks three proposals in a turn; covered in trades.test.ts',
+    badBid: 'auctions are rare in the fuzz and a malformed amount has to hit a bidder who has not bid yet; covered in auction.test.ts',
+    notBidding: 'the apply gate answers auctionOpen to anyone not bidding before the bid handler runs; a guard only',
     tooManyCounters: 'the bots never counter and the fuzz rarely stacks three counter-offers on one proposal; covered in trades.test.ts',
   };
 

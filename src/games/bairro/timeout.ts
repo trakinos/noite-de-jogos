@@ -1,5 +1,6 @@
 // Cautious forced moves when a clock runs out. Never buys, builds, unmortgages or proposes trades.
 import type { ClockKind } from '../../net/turnClock';
+import { passMissingBids } from './auction';
 import { apply, liquidate } from './engine';
 import { log } from './ops';
 import type { BairroIntent, BairroState } from './types';
@@ -34,12 +35,18 @@ function turnMove(s: BairroState): BairroIntent {
 }
 
 /**
- * Time ran out. 'response': the trade recipient declines and every off-turn debtor settles.
+ * Time ran out. During an auction, whoever hasn't bid on the escritura passes.
+ * 'response': the trade recipient declines and every off-turn debtor settles.
  * 'turn': the current player cancels their offer, settles their debts (and anyone else's), declines
  * the buy and rolls or ends the turn, until the turn changes or the game ends.
  */
 export function expire(s: BairroState, kind: ClockKind): void {
   if (s.winner !== null) return;
+  // An auction lot closes with whoever hasn't bid passing; the next lot gets its own time.
+  if (s.auction) {
+    passMissingBids(s);
+    return;
+  }
   if (kind === 'response') {
     const late = new Set<number>(debtors(s, s.current));
     if (s.offer) late.add(s.offer.to);

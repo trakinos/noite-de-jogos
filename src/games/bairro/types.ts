@@ -21,6 +21,9 @@ export interface OfferTerms { to: number; give: OfferSide; get: OfferSide }
 /** An open offer. A counter-offer replaces it, with `from` and `to` swapped and `counters` one higher. */
 export interface Offer extends OfferTerms { from: number; counters: number }
 
+/** Escrituras up for auction, the first one now; one sealed bid per player (null = not yet), revealed when all are in. */
+export interface Auction { from: number; lots: number[]; bids: (number | null)[] }
+
 export interface BairroLogEntry { player: number | null; key: string; params?: Record<string, string | number> }
 
 export interface BairroState {
@@ -38,6 +41,8 @@ export interface BairroState {
   tradesThisTurn: number;
   /** Lobby setting: everyone sees the terms of an open offer, not just the two players in it. */
   openTrades: boolean;
+  /** The Prefeitura auctioning a bankrupt player's escrituras; nothing else happens until it ends. */
+  auction: Auction | null;
   /** Test hook: when non-empty, the next roll is taken from here instead of the rng. */
   riggedDice?: [number, number][];
 }
@@ -49,4 +54,5 @@ export type BairroIntent =
   | { type: 'mortgage'; pos: number } | { type: 'unmortgage'; pos: number }
   | { type: 'payDebt' } | { type: 'goBankrupt' }
   | { type: 'proposeTrade'; offer: OfferTerms } | { type: 'cancelTrade' } | { type: 'answerTrade'; accept: boolean }
-  | { type: 'counterTrade'; offer: Omit<OfferTerms, 'to'> };
+  | { type: 'counterTrade'; offer: Omit<OfferTerms, 'to'> }
+  | { type: 'bid'; amount: number };

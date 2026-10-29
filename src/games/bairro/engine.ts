@@ -6,6 +6,7 @@ import { BOARD, JAIL_FINE, JAIL_POS, PASS_START, RUAS, unmortgageCost } from './
 import type { PontoSquare, RuaId, ServicoSquare } from './board';
 import { charge, credit, lawyerCardId, log, mortgageOne, passTurn, sellOne } from './ops';
 import { answerTrade, cancelTrade, counterTrade, proposeTrade } from './trades';
+import { bidders, placeBid, startAuction } from './auction';
 import type { BairroIntent, BairroState } from './types';
 
 const ok = (): ApplyResult => ({ ok: true });
@@ -18,7 +19,7 @@ type Handler = (s: BairroState, player: number, intent: BairroIntent) => ApplyRe
 const INTENT_TYPES: ReadonlySet<string> = new Set<IntentType>([
   'roll', 'buy', 'decline', 'endTurn', 'payJailFine', 'useLawyer', 'build', 'sellBuilding',
   'mortgage', 'unmortgage', 'payDebt', 'goBankrupt', 'proposeTrade', 'cancelTrade', 'answerTrade',
-  'counterTrade',
+  'counterTrade', 'bid',
 ]);
 
 const HANDLERS: Partial<Record<IntentType, Handler>> = {
@@ -38,6 +39,7 @@ const HANDLERS: Partial<Record<IntentType, Handler>> = {
   cancelTrade: (s, player) => cancelTrade(s, player),
   answerTrade: (s, player, i) => answerTrade(s, player, i),
   counterTrade: (s, player, i) => counterTrade(s, player, i),
+  bid: (s, player, i) => placeBid(s, player, i),
 };
 
 /** While any debt is open, these are the only intents accepted, and only from a debtor, on or off turn. */
@@ -49,7 +51,10 @@ export function apply(s: BairroState, player: number, intent: BairroIntent): App
   const type: unknown = intent && typeof intent === 'object' ? (intent as { type?: unknown }).type : undefined;
   if (typeof type !== 'string' || !INTENT_TYPES.has(type)) return fail('badIntent');
   if (s.players[player]?.bankrupt) return fail('bankrupt');
-  if (s.offer !== null) {
+  if (s.auction !== null) {
+    // The Prefeitura's auction comes first: only bids, from those still to bid.
+    if (type !== 'bid' || !bidders(s).includes(player)) return fail('auctionOpen');
+  } else if (s.offer !== null) {
     // Exception to the own-turn gate: while an offer is open, the recipient answers or counters and the proposer cancels, nothing else.
     const answering = (type === 'answerTrade' || type === 'counterTrade') && player === s.offer.to;
     const allowed = answering || (type === 'cancelTrade' && player === s.offer.from);
@@ -336,7 +341,6 @@ function goBankrupt(s: BairroState, player: number): ApplyResult {
   const p = s.players[player];
   const assets = Object.keys(s.owned).map(Number).filter(i => s.owned[i].owner === player);
   if (creditor === null) {
-    for (const i of assets) delete s.owned[i];
     for (; p.lawyerCards > 0; p.lawyerCards--) s.deck.push(lawyerCardId(s));
     log(s, player, 'bankruptToBank');
   } else {
@@ -359,9 +363,14 @@ function goBankrupt(s: BairroState, player: number): ApplyResult {
   s.debts = s.debts.filter(d => d.debtor !== player && d.creditor !== player);
   const solvent = s.players.flatMap((x, i) => (x.bankrupt ? [] : [i]));
   if (solvent.length === 1) {
+    for (const i of assets) if (creditor === null) delete s.owned[i];
     s.winner = solvent[0];
     log(s, s.winner, 'won');
-  } else if (player === s.current) passTurn(s);
+    return ok();
+  }
+  if (player === s.current) passTurn(s);
+  // Owed to the Prefeitura: it auctions the escrituras to everyone left, clean of buildings and mortgages.
+  if (creditor === null) startAuction(s, player, assets);
   return ok();
 }
 

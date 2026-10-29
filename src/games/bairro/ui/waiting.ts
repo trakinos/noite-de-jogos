@@ -18,6 +18,7 @@ export function joinNames(lang: Lang, names: string[]): string {
 export function waitingFor(view: BairroView, names: string[], lang: Lang): WaitingMessage | null {
   if (view.pending !== 'wait') return null;
   if (view.winner !== null) return { key: 'gameOver', params: {} };
+  if (view.auction) return { key: 'waitAuction', params: {} };
   if (view.offer) return { key: 'waitTrade', params: { name: names[view.offer.to] ?? '' } };
   if (view.debts.length > 0) {
     const debtors = [...new Set(view.debts.map(d => d.debtor))].sort((a, b) => a - b);

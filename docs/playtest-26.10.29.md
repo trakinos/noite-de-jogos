@@ -17,4 +17,4 @@ Notes from the second playtest of Dono do Bairro.
 - [ ] Change the theme to Brazil's corrupt politicians.
 - [x] Replace the player's little dot with a token that has more shape and fits the theme.
 - [x] Players choose their token when they choose their name.
-- [ ] Auction a bankrupt player's escrituras.
+- [x] Auction a bankrupt player's escrituras.

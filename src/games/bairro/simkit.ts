@@ -89,7 +89,7 @@ const pick = <T>(rng: RngState, xs: readonly T[]): T => xs[nextInt(rng, xs.lengt
 
 const TYPES = [
   'roll', 'buy', 'decline', 'endTurn', 'payJailFine', 'useLawyer', 'build', 'sellBuilding', 'mortgage',
-  'unmortgage', 'payDebt', 'goBankrupt', 'proposeTrade', 'cancelTrade', 'answerTrade', 'counterTrade', 'fly', '', 'ROLL',
+  'unmortgage', 'payDebt', 'goBankrupt', 'proposeTrade', 'cancelTrade', 'answerTrade', 'counterTrade', 'bid', 'fly', '', 'ROLL',
 ];
 
 function randomPos(rng: RngState, s: BairroState): unknown {
@@ -121,6 +121,7 @@ function junkIntent(rng: RngState, s: BairroState, player: number): unknown {
     type,
     pos: randomPos(rng, s),
     accept: pick(rng, [true, false, true, 'yes', undefined]),
+    amount: pick(rng, [0, 10, 60, 150, 5000, -1, 1.5, 'x', undefined]),
     offer: nextFloat(rng) < 0.1 ? pick(rng, [null, 'x', { to }]) : { to, give: randomSide(rng, s, player), get: randomSide(rng, s, typeof to === 'number' ? to : 0) },
   };
 }
@@ -138,7 +139,8 @@ export function runFuzz(seeds: number, maxSteps: number): RunStats {
       } else {
         // Often the current player (or the one an offer waits on), so the junk gets past the turn gate.
         const r = nextFloat(rng);
-        const player = r < 0.4 ? (s.offer && r < 0.2 ? s.offer.to : s.current) : r < 0.95 ? nextInt(rng, s.players.length) : pick(rng, [-1, s.players.length, 99]);
+        const bidder = s.auction ? s.players.findIndex((p, i) => !p.bankrupt && s.auction!.bids[i] === null) : -1;
+        const player = r < 0.4 ? (bidder >= 0 && r < 0.3 ? bidder : s.offer && r < 0.2 ? s.offer.to : s.current) : r < 0.95 ? nextInt(rng, s.players.length) : pick(rng, [-1, s.players.length, 99]);
         step(s, player, junkIntent(rng, s, player), stats, `seed ${seed} step ${i}`);
       }
     }

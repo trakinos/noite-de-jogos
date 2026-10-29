@@ -27,7 +27,7 @@ const SAMPLE: Record<string, Record<string, string | number>> = {
   owesPlayer: { to: 1, amount: 90 }, builtPuxadinho: { pos: 1, cost: 50 }, builtPredio: { pos: 1, cost: 50 },
   soldBuilding: { pos: 1, amount: 25 }, mortgaged: { pos: 1, amount: 30 }, unmortgaged: { pos: 1, amount: 33 },
   paidDebtBank: { amount: 90 }, paidDebtPlayer: { to: 1, amount: 90 }, bankruptToBank: {}, bankruptToPlayer: { to: 1 },
-  tradeProposed: { to: 1 }, tradeAccepted: { to: 1 }, tradeDeclined: { to: 1 }, tradeCountered: { to: 1 }, tradeCancelled: { to: 1 },
+  tradeProposed: { to: 1 }, tradeAccepted: { to: 1 }, tradeDeclined: { to: 1 }, tradeCountered: { to: 1 }, auctionStarted: { pos: 1 }, auctionNext: { pos: 3 }, auctionWon: { pos: 1, amount: 50 }, auctionUnsold: { pos: 1 }, tradeCancelled: { to: 1 },
   tradeVoided: { to: 1 }, won: {}, turnStarted: {}, timedOut: {},
 };
 

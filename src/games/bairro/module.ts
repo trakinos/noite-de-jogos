@@ -1,5 +1,6 @@
 import type { ClockInput, ClockKind } from '../../net/turnClock';
 import type { GameInstance, GameModule, SeatInfo } from '../module';
+import { bidders } from './auction';
 import { apply } from './engine';
 import { createBairro } from './setup';
 import { expire } from './timeout';
@@ -50,7 +51,13 @@ export class BairroInstance implements GameInstance {
     const turn = this.turns.of(String(s.turnNumber), () => ({}));
     let pending: { player: number } | null = null;
     let group: object | null = null;
-    if (!over && s.offer) {
+    if (!over && s.auction) {
+      // One clock per escritura on the block, for whoever still has to bid.
+      const left = bidders(s).filter(i => s.auction!.bids[i] === null);
+      const key = `auction ${s.turnNumber} ${s.auction.lots.length} ${s.auction.lots[0]}`;
+      if (left.length === 1) pending = this.prompts.of(key, () => ({ player: left[0]! }));
+      else group = this.groups.of(key, () => ({}));
+    } else if (!over && s.offer) {
       const to = s.offer.to;
       pending = this.prompts.of(`offer ${s.turnNumber} ${JSON.stringify(s.offer)}`, () => ({ player: to }));
     } else if (!over) {

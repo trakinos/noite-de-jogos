@@ -614,7 +614,7 @@ describe('debts', () => {
     expect(s.current).toBe(1);
   });
 
-  it('bankruptcy to the bank resets the assets and returns lawyer cards to the deck', () => {
+  it('bankruptcy to the bank puts the assets up for auction, clean, and returns lawyer cards to the deck', () => {
     const s = game(3);
     s.phase = { kind: 'manage', rollAgain: false };
     give(s, 0, B, { houses: 3 }); give(s, 0, L, { houses: 3 });
@@ -626,12 +626,12 @@ describe('debts', () => {
     expect(s.owned[B]).toBeUndefined();
     expect(s.owned[L]).toBeUndefined();
     expect(s.owned[5]).toBeUndefined();
+    expect(s.auction).toEqual({ from: 0, lots: [B, 5, L].sort((a, b) => a - b), bids: [null, null, null] });
     expect(s.players[0]).toMatchObject({ bankrupt: true, cash: 0, lawyerCards: 0 });
     expect(s.deck.slice(-2).sort()).toEqual(['c01', 'c02']);
     expect(s.deck).toHaveLength(30);
     expect(s.players[1].cash).toBe(START_MONEY);
-    expect(s.log.at(-2)).toEqual({ player: 0, key: 'bankruptToBank' });
-    expect(s.log.at(-1)).toEqual({ player: 1, key: 'turnStarted' });
+    expect(s.log.slice(-3).map(e => e.key)).toEqual(['bankruptToBank', 'turnStarted', 'auctionStarted']);
   });
 
   it('several creditors: bankrupt to the creditor of the oldest player-debt, others dropped', () => {
