@@ -15,6 +15,8 @@ interface Props {
   size: 'ring' | 'strip';
   /** CSS color per seat. */
   colors: string[];
+  /** Each seat's piece (an emoji), if the room has pieces. */
+  pieces?: (string | undefined)[];
   /** Player names per seat. */
   names: string[];
   /** The seat whose turn it is; its token is drawn bigger. */
@@ -24,7 +26,7 @@ interface Props {
   onOpen: (pos: number) => void;
 }
 
-export function Square({ info, size, colors, names, current, facing, onOpen }: Props) {
+export function Square({ info, size, colors, pieces = [], names, current, facing, onOpen }: Props) {
   const { tr } = useLang();
   const text = useBairroText();
   const name = text.square(info.pos);
@@ -49,7 +51,9 @@ export function Square({ info, size, colors, names, current, facing, onOpen }: P
 
   const visitors = info.tokens.filter(i => !info.jailed.includes(i));
   const token = (i: number) => (
-    <span key={i} className={`bsq__token${i === current ? ' bsq__token--current' : ''}`} style={{ backgroundColor: colors[i] }} />
+    <span key={i} className={`bsq__token${i === current ? ' bsq__token--current' : ''}${pieces[i] ? ' bsq__token--piece' : ''}`} style={{ backgroundColor: colors[i] }}>
+      {pieces[i]}
+    </span>
   );
   const cls = [
     'bsq', `bsq--${size}`, `bsq--${info.kind}`,

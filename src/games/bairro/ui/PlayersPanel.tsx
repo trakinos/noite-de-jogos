@@ -14,7 +14,19 @@ interface Props {
   names: string[];
   /** CSS color per seat. */
   colors: string[];
+  /** Each seat's piece (an emoji), if the room has pieces. */
+  pieces?: (string | undefined)[];
   onOpenSquare(pos: number): void;
+}
+
+/** A player's piece on a disc of their color, or a plain color dot without one. `color` defaults to the row's --player. */
+export function PieceDot({ piece, color }: { piece?: string; color?: string }) {
+  const style = color ? ({ '--player': color } as CSSProperties) : undefined;
+  return (
+    <span className={`bdot${piece ? ' bdot--piece' : ''}`} style={style} aria-hidden="true">
+      {piece}
+    </span>
+  );
 }
 
 /** A player's Cartas do Advogado, as a small tag: 📜 and how many. */
@@ -30,7 +42,7 @@ export function LawyerTag({ n }: { n: number }) {
 }
 
 /** Everyone's money and status, then one player's escrituras by rua: yours, or whoever you tap in the list. */
-export function PlayersPanel({ view, names, colors, onOpenSquare }: Props) {
+export function PlayersPanel({ view, names, colors, pieces = [], onOpenSquare }: Props) {
   const { tr } = useLang();
   const text = useBairroText();
   const [shown, setShown] = useState(view.you);
@@ -76,7 +88,7 @@ export function PlayersPanel({ view, names, colors, onOpenSquare }: Props) {
                   aria-pressed={i === shown}
                   onClick={() => setShown(i)}
                 >
-                  <span className="bdot" aria-hidden="true" />
+                  <PieceDot piece={pieces[i]} />
                   <span className="bplayer__name">
                     {i === view.you ? <b>{names[i]}</b> : names[i]}
                     {i === view.you && <span className="muted"> ({text.ui('youTag')})</span>}

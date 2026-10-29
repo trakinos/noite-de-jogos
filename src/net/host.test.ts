@@ -112,6 +112,26 @@ describe('HostSession lobby', () => {
     expect(host.lobby.players[1].color).toBe('green');
   });
 
+  it('seats each player with the piece they picked, or one by seat when they bring none', async () => {
+    const host = new HostSession(dominionModule, seededHostOptions());
+    await join(host, 'Ana', { local: true, piece: 'papagaio' });
+    await join(host, 'Bo');
+    await join(host, 'Cy', { piece: 'papagaio' });
+    expect(host.lobby.players.map((p) => p.piece)).toEqual(['papagaio', 'chinelo', 'papagaio']);
+  });
+
+  it('lets a player change piece in the lobby, even to one already in use', async () => {
+    const host = new HostSession(dominionModule, seededHostOptions());
+    const ana = await join(host, 'Ana', { local: true, piece: 'bola' });
+    const bo = await join(host, 'Bo');
+    bo.send({ type: 'setPiece', piece: 'bola' });
+    await flush();
+    expect(ana.last('lobby')!.lobby.players.map((p) => p.piece)).toEqual(['bola', 'bola']);
+    bo.send({ type: 'setPiece', piece: 'dragao' });
+    await flush();
+    expect(host.lobby.players[1].piece).toBe('bola');
+  });
+
   it('frees a color when its player leaves the lobby', async () => {
     const host = new HostSession(dominionModule, seededHostOptions());
     await join(host, 'Ana', { local: true });

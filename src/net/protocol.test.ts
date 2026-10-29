@@ -15,6 +15,10 @@ describe('parseGuestMessage', () => {
     expect(parseGuestMessage({ type: 'hello', name: ' Ana ', token: 't1' })).toEqual({ type: 'hello', name: 'Ana', token: 't1' });
     expect(parseGuestMessage({ type: 'hello', name: 'Ana', token: 7 })).toEqual({ type: 'hello', name: 'Ana', token: null });
     expect(parseGuestMessage({ type: 'hello', name: 'Ana', token: 'x'.repeat(65) })).toEqual({ type: 'hello', name: 'Ana', token: null });
+    expect(parseGuestMessage({ type: 'hello', name: 'Ana', token: null, piece: 'pipa' })).toEqual({ type: 'hello', name: 'Ana', token: null, piece: 'pipa' });
+    expect(parseGuestMessage({ type: 'hello', name: 'Ana', token: null, piece: 'dragao' })).toEqual({ type: 'hello', name: 'Ana', token: null });
+    expect(parseGuestMessage({ type: 'setPiece', piece: 'coco' })).toEqual({ type: 'setPiece', piece: 'coco' });
+    expect(parseGuestMessage({ type: 'setPiece', piece: 7 })).toBeNull();
   });
 
   it('passes intents through for the engine to validate', () => {

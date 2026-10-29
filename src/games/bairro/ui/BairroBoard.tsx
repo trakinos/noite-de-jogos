@@ -6,6 +6,7 @@ import { ConfirmDialog } from '../../../ui/components/ConfirmDialog';
 import { Icon } from '../../../ui/components/Icon';
 import { TimerBar } from '../../../ui/components/TimerBar';
 import { playerColor } from '../../../ui/playerColor';
+import { pieceEmoji } from '../../../theme/playerPieces';
 import { JAIL_FINE, JAIL_POS } from '../board';
 import { DECK } from '../deck';
 import { BAIRRO_DICTIONARIES } from '../i18n';
@@ -58,12 +59,13 @@ export function BairroBoard({ view: live, lobby, code, error, clock, awaiting, o
   const menu = useRef<HTMLDetailsElement>(null);
   const names = live.players.map(p => p.name);
   const colors = live.players.map(p => playerColor(lobby, p.id));
+  const pieces = live.players.map(p => pieceEmoji(lobby.players.find(l => l.id === p.id)?.piece));
   const colorOf = (player: number) => colors[player] ?? 'currentColor';
 
   // The tokens and dice follow the live view; everything else shows `view`, which waits for them to finish.
   const { positions, settled: view } = useBoardMotion(live, {
     onArrest: m => {
-      playArrest(m.arrestAt!, m.to, colorOf(m.player));
+      playArrest(m.arrestAt!, m.to, colorOf(m.player), pieces[m.player]);
       if (m.player === live.you) setTimeout(() => playJailedScreen(text.ui('jailedTitle'), text.ui('jailedSub')), BARS_AT_MS);
     },
     onCard: m => {
@@ -79,7 +81,7 @@ export function BairroBoard({ view: live, lobby, code, error, clock, awaiting, o
   const moving = view !== live;
   useReleases(live, r => {
     const label = r.kind === 'fine' ? `-${money(lang, JAIL_FINE)}` : '';
-    playRelease(JAIL_POS, colorOf(r.player), r.kind, label);
+    playRelease(JAIL_POS, colorOf(r.player), r.kind, label, pieces[r.player]);
   });
   useMortgages(live, m => {
     const taken = m.kind === 'mortgaged';
@@ -111,7 +113,7 @@ export function BairroBoard({ view: live, lobby, code, error, clock, awaiting, o
 
   const reasons = BAIRRO_DICTIONARIES[lang].reasons;
   const errorText = error && (Object.hasOwn(reasons, error) ? reasons[error] : tr.reason(error));
-  const layout = { view, live, moving, positions, names, colors, awaiting, onIntent, onOpenSquare, onTrade: () => setTradeOpen(true) };
+  const layout = { view, live, moving, positions, names, colors, pieces, awaiting, onIntent, onOpenSquare, onTrade: () => setTradeOpen(true) };
 
   return (
     <main className={`bboard ${wide ? 'bboard--wide' : 'bboard--narrow'}`}>

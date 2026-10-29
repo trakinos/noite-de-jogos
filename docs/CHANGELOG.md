@@ -4,6 +4,9 @@ What changed for players, newest first. Every push to `main` deploys to https://
 
 ## Unreleased — Dono do Bairro, after the second playtest
 
+### Added
+- **Pick your piece.** Under your name on the front page there are ten neighborhood pieces to play as: vira-lata 🐕, chinelo 🩴, bola ⚽, moto 🛵, coco 🥥, papagaio 🦜, cafezinho ☕, violão 🎸, pipa 🪁 and abacaxi 🍍. A first visit gets one at random, and your pick is remembered. You can change it in the lobby too, next to your color; two players may pick the same piece, since their colors tell them apart. In Dono do Bairro your token on the board is now your piece on a disc of your color (also in the players list, on the phone's money line, and when the cop carries you off); the lobby shows it as your avatar in both games.
+
 ### Changed
 - **The board waits for the dice.** The log line, everyone's money, the owners and every dialog (buying, debts, trades) now update only once the dice have landed, the token has walked and any Tigrinho card has been read. So "pagou $X a Y" no longer shows before the roll, and a debt's mortgage window opens after the card that caused it. Your buttons come back at the same moment, so a turn can't be ended mid-walk.
 - **Longer Tigrinho cards.** The card now stays face up for about 3 seconds, up from about 1.

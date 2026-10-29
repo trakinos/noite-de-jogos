@@ -4,6 +4,7 @@ import { connectToHost, hostWithFreshCode } from '../net/peer';
 import { generateRoomCode } from '../net/roomCode';
 import type { GameId } from '../games/catalog';
 import { moduleFor } from '../games/registry';
+import { loadPiece } from './storage';
 
 export interface ActiveSession {
   code: string;
@@ -18,7 +19,7 @@ export async function hostGame(game: GameId, name: string): Promise<ActiveSessio
   const peer = await hostWithFreshCode(() => generateRoomCode());
   const host = new HostSession(moduleFor(game));
   peer.onConnection((conn) => host.accept(conn));
-  const session = new GuestSession(host.connectLocal(), name, memoryTokenStore());
+  const session = new GuestSession(host.connectLocal(), name, memoryTokenStore(), loadPiece());
   return {
     code: peer.code,
     session,
@@ -32,6 +33,6 @@ export async function hostGame(game: GameId, name: string): Promise<ActiveSessio
 
 export async function joinGame(code: string, name: string): Promise<ActiveSession> {
   const conn = await connectToHost(code);
-  const session = new GuestSession(conn, name, localTokenStore(code));
+  const session = new GuestSession(conn, name, localTokenStore(code), loadPiece());
   return { code, session, host: null, close: () => session.leave() };
 }

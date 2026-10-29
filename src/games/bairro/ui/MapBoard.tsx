@@ -22,6 +22,8 @@ export interface LayoutProps {
   names: string[];
   /** CSS color per seat. */
   colors: string[];
+  /** Each seat's piece (an emoji), or undefined in a room from before pieces. */
+  pieces: (string | undefined)[];
   awaiting: boolean;
   onIntent(intent: BairroIntent): void;
   onOpenSquare(pos: number): void;
@@ -31,7 +33,7 @@ export interface LayoutProps {
 }
 
 /** The computer board: the bairro seen from above, a road around the ring and the Pracinha in the middle. */
-export function MapBoard({ view, live, moving, names, colors, awaiting, onIntent, onOpenSquare, onTrade, positions }: LayoutProps) {
+export function MapBoard({ view, live, moving, names, colors, pieces, awaiting, onIntent, onOpenSquare, onTrade, positions }: LayoutProps) {
   const text = useBairroText();
   const drawn = withPositions(view, positions);
   return (
@@ -39,7 +41,7 @@ export function MapBoard({ view, live, moving, names, colors, awaiting, onIntent
       <div className="bmap__ring">
         {POSITIONS.map(pos => (
           <div key={pos} className="bmap__cell" style={ringGridArea(pos)}>
-            <Square info={squareInfo(drawn, pos)} size="ring" colors={colors} names={names} current={view.current} facing={ringFacing(pos)} onOpen={onOpenSquare} />
+            <Square info={squareInfo(drawn, pos)} size="ring" colors={colors} pieces={pieces} names={names} current={view.current} facing={ringFacing(pos)} onOpen={onOpenSquare} />
           </div>
         ))}
         <div className="bmap__park">
@@ -48,7 +50,7 @@ export function MapBoard({ view, live, moving, names, colors, awaiting, onIntent
         </div>
       </div>
       <div className="bmap__side">
-        <PlayersPanel view={view} names={names} colors={colors} onOpenSquare={onOpenSquare} />
+        <PlayersPanel view={view} names={names} colors={colors} pieces={pieces} onOpenSquare={onOpenSquare} />
         <section className="panel bpanel__box" aria-label={text.ui('log')}>
           <h2>{text.ui('log')}</h2>
           <BairroLog entries={view.log} total={view.logTotal} names={names} />

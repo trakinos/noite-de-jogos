@@ -1,4 +1,5 @@
 import type { PlayerColorId } from '../theme/playerColors';
+import type { PlayerPieceId } from '../theme/playerPieces';
 import { parseHostMessage, type GuestMessage, type HostMessage, type LobbyState } from './protocol';
 import type { Connection } from './transport';
 import type { ClockKind } from './turnClock';
@@ -40,6 +41,7 @@ export class GuestSession {
     private readonly conn: Connection,
     name: string,
     private readonly tokens: TokenStore,
+    piece?: PlayerPieceId,
   ) {
     conn.onMessage((raw) => {
       const msg = parseHostMessage(raw);
@@ -48,7 +50,7 @@ export class GuestSession {
     conn.onClose(() => {
       if (this.state.status !== 'rejected') this.update({ status: 'disconnected' });
     });
-    const hello: GuestMessage = { type: 'hello', name, token: tokens.get() };
+    const hello: GuestMessage = { type: 'hello', name, token: tokens.get(), ...(piece ? { piece } : {}) };
     conn.send(hello);
   }
 
@@ -67,6 +69,12 @@ export class GuestSession {
     if (this.state.status !== 'joined' || this.state.awaiting) return;
     this.update({ error: null, awaiting: true });
     const msg: GuestMessage = { type: 'intent', intent };
+    this.conn.send(msg);
+  }
+
+  setPiece(piece: PlayerPieceId): void {
+    if (this.state.status !== 'joined') return;
+    const msg: GuestMessage = { type: 'setPiece', piece };
     this.conn.send(msg);
   }
 

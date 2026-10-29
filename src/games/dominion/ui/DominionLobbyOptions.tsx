@@ -11,6 +11,7 @@ import { RulesDialog } from '../../../ui/components/RulesDialog';
 import { Lobby } from '../../../ui/screens/Lobby';
 import { sortByCost } from '../../../ui/moves';
 import type { PlayerColorId } from '../../../theme/playerColors';
+import type { PlayerPieceId } from '../../../theme/playerPieces';
 import { dominionModule, type DominionOptions } from '../module';
 
 interface OptionsProps {
@@ -65,6 +66,7 @@ interface LobbyProps {
   shareLink: string;
   host: HostSession | null;
   onSetColor(color: PlayerColorId): void;
+  onSetPiece(piece: PlayerPieceId): void;
   onLeave(): void;
 }
 

@@ -1,5 +1,6 @@
 import type { ApplyResult, GameInstance, GameModule } from '../games/module';
 import { PLAYER_COLORS, type PlayerColorId } from '../theme/playerColors';
+import { PLAYER_PIECES, type PlayerPieceId } from '../theme/playerPieces';
 import { createMemoryPair } from './memory';
 import { parseGuestMessage, type HostMessage, type LobbyState } from './protocol';
 import type { Connection } from './transport';
@@ -22,6 +23,7 @@ interface Seat {
   token: string;
   conn: Connection | null;
   color: PlayerColorId;
+  piece: PlayerPieceId;
 }
 
 const ok = (): ApplyResult => ({ ok: true });
@@ -73,7 +75,7 @@ export class HostSession {
     return {
       game: this.module.id,
       hostId: this.hostSeatId ?? '',
-      players: this.seats.map((s) => ({ id: s.id, name: s.name, online: s.conn !== null, color: s.color })),
+      players: this.seats.map((s) => ({ id: s.id, name: s.name, online: s.conn !== null, color: s.color, piece: s.piece })),
       options,
       inGame: this.activeGame !== null,
       turnTimer: this.turnTimer,
@@ -97,7 +99,11 @@ export class HostSession {
       const msg = parseGuestMessage(raw);
       if (!msg) return;
       if (msg.type === 'hello') {
-        if (!seat) seat = this.hello(conn, msg.name, msg.token, isHost);
+        if (!seat) seat = this.hello(conn, msg.name, msg.token, isHost, msg.piece);
+        return;
+      }
+      if (msg.type === 'setPiece') {
+        if (seat && seat.conn === conn) this.setPiece(seat, conn, msg.piece);
         return;
       }
       if (msg.type === 'setColor') {
@@ -180,7 +186,7 @@ export class HostSession {
     this.broadcastViews();
   }
 
-  private hello(conn: Connection, name: string, token: string | null, isHost: boolean): Seat | null {
+  private hello(conn: Connection, name: string, token: string | null, isHost: boolean, piece?: PlayerPieceId): Seat | null {
     const existing = token ? this.seats.find((s) => s.token === token) : undefined;
     if (existing) {
       const previous = existing.conn;
@@ -194,7 +200,11 @@ export class HostSession {
     if (this.activeGame) return this.reject(conn, 'Game in progress');
     if (this.seats.length >= this.module.maxPlayers) return this.reject(conn, 'Room full');
 
-    const seat: Seat = { id: `p${this.nextSeat++}`, name, token: this.makeToken(), conn, color: this.freeColor(token) };
+    const seat: Seat = {
+      id: `p${this.nextSeat++}`, name, token: this.makeToken(), conn, color: this.freeColor(token),
+      // A guest without a piece (an older page) gets one by seat, so every token on the board has a shape.
+      piece: piece ?? PLAYER_PIECES[this.seats.length % PLAYER_PIECES.length]!.id,
+    };
     this.seats.push(seat);
     if (isHost && this.hostSeatId === null) this.hostSeatId = seat.id;
     this.welcome(seat);
@@ -240,6 +250,13 @@ export class HostSession {
     if (this.activeGame) return void send(conn, { type: 'error', reason: 'Game in progress' });
     if (this.seats.some((s) => s !== seat && s.color === color)) return void send(conn, { type: 'error', reason: 'That color is taken' });
     seat.color = color;
+    this.broadcastLobby();
+  }
+
+  /** Pieces may repeat: the colors tell players apart. */
+  private setPiece(seat: Seat, conn: Connection, piece: PlayerPieceId): void {
+    if (this.activeGame) return void send(conn, { type: 'error', reason: 'Game in progress' });
+    seat.piece = piece;
     this.broadcastLobby();
   }
 

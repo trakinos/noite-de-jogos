@@ -18,7 +18,7 @@ import { LangToggle } from './components/LangToggle';
 import { Loader } from './components/Loader';
 import { entryAction } from './entry';
 import { screensFor } from './gameScreens';
-import { loadName, saveName } from './storage';
+import { loadName, savePiece, saveName } from './storage';
 import { useGuestState } from './useGuestState';
 
 export function App() {
@@ -195,6 +195,10 @@ export function App() {
           shareLink={joinLink(location.origin + location.pathname, active.code)}
           host={active.host}
           onSetColor={(c) => active.session.setColor(c)}
+          onSetPiece={(piece) => {
+            savePiece(piece);
+            active.session.setPiece(piece);
+          }}
           onLeave={leave}
         />
       );

@@ -7,7 +7,7 @@ import { BOARD_SIZE } from './geometry';
 import type { LayoutProps } from './MapBoard';
 import { MiniMap } from './MiniMap';
 import { withPositions } from './motion';
-import { LawyerTag, PlayersPanel } from './PlayersPanel';
+import { LawyerTag, PieceDot, PlayersPanel } from './PlayersPanel';
 import { Pracinha } from './Pracinha';
 import { Square } from './Square';
 import { squareInfo } from './squareInfo';
@@ -19,7 +19,7 @@ const POSITIONS = Array.from({ length: BOARD_SIZE }, (_, p) => p);
 const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** The phone board: a mini-map, the street in focus as a snapping row, the Pracinha and a players summary. */
-export function StreetBoard({ view, live, moving, names, colors, awaiting, onIntent, onOpenSquare, onTrade, positions }: LayoutProps) {
+export function StreetBoard({ view, live, moving, names, colors, pieces, awaiting, onIntent, onOpenSquare, onTrade, positions }: LayoutProps) {
   const { tr } = useLang();
   const text = useBairroText();
   const strip = useRef<HTMLDivElement>(null);
@@ -52,7 +52,7 @@ export function StreetBoard({ view, live, moving, names, colors, awaiting, onInt
       <MiniMap view={drawn} colors={colors} onPick={pos => center(pos, false)} />
       <div className="bstrip" ref={strip} role="group" aria-label={text.ui('streetStrip')}>
         {POSITIONS.map(pos => (
-          <Square key={pos} info={squareInfo(drawn, pos)} size="strip" colors={colors} names={names} current={view.current} onOpen={onOpenSquare} />
+          <Square key={pos} info={squareInfo(drawn, pos)} size="strip" colors={colors} pieces={pieces} names={names} current={view.current} onOpen={onOpenSquare} />
         ))}
       </div>
       <Pracinha view={view} live={live} moving={moving} names={names} awaiting={awaiting} onIntent={onIntent} onTrade={onTrade} compact />
@@ -66,7 +66,7 @@ export function StreetBoard({ view, live, moving, names, colors, awaiting, onInt
         )}
         {others.map(({ p, i }) => (
           <span key={p.id} className={`bsummary__other${p.bankrupt ? ' is-bankrupt' : ''}`}>
-            <span className="bdot" style={{ ['--player' as string]: colors[i] }} aria-hidden="true" />
+            <PieceDot color={colors[i]} piece={pieces[i]} />
             {p.bankrupt ? text.ui('bankruptTag') : money(tr.lang, p.cash)}
           </span>
         ))}
@@ -82,6 +82,7 @@ export function StreetBoard({ view, live, moving, names, colors, awaiting, onInt
             view={view}
             names={names}
             colors={colors}
+            pieces={pieces}
             onOpenSquare={pos => {
               setSheet(false);
               onOpenSquare(pos);

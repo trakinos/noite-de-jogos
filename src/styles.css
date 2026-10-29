@@ -202,6 +202,18 @@ input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px 
 .front__title { font-size: clamp(34px, 7vw, 52px); line-height: 0.95; letter-spacing: -0.03em; margin: 0; }
 .front__tagline { font-weight: 600; color: var(--muted); margin: 8px 0 8px; }
 .front__name { max-width: 320px; }
+.front__me { display: grid; gap: 12px; margin-bottom: 6px; }
+.front__piece { display: grid; gap: 6px; }
+.front__piece > span { font-weight: 800; font-size: 13px; }
+/* The pieces to play as: round buttons; the picked one gets a ring (and, in the lobby, your color). */
+.pieces { display: flex; flex-wrap: wrap; gap: 6px; }
+.lobby .pieces { flex-basis: 100%; padding: 2px 0 2px 42px; }
+.piece {
+  width: 40px; height: 40px; min-height: 0; padding: 0; border-radius: 50%; font-size: 20px; line-height: 1;
+  border: 2px solid var(--border); background: var(--surface);
+}
+.piece.is-on { border-color: var(--text); box-shadow: 0 0 0 2px var(--text); background: var(--surface-2); }
+.avatar--piece { font-size: 18px; }
 .front__who { margin: 0 0 6px; color: var(--muted); font-weight: 700; }
 .front__who b { color: var(--text); }
 .front__who button.link { display: inline; }
@@ -980,6 +992,11 @@ button.link:hover { color: var(--text); }
 .bsq__tokens { position: absolute; right: 2px; bottom: 6px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px; max-width: 70%; }
 .bsq__token { width: 0.7em; height: 0.7em; border-radius: 50%; border: 1px solid var(--surface); box-shadow: 0 0 0 1px var(--text); }
 .bsq--strip .bsq__token { width: 1em; height: 1em; }
+/* A piece: the player's emoji on their color disc, big enough to read on the map's small tiles. */
+.bsq__token--piece { display: inline-grid; place-items: center; width: 1.6em; height: 1.6em; font-size: 1em; line-height: 1; }
+.bsq--strip .bsq__token--piece { width: 1.9em; height: 1.9em; }
+.bsq__token--piece.bsq__token--current { width: 2.1em; height: 2.1em; font-size: 1.15em; }
+.bsq--strip .bsq__token--piece.bsq__token--current { width: 2.3em; height: 2.3em; }
 /* The Papuda's cell: locked-up tokens sit behind bars in the bottom-left corner; visitors stay on the right. */
 .bsq__cell {
   position: absolute; left: 3px; bottom: 4px; display: flex; flex-wrap: wrap; gap: 3px; max-width: 60%;
@@ -1088,6 +1105,7 @@ button.link:hover { color: var(--text); }
 .bcard > span:last-child { display: grid; gap: 2px; }
 .bsummary__me { display: inline-flex; align-items: center; gap: 6px; }
 .bdot { width: 12px; height: 12px; flex: none; border-radius: 50%; background: var(--player); }
+.bdot--piece { display: inline-grid; place-items: center; width: 22px; height: 22px; font-size: 13px; line-height: 1; }
 .bswatch { width: 12px; height: 12px; flex: none; border-radius: 2px; display: inline-block; }
 .bdeeds + .bdeeds { margin-top: 8px; }
 .bdeeds h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 4px; font-size: 13px; }
@@ -1269,7 +1287,7 @@ button.link:hover { color: var(--text); }
 .barrest__cop { left: -0.9em; top: -0.75em; font-size: 36px; line-height: 1; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.45)); }
 .barrest__siren { left: -0.45em; top: -2.3em; font-size: 20px; animation: barrest-siren 300ms steps(2) infinite; }
 .barrest__token {
-  left: 8px; top: 0; width: 20px; height: 20px; border-radius: 50%;
+  left: 8px; top: 0; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; line-height: 1;
   border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--text);
 }
 .barrest__bars {
@@ -1295,7 +1313,7 @@ button.link:hover { color: var(--text); }
   animation: brelease-bars 1400ms ease-in forwards;
 }
 .brelease__token {
-  left: -10px; top: -10px; width: 20px; height: 20px; border-radius: 50%;
+  left: -11px; top: -11px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; line-height: 1;
   border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--text), 0 0 12px #f2b632;
   animation: brelease-hop 1400ms ease-out forwards;
 }

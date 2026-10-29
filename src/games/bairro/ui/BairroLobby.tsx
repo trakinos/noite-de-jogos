@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { HostSession } from '../../../net/host';
 import type { LobbyState } from '../../../net/protocol';
 import type { PlayerColorId } from '../../../theme/playerColors';
+import type { PlayerPieceId } from '../../../theme/playerPieces';
 import { Lobby } from '../../../ui/screens/Lobby';
 import { BairroLobbyOptions } from './BairroLobbyOptions';
 import { BairroRules } from './BairroRules';
@@ -13,6 +14,7 @@ interface Props {
   shareLink: string;
   host: HostSession | null;
   onSetColor(color: PlayerColorId): void;
+  onSetPiece(piece: PlayerPieceId): void;
   onLeave(): void;
 }
 

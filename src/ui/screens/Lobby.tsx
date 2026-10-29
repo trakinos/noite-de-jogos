@@ -3,8 +3,10 @@ import { TURN_TIMER_OPTIONS, type HostSession } from '../../net/host';
 import type { LobbyState } from '../../net/protocol';
 import { useLang } from '../../i18n/LangProvider';
 import { colorHex, type PlayerColorId } from '../../theme/playerColors';
+import { pieceEmoji, type PlayerPieceId } from '../../theme/playerPieces';
 import { Avatar } from '../components/Avatar';
 import { ColorPicker } from '../components/ColorPicker';
+import { PiecePicker } from '../components/PiecePicker';
 import { Icon } from '../components/Icon';
 
 interface Props {
@@ -14,6 +16,7 @@ interface Props {
   shareLink: string;
   host: HostSession | null;
   onSetColor(color: PlayerColorId): void;
+  onSetPiece(piece: PlayerPieceId): void;
   onLeave(): void;
   /** The game's own options section, below the turn timer. */
   options?: ReactNode;
@@ -23,7 +26,7 @@ interface Props {
   startGate?: { ready: boolean; notReady: string; summary: string };
 }
 
-export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onLeave, options, onRules, startGate }: Props) {
+export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onSetPiece, onLeave, options, onRules, startGate }: Props) {
   const { tr } = useLang();
   const [startError, setStartError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -88,7 +91,7 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onLeave, o
             <ul className="seats">
               {lobby.players.map((p) => (
                 <li key={p.id} className={p.id === me ? 'is-me' : ''}>
-                  <Avatar name={p.name} color={colorHex(p.color)} />
+                  <Avatar name={p.name} color={colorHex(p.color)} piece={pieceEmoji(p.piece)} />
                   <span className="seats__name">{p.name}</span>
                   {p.id === lobby.hostId && <span className="pill">{tr.t('hostTag')}</span>}
                   {p.id === me && <span className="pill pill--accent">{tr.t('youTag')}</span>}
@@ -103,6 +106,7 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onLeave, o
                       onPick={onSetColor}
                     />
                   )}
+                  {p.id === me && <PiecePicker value={p.piece} color={colorHex(p.color)} onPick={onSetPiece} />}
                 </li>
               ))}
               {Array.from({ length: openSeats }, (_, i) => (

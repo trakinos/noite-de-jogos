@@ -1,4 +1,5 @@
 import { isPlayerColor, type PlayerColorId } from '../theme/playerColors';
+import { isPlayerPiece, type PlayerPieceId } from '../theme/playerPieces';
 import { GAMES, isGameId, type GameId } from '../games/catalog';
 import type { ClockInfo } from './turnClock';
 
@@ -7,6 +8,8 @@ export interface LobbyPlayer {
   name: string;
   online: boolean;
   color: PlayerColorId;
+  /** The piece they play as; missing from hosts that predate pieces. */
+  piece?: PlayerPieceId;
 }
 
 export interface LobbyState {
@@ -24,9 +27,10 @@ export interface LobbyState {
 }
 
 export type GuestMessage =
-  | { type: 'hello'; name: string; token: string | null }
+  | { type: 'hello'; name: string; token: string | null; piece?: PlayerPieceId }
   | { type: 'intent'; intent: unknown }
-  | { type: 'setColor'; color: PlayerColorId };
+  | { type: 'setColor'; color: PlayerColorId }
+  | { type: 'setPiece'; piece: PlayerPieceId };
 
 export type HostMessage =
   | { type: 'welcome'; playerId: string; token: string }
@@ -51,12 +55,13 @@ export function parseGuestMessage(raw: unknown): GuestMessage | null {
   if (!isRecord(raw)) return null;
   if (raw.type === 'hello') {
     const token = typeof raw.token === 'string' && raw.token.length <= MAX_TOKEN_LENGTH ? raw.token : null;
-    return { type: 'hello', name: cleanName(raw.name), token };
+    return { type: 'hello', name: cleanName(raw.name), token, ...(isPlayerPiece(raw.piece) ? { piece: raw.piece } : {}) };
   }
   if (raw.type === 'intent' && isRecord(raw.intent) && typeof raw.intent.type === 'string') {
     return { type: 'intent', intent: raw.intent };
   }
   if (raw.type === 'setColor' && isPlayerColor(raw.color)) return { type: 'setColor', color: raw.color };
+  if (raw.type === 'setPiece' && isPlayerPiece(raw.piece)) return { type: 'setPiece', piece: raw.piece };
   return null;
 }
 

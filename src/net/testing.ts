@@ -6,6 +6,7 @@ import { createRng, nextFloat } from '../engine/rng';
 import type { HostOptions, HostSession } from './host';
 import { createMemoryPair, flush } from './memory';
 import type { HostMessage } from './protocol';
+import type { PlayerPieceId } from '../theme/playerPieces';
 import type { Connection } from './transport';
 import type { Scheduler } from './turnClock';
 
@@ -62,10 +63,10 @@ export function connectClient(host: HostSession, opts: { local?: boolean } = {})
 export async function join(
   host: HostSession,
   name: string,
-  opts: { local?: boolean; token?: string } = {},
+  opts: { local?: boolean; token?: string; piece?: PlayerPieceId } = {},
 ): Promise<TestClient> {
   const client = connectClient(host, opts);
-  client.send({ type: 'hello', name, token: opts.token ?? null });
+  client.send({ type: 'hello', name, token: opts.token ?? null, ...(opts.piece ? { piece: opts.piece } : {}) });
   await flush();
   return client;
 }

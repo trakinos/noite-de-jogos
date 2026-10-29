@@ -74,7 +74,7 @@ Full list and notes: `docs/playtest-26.10.29.md`.
 ### C. Dono do Bairro, later
 - [ ] Replace the working values with the checked classic numbers and Sorte ou Revés cards.
 - [ ] **New theme:** Brazil's corrupt politicians. Draft names and cards: `docs/theme-politicos.md`.
-- [ ] **Player tokens:** a shaped, on-theme token instead of the dot; each player picks theirs next to their name.
+- [x] **Player tokens:** a shaped, on-theme token instead of the dot; each player picks theirs next to their name.
 - [ ] **Bankruptcy auction:** a bankrupt player's escrituras go up for auction.
 - [ ] Bots to fill seats.
 - [ ] Sounds (dice, buying, rent, going to the Xilindró).

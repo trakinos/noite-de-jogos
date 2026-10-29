@@ -4,6 +4,18 @@ import { MAX_NAME_LENGTH } from '../../net/protocol';
 import { useLang } from '../../i18n/LangProvider';
 import { CODE_LENGTH, normalizeRoomCode } from '../../net/roomCode';
 import { Icon } from '../components/Icon';
+import { PiecePicker } from '../components/PiecePicker';
+import { PLAYER_PIECES, pieceEmoji, type PlayerPieceId } from '../../theme/playerPieces';
+import { loadPiece, savePiece } from '../storage';
+
+/** The saved piece, or a random one saved now, so a first visit already has a token with a shape. */
+function initialPiece(): PlayerPieceId {
+  const saved = loadPiece();
+  if (saved) return saved;
+  const piece = PLAYER_PIECES[Math.floor(Math.random() * PLAYER_PIECES.length)]!.id;
+  savePiece(piece);
+  return piece;
+}
 
 interface Props {
   initialName: string;
@@ -17,6 +29,11 @@ interface Props {
 export function FrontPage({ initialName, invitedCode, busy, error, onHost, onJoin }: Props) {
   const { tr } = useLang();
   const [name, setName] = useState(initialName);
+  const [piece, setPiece] = useState(initialPiece);
+  const pick = (p: PlayerPieceId) => {
+    setPiece(p);
+    savePiece(p);
+  };
   const [code, setCode] = useState(invitedCode ?? '');
   // A saved name shows as a line; an invite puts the name field up front so it can be checked.
   const [editingName, setEditingName] = useState(initialName.trim() === '' || invitedCode !== null);
@@ -29,19 +46,25 @@ export function FrontPage({ initialName, invitedCode, busy, error, onHost, onJoi
       </header>
 
       {editingName ? (
-        <label className="field front__name">
-          {tr.t('yourName')}
-          <input
-            value={name}
-            maxLength={MAX_NAME_LENGTH}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={tr.t('namePlaceholder')}
-            autoFocus={invitedCode !== null}
-          />
-        </label>
+        <div className="front__me">
+          <label className="field front__name">
+            {tr.t('yourName')}
+            <input
+              value={name}
+              maxLength={MAX_NAME_LENGTH}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={tr.t('namePlaceholder')}
+              autoFocus={invitedCode !== null}
+            />
+          </label>
+          <div className="field front__piece">
+            <span>{tr.t('yourPiece')}</span>
+            <PiecePicker value={piece} onPick={pick} />
+          </div>
+        </div>
       ) : (
         <p className="front__who">
-          {tr.t('yourNameIs')} <b>{name.trim() || tr.t('namePlaceholder')}</b> ·{' '}
+          {tr.t('yourNameIs')} <b>{name.trim() || tr.t('namePlaceholder')}</b> <span aria-hidden="true">{pieceEmoji(piece)}</span> ·{' '}
           <button type="button" className="link" onClick={() => setEditingName(true)}>
             {tr.t('changeName')}
           </button>

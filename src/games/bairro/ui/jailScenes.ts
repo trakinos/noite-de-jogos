@@ -32,7 +32,7 @@ const centre = (r: DOMRect) => ({ x: r.left + r.width / 2, y: r.top + r.height /
  * The arrest scene above the page: a cop pops up on `from` with a siren, grabs the token (`color`),
  * carries it along an arc to `to` (the Papuda) and the bars drop. Takes ARREST_MS.
  */
-export function playArrest(from: number, to: number, color: string): void {
+export function playArrest(from: number, to: number, color: string, piece?: string): void {
   const a = squareRect(from);
   const b = squareRect(to);
   if (!a || !b) return;
@@ -47,6 +47,7 @@ export function playArrest(from: number, to: number, color: string): void {
   group.innerHTML =
     '<span class="barrest__siren">🚨</span><span class="barrest__cop">👮</span>' +
     `<span class="barrest__token" style="background-color:${color}"></span><span class="barrest__bars"></span>`;
+  if (piece) group.querySelector('.barrest__token')!.textContent = piece;
   arrestLayer().append(group);
 
   const at = (pt: { x: number; y: number }, extra = '') => `translate(${pt.x - p.x}px, ${pt.y - p.y}px) ${extra}`;
@@ -77,7 +78,7 @@ const RELEASE_ICONS: Record<ReleaseKind, string> = { fine: '💸', lawyer: '📜
  * Leaving the Papuda: the bars lift off the square, the token hops out and what paid for it
  * (money, the lawyer card, the dice) floats up. Takes RELEASE_MS.
  */
-export function playRelease(pos: number, color: string, kind: ReleaseKind, label: string): void {
+export function playRelease(pos: number, color: string, kind: ReleaseKind, label: string, piece?: string): void {
   const r = squareRect(pos);
   if (!r) return;
   const c = centre(r);
@@ -92,6 +93,7 @@ export function playRelease(pos: number, color: string, kind: ReleaseKind, label
     (label ? `<span class="brelease__label"></span>` : '');
   const tag = group.querySelector<HTMLElement>('.brelease__label');
   if (tag) tag.textContent = label;
+  if (piece) group.querySelector('.brelease__token')!.textContent = piece;
   arrestLayer().append(group);
   setTimeout(() => group.remove(), RELEASE_MS);
 }
