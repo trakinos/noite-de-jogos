@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { stayStill } from '../../../ui/useCardMotion';
 import type { BairroView } from '../view';
-import { doublesBetween, movesBetween, releasesBetween, rolledBetween, type Bonus, type DoublesKind, type Release, type TokenMove } from './motion';
+import { doublesBetween, mortgagesBetween, movesBetween, releasesBetween, rolledBetween, type Bonus, type DoublesKind, type MortgageChange, type Release, type TokenMove } from './motion';
 
 /** One step of a token's walk. */
 export const STEP_MS = 220;
@@ -31,6 +31,10 @@ const CARRIED = -1;
 export const CARD_MS = 4600;
 /** Money from the board: the amount pops off the square and floats up. */
 export const BONUS_MS = 1600;
+/** A mortgage stamp: slammed onto the escritura (or peeled off it) with the money. */
+export const MORTGAGE_MS = 1700;
+/** Between stamps when several mortgages land at once (paying a debt). */
+const MORTGAGE_GAP_MS = 350;
 
 export interface BoardScenes {
   /** The cop takes the token away (see ARREST_MS). */
@@ -212,6 +216,23 @@ export function useReleases(view: BairroView, onRelease: (release: Release) => v
     for (const r of releasesBetween(before, view)) {
       timers.current.push(setTimeout(() => cb.current(r), r.rolled ? ROLL_MS : 0));
     }
+  }, [view]);
+
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+}
+
+/** Calls `onChange` for each mortgage taken or paid off in a new view, one after another. Not under reduced motion. */
+export function useMortgages(view: BairroView, onChange: (change: MortgageChange) => void): void {
+  const prev = useRef(view);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const cb = useRef(onChange);
+  cb.current = onChange;
+
+  useLayoutEffect(() => {
+    const before = prev.current;
+    prev.current = view;
+    if (before === view || stayStill()) return;
+    mortgagesBetween(before, view).forEach((m, i) => timers.current.push(setTimeout(() => cb.current(m), i * MORTGAGE_GAP_MS)));
   }, [view]);
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);

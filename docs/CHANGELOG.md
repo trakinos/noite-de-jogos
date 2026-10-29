@@ -9,6 +9,7 @@ What changed for players, newest first. Every push to `main` deploys to https://
 - **Longer Tigrinho cards.** The card now stays face up for about 3 seconds, up from about 1.
 - **Paying a debt: pick, then confirm.** The debt window now has a checkbox for each building to sell and each escritura to mortgage. A tally shows what the picks raise and whether that covers the debt; "Confirmar" then sells and mortgages them all (buildings first). A stray tap no longer mortgages anything by itself.
 - **Cards in hand.** A Carta do Advogado now shows as a 📜 tag next to its holder in the players list ("📜 2" for two), on your money line on phones, and in a "Cartas na mão" box under the escrituras of whoever you're looking at, with what it does.
+- **Mortgage stamps.** Mortgaging an escritura slams a red "HIPOTECADA" stamp onto it, with the cash floating up in green; paying it off lands a green "QUITADA" stamp that lifts away, with the payment in red. Everyone sees it, one stamp after another when several land at once.
 
 ## Unreleased — Dono do Bairro, after the first playtest
 

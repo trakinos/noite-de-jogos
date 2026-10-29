@@ -19,10 +19,11 @@ import { StreetBoard } from './StreetBoard';
 import { TradeAnswerDialog } from './TradeAnswerDialog';
 import { TradeDialog } from './TradeDialog';
 import { TradeWatch } from './TradeWatch';
-import { BARS_AT_MS, useBoardMotion, useReleases } from './useBairroMotion';
+import { BARS_AT_MS, useBoardMotion, useMortgages, useReleases } from './useBairroMotion';
 import { playArrest, playJailedScreen, playRelease } from './jailScenes';
 import { playLuckCard } from './luckScene';
 import { playBonus } from './bonusScene';
+import { playMortgage } from './mortgageScene';
 import { useMediaQuery } from './useMediaQuery';
 import { useBairroText } from './useBairroText';
 import { money } from './text';
@@ -79,6 +80,10 @@ export function BairroBoard({ view: live, lobby, code, error, clock, awaiting, o
   useReleases(live, r => {
     const label = r.kind === 'fine' ? `-${money(lang, JAIL_FINE)}` : '';
     playRelease(JAIL_POS, colorOf(r.player), r.kind, label);
+  });
+  useMortgages(live, m => {
+    const taken = m.kind === 'mortgaged';
+    playMortgage(m.pos, taken, text.ui(taken ? 'stampMortgaged' : 'stampPaidOff'), `${taken ? '+' : '-'}${money(lang, m.amount)}`);
   });
 
   // Tapping a square or an escritura opens its escritura; squares that are not deeds do nothing.

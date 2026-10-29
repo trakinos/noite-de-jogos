@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { apply } from '../engine';
-import { game, rig } from '../testkit';
+import { game, give, rig } from '../testkit';
 import { viewFor } from '../view';
 import { DECK } from '../deck';
 import { BOARD } from '../board';
-import { doublesBetween, releasesBetween, movesBetween, newEntries, rolledBetween, withPositions } from './motion';
+import { doublesBetween, mortgagesBetween, releasesBetween, movesBetween, newEntries, rolledBetween, withPositions } from './motion';
 
 describe('movesBetween bonuses', () => {
   it('pays the Pé de Meia as the token passes it', () => {
@@ -299,5 +299,31 @@ describe('Tigrinho cards on the way', () => {
       player: 0, from: luckPos - 3, to: 0, steps: [...walkTo, 0], card: { id: card, pos: luckPos, after: 3 },
       bonuses: [{ at: 3, pos: 0, kind: 'start', amount: 200 }],
     }]);
+  });
+});
+
+describe('mortgagesBetween', () => {
+  it('lists mortgages taken and paid off, in order', () => {
+    const s = game(2);
+    give(s, 0, 1);
+    give(s, 0, 3);
+    s.phase = { kind: 'manage', rollAgain: false };
+    const before = viewFor(s, 0);
+    apply(s, 0, { type: 'mortgage', pos: 1 });
+    apply(s, 0, { type: 'mortgage', pos: 3 });
+    apply(s, 0, { type: 'unmortgage', pos: 1 });
+    expect(mortgagesBetween(before, viewFor(s, 0))).toEqual([
+      { player: 0, pos: 1, kind: 'mortgaged', amount: 30 },
+      { player: 0, pos: 3, kind: 'mortgaged', amount: 30 },
+      { player: 0, pos: 1, kind: 'unmortgaged', amount: 36 },
+    ]);
+  });
+
+  it('has nothing when nobody mortgaged', () => {
+    const s = game(2);
+    const before = viewFor(s, 0);
+    rig(s, [[1, 2]]);
+    apply(s, 0, { type: 'roll' });
+    expect(mortgagesBetween(before, viewFor(s, 0))).toEqual([]);
   });
 });

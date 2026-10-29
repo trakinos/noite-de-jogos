@@ -1329,6 +1329,22 @@ button.link:hover { color: var(--text); }
 @keyframes bjailed-fade { 0%, 85% { opacity: 1; } 100% { opacity: 0; } }
 
 /* A Tigrinho card for everyone: it rises from its square, flips and shows green for bom, red for ruim. */
+/* Mortgages: a rubber stamp hits the escritura (red HIPOTECADA, green QUITADA), and the money floats up. */
+.flights > .bmortgage { overflow: visible; }
+.bmortgage { --tone: #c8372d; --money: #3f9d5a; }
+.bmortgage--paid { --tone: #2f8f4e; --money: #e0533d; }
+.bmortgage__stamp, .bmortgage__money { position: absolute; left: 50%; top: 50%; white-space: nowrap; }
+.bmortgage__stamp {
+  padding: 2px 6px; border: 3px solid var(--tone); border-radius: 4px; color: var(--tone);
+  background: color-mix(in srgb, var(--tone) 12%, rgb(255 255 255 / 0.85));
+  font: 900 var(--stamp-size, 12px)/1 var(--font-display); letter-spacing: 0.06em;
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.6);
+}
+.bmortgage__money {
+  top: 0; padding: 4px 10px; border-radius: 999px; background: var(--money); color: #fff;
+  font-weight: 800; font-size: 16px; font-variant-numeric: tabular-nums; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
 /* Money from the board: the amount pops off the Pé de Meia, the IPTU or the Bolão, with coins flying out (or in). */
 .flights > .bbonus { width: 0; height: 0; overflow: visible; }
 .bbonus { --tone: #3f9d5a; }

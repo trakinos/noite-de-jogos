@@ -158,6 +158,24 @@ export function releasesBetween(prev: BairroView, next: BairroView): Release[] {
   });
 }
 
+/** A mortgage taken (money in) or paid off (money out) on the escritura at `pos`. */
+export interface MortgageChange {
+  player: number;
+  pos: number;
+  kind: 'mortgaged' | 'unmortgaged';
+  amount: number;
+}
+
+/** Every mortgage taken or paid off between the two views, in order. */
+export function mortgagesBetween(prev: BairroView, next: BairroView): MortgageChange[] {
+  return newEntries(prev, next).flatMap((e): MortgageChange[] => {
+    if (e.key !== 'mortgaged' && e.key !== 'unmortgaged') return [];
+    const pos = Number(e.params?.pos);
+    const amount = Number(e.params?.amount);
+    return e.player !== null && Number.isInteger(pos) && Number.isFinite(amount) ? [{ player: e.player, pos, kind: e.key, amount }] : [];
+  });
+}
+
 /** The view with the tokens standing at `positions` (per seat), for drawing tokens mid-walk. */
 export function withPositions(view: BairroView, positions: number[]): BairroView {
   return { ...view, players: view.players.map((p, i) => ({ ...p, pos: positions[i] ?? p.pos })) };
