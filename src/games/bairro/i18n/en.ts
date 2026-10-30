@@ -171,6 +171,7 @@ export const en: BairroDictionary = {
     tradeLift: '{amount}, mortgaged: lifting it costs {lift}', tradeTotal: 'Total: {amount}',
     tradeAhead: 'On paper, you come out {amount} ahead', tradeBehind: 'On paper, you come out {amount} behind', tradeEven: 'On paper, it is an even trade',
     tradeValueNote: 'Escrituras count at their price; mortgaged ones less the cost of lifting the mortgage. Lawyer cards are not counted.',
+    tradeHide: 'See the board', tradeHidden: 'Trade in progress', tradeShow: 'Show',
     tradeSend: 'Send offer', tradeWaiting: 'Waiting for {name} to answer…', tradeCancel: 'Cancel offer',
     answerTitle: 'Trade offer', answerIntro: '{name} proposes a trade', answerYouGet: 'You get', answerYouGive: 'You give',
     endTitle: '{name} is the Dono do Bairro!', endNoWinner: 'Game over', endPlayAgain: 'Play again', endPlace: 'Place {n}', endBust: 'bust',

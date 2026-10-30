@@ -19,6 +19,7 @@ import { MapBoard } from './MapBoard';
 import { StreetBoard } from './StreetBoard';
 import { TradeAnswerDialog } from './TradeAnswerDialog';
 import { TradeDialog } from './TradeDialog';
+import { TradePill } from './TradePill';
 import { TradeWatch } from './TradeWatch';
 import { BARS_AT_MS, useBoardMotion, useMortgages, useReleases } from './useBairroMotion';
 import { playArrest, playJailedScreen, playRelease } from './jailScenes';
@@ -104,6 +105,14 @@ export function BairroBoard({ view: live, lobby, code, error, clock, awaiting, o
   useEffect(() => {
     if (!proposing || myOffer) setTradeOpen(false);
   }, [proposing, myOffer]);
+  // Any trade window can be tucked away to see the board; a new offer (or opening the compose dialog) brings it back.
+  const [tradeHidden, setTradeHidden] = useState(false);
+  const offerKey = view.offer ? JSON.stringify(view.offer) : '';
+  useEffect(() => setTradeHidden(false), [offerKey, tradeOpen]);
+  const composing = (tradeOpen && proposing) || myOffer;
+  const answering = view.pending === 'tradeAnswer';
+  const watching = !!view.offer && view.openTrades && view.offer.from !== view.you && view.offer.to !== view.you;
+  const hideTrade = () => setTradeHidden(true);
 
   useEffect(() => {
     if (!error) return;
@@ -162,13 +171,16 @@ export function BairroBoard({ view: live, lobby, code, error, clock, awaiting, o
 
       {!view.auction && view.pending === 'debt' && <DebtDialog view={view} names={names} awaiting={awaiting} onIntent={onIntent} />}
 
-      {((tradeOpen && proposing) || myOffer) && (
-        <TradeDialog view={view} names={names} awaiting={awaiting} onIntent={onIntent} onClose={() => setTradeOpen(false)} />
+      {composing && (
+        <TradeDialog view={view} names={names} awaiting={awaiting} onIntent={onIntent} onClose={() => setTradeOpen(false)} hidden={tradeHidden} onHide={hideTrade} />
       )}
 
-      <TradeWatch view={view} names={names} />
+      <TradeWatch view={view} names={names} hidden={tradeHidden} onHide={hideTrade} />
 
-      {view.pending === 'tradeAnswer' && <TradeAnswerDialog view={view} names={names} clock={clock} awaiting={awaiting} onIntent={onIntent} />}
+      {answering && (
+        <TradeAnswerDialog view={view} names={names} clock={clock} awaiting={awaiting} onIntent={onIntent} hidden={tradeHidden} onHide={hideTrade} />
+      )}
+      {tradeHidden && (composing || answering || watching) && <TradePill onShow={() => setTradeHidden(false)} />}
 
       {errorText && (
         <div className="toast bboard__toast" role="alert">

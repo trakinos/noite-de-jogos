@@ -71,6 +71,13 @@ Full list and notes: `docs/playtest-26.10.29.md`.
 - [x] **Debts:** pick several escrituras to mortgage, then confirm, so a misclick can't mortgage the wrong one.
 - [x] **Pracinha:** a little lit-cigarette animation.
 
+### B4. Dono do Bairro, notes 2026-10-30
+- [x] **Phones:** the street strip follows whoever's turn it is, so everyone watches the walk.
+- [x] **Trades:** any trade window can be tucked away to see the board, and a pill brings it back.
+- [x] **Esquema theme:** the top building is an assessor; Rinha de Galo became Jogo da Galera.
+- [x] **Cigarette:** hidden for now (`Cigarette.tsx`, `SHOWN`).
+- [ ] **Less luck:** brainstorm rules, cards to keep and per-player skills.
+
 ### C. Dono do Bairro, later
 - [ ] Replace the working values with the checked classic numbers and Sorte ou Revés cards.
 - [x] **New theme:** Brazil's corrupt politicians and the illegal businesses they protect, picked in the lobby. Draft names and cards: `docs/theme-politicos.md`.

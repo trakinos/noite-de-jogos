@@ -26,8 +26,9 @@ export function StreetBoard({ view, live, moving, names, colors, pieces, awaitin
   const [sheet, setSheet] = useState(false);
   const [logSheet, setLogSheet] = useState(false);
   const drawn = withPositions(view, positions);
-  // The strip follows your token as it walks.
-  const myPos = positions[view.you] ?? 0;
+  // The strip follows the token of whoever's turn it is, so everyone watches the walk; on your turn that's you.
+  // While the cop carries a token it is nowhere (-1) and the strip waits for it to land.
+  const followed = positions[live.current] ?? positions[view.you] ?? 0;
 
   function center(pos: number, instant: boolean) {
     const row = strip.current;
@@ -37,12 +38,12 @@ export function StreetBoard({ view, live, moving, names, colors, pieces, awaitin
     row.scrollTo({ left, behavior: instant || reducedMotion() ? 'auto' : 'smooth' });
   }
 
-  // First paint lands on your square at once; later moves glide there.
+  // First paint lands on the square at once; later moves glide there.
   const mounted = useRef(false);
   useLayoutEffect(() => {
-    center(myPos, !mounted.current);
+    center(followed, !mounted.current);
     mounted.current = true;
-  }, [myPos]);
+  }, [followed]);
 
   const me = view.players[view.you];
   const others = view.players.flatMap((p, i) => (i === view.you ? [] : [{ p, i }]));

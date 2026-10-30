@@ -6,6 +6,7 @@ import type { BairroIntent, OfferSide } from '../types';
 import type { BairroView } from '../view';
 import { MAX_COUNTERS } from '../trades';
 import { BairroDialog } from './BairroDialog';
+import { HideButton } from './TradePill';
 import { money } from './text';
 import { isEmptySide, tradeOptions } from './trade';
 import { Column } from './TradeDialog';
@@ -18,6 +19,9 @@ interface Props {
   clock: LocalClock | null;
   awaiting: boolean;
   onIntent(intent: BairroIntent): void;
+  /** Tucks the dialog away to show the board (see TradePill). */
+  hidden?: boolean;
+  onHide?(): void;
 }
 
 /**
@@ -29,7 +33,7 @@ export function TradeAnswerDialog(props: Props) {
   return offer ? <Answer key={JSON.stringify(offer)} {...props} /> : null;
 }
 
-function Answer({ view, names, clock, awaiting, onIntent }: Props) {
+function Answer({ view, names, clock, awaiting, onIntent, hidden, onHide }: Props) {
   const { tr } = useLang();
   const text = useBairroText();
   const offer = view.offer!;
@@ -42,7 +46,7 @@ function Answer({ view, names, clock, awaiting, onIntent }: Props) {
   if (countering) {
     const opts = tradeOptions(view, offer.from);
     return (
-      <BairroDialog key="counter" title={text.ui('counterTitle')} onClose={() => undefined} dismissable={false} className="btrade">
+      <BairroDialog key="counter" title={text.ui('counterTitle')} onClose={() => undefined} dismissable={false} className="btrade" hidden={hidden}>
         <p className="btrade__who">{text.ui('counterIntro', { name: from })}</p>
         {clock && <TimerBar clock={clock} />}
         <div className="btrade__cols">
@@ -62,6 +66,7 @@ function Answer({ view, names, clock, awaiting, onIntent }: Props) {
           <button type="button" disabled={awaiting} onClick={() => setCountering(false)}>
             {text.ui('counterBack')}
           </button>
+          {onHide && <HideButton onHide={onHide} />}
         </div>
       </BairroDialog>
     );
@@ -94,7 +99,7 @@ function Answer({ view, names, clock, awaiting, onIntent }: Props) {
   };
 
   return (
-    <BairroDialog key="answer" title={text.ui(offer.counters > 0 ? 'answerCounterTitle' : 'answerTitle')} onClose={() => undefined} dismissable={false} className="btrade">
+    <BairroDialog key="answer" title={text.ui(offer.counters > 0 ? 'answerCounterTitle' : 'answerTitle')} onClose={() => undefined} dismissable={false} className="btrade" hidden={hidden}>
       <p className="btrade__who">{text.ui(offer.counters > 0 ? 'answerCounterIntro' : 'answerIntro', { name: from })}</p>
       {clock && <TimerBar clock={clock} />}
       <div className="btrade__cols">
@@ -120,6 +125,7 @@ function Answer({ view, names, clock, awaiting, onIntent }: Props) {
             {text.ui('answerCounter')}
           </button>
         )}
+        {onHide && <HideButton onHide={onHide} />}
       </div>
     </BairroDialog>
   );

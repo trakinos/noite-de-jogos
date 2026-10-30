@@ -4,6 +4,7 @@ import { MAX_TRADES_PER_TURN } from '../trades';
 import type { BairroIntent, OfferSide } from '../types';
 import type { BairroView } from '../view';
 import { BairroDialog } from './BairroDialog';
+import { HideButton } from './TradePill';
 import { money } from './text';
 import { clampCount, emptySide, isEmptySide, sideLines, tradeOptions, tradePartners, tradesLeft } from './trade';
 import type { TradeSideOptions } from './trade';
@@ -16,6 +17,9 @@ interface Props {
   awaiting: boolean;
   onIntent(intent: BairroIntent): void;
   onClose(): void;
+  /** Tucks the dialog away to show the board (see TradePill). */
+  hidden?: boolean;
+  onHide?(): void;
 }
 
 export interface ColumnProps {
@@ -84,7 +88,7 @@ export function Column({ view, title, options, side, onChange }: ColumnProps) {
 }
 
 /** Proposing a trade: pick a player and what each side puts up; then wait for the answer, with Cancel. */
-export function TradeDialog({ view, names, awaiting, onIntent, onClose }: Props) {
+export function TradeDialog({ view, names, awaiting, onIntent, onClose, hidden, onHide }: Props) {
   const { tr } = useLang();
   const text = useBairroText();
   const partners = tradePartners(view);
@@ -108,7 +112,7 @@ export function TradeDialog({ view, names, awaiting, onIntent, onClose }: Props)
 
   if (mine) {
     return (
-      <BairroDialog key="waiting" title={text.ui('tradeTitle')} onClose={() => undefined} dismissable={false} className="btrade">
+      <BairroDialog key="waiting" title={text.ui('tradeTitle')} onClose={() => undefined} dismissable={false} className="btrade" hidden={hidden}>
         <p className="btrade__summary">{summary}</p>
         <TradeBalance view={view} give={mine.give} get={mine.get} />
         <p role="status" className="muted">{text.ui('tradeWaiting', { name: name(mine.to) })}</p>
@@ -116,6 +120,7 @@ export function TradeDialog({ view, names, awaiting, onIntent, onClose }: Props)
           <button type="button" disabled={awaiting} onClick={() => onIntent({ type: 'cancelTrade' })}>
             {text.ui('tradeCancel')}
           </button>
+          {onHide && <HideButton onHide={onHide} />}
         </div>
       </BairroDialog>
     );
@@ -123,7 +128,7 @@ export function TradeDialog({ view, names, awaiting, onIntent, onClose }: Props)
 
   const send = () => onIntent({ type: 'proposeTrade', offer: { to, give, get } });
   return (
-    <BairroDialog key="compose" title={text.ui('tradeTitle')} onClose={onClose} className="btrade">
+    <BairroDialog key="compose" title={text.ui('tradeTitle')} onClose={onClose} className="btrade" hidden={hidden}>
       {partners.length > 1 ? (
         <label className="btrade__who">
           <span>{text.ui('tradeWith')}</span>
@@ -157,6 +162,7 @@ export function TradeDialog({ view, names, awaiting, onIntent, onClose }: Props)
         <button type="button" className="primary" disabled={awaiting || tradesLeft(view) === 0 || (isEmptySide(give) && isEmptySide(get))} onClick={send}>
           {text.ui('tradeSend')}
         </button>
+        {onHide && <HideButton onHide={onHide} />}
       </div>
     </BairroDialog>
   );

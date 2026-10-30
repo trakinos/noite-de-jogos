@@ -171,6 +171,7 @@ export const pt: BairroDictionary = {
     tradeLift: '{amount}, hipotecado: quitar custa {lift}', tradeTotal: 'Total: {amount}',
     tradeAhead: 'Na ponta do lápis, você ganha {amount}', tradeBehind: 'Na ponta do lápis, você perde {amount}', tradeEven: 'Na ponta do lápis, fica elas por elas',
     tradeValueNote: 'Escrituras pelo preço de compra; as hipotecadas descontam o custo de quitar. Cartas de advogado não entram na conta.',
+    tradeHide: 'Ver o tabuleiro', tradeHidden: 'Troca em andamento', tradeShow: 'Mostrar',
     tradeSend: 'Enviar proposta', tradeWaiting: 'Esperando {name} responder…', tradeCancel: 'Cancelar proposta',
     answerTitle: 'Proposta de troca', answerIntro: '{name} propõe uma troca', answerYouGet: 'Você recebe', answerYouGive: 'Você dá',
     endTitle: '{name} é o Dono do Bairro!', endNoWinner: 'Fim de jogo', endPlayAgain: 'Jogar de novo', endPlace: '{n}º lugar', endBust: 'faliu',

@@ -1,12 +1,15 @@
 import type { CSSProperties } from 'react';
 
 const WISPS = 3;
+/** Off for now: playtesters found it always on screen (2026-10-30). Set to true to bring it back. */
+const SHOWN = false;
 
 /**
  * Pracinha scenery: a cigarette someone left burning on a park bench, the ember glowing and smoke curling up.
  * Pure decoration, hidden from screen readers. `small` drops the bench, for the phone's Pracinha corner.
  */
 export function Cigarette({ small = false }: { small?: boolean }) {
+  if (!SHOWN) return null;
   return (
     <div className={`bsmoke${small ? ' bsmoke--small' : ''}`} aria-hidden="true">
       <svg viewBox="0 0 80 40" className="bsmoke__art">

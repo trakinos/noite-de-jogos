@@ -2,20 +2,24 @@ import { useLang } from '../../../i18n/LangProvider';
 import type { OfferSide } from '../types';
 import type { BairroView } from '../view';
 import { money } from './text';
+import { HideButton } from './TradePill';
 import { AssetPrice, SideTotal } from './TradeValues';
 import { useBairroText } from './useBairroText';
 
 interface Props {
   view: BairroView;
   names: string[];
+  /** Tucked away to show the board (see TradePill). */
+  hidden?: boolean;
+  onHide?(): void;
 }
 
 /** With open trades, everyone else sees the offer on the table, read-only, while the two players decide. */
-export function TradeWatch({ view, names }: Props) {
+export function TradeWatch({ view, names, hidden = false, onHide }: Props) {
   const { tr } = useLang();
   const text = useBairroText();
   const offer = view.offer;
-  if (!offer || !view.openTrades || offer.from === view.you || offer.to === view.you) return null;
+  if (hidden || !offer || !view.openTrades || offer.from === view.you || offer.to === view.you) return null;
   const name = (seat: number) => names[seat] || text.ui('ownerFallback');
 
   const side = (who: number, s: OfferSide) => (
@@ -44,6 +48,11 @@ export function TradeWatch({ view, names }: Props) {
         {side(offer.from, offer.give)}
         {side(offer.to, offer.get)}
       </div>
+      {onHide && (
+        <div className="besc__actions">
+          <HideButton onHide={onHide} />
+        </div>
+      )}
     </aside>
   );
 }

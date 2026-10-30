@@ -24,14 +24,14 @@ My calls, for you to check:
 | Bolão (collect $200) | **Jogo do Bicho** | deu o seu bicho: receba $200 |
 | Carta do Advogado | **Pagamento pro Ministro** | the get-out-of-the-Papuda card |
 | Prefeitura (the bank) | **Prefeitura** | stays; or "Tesouro Nacional" |
-| Puxadinho / Prédio | **Laranja / Esquema** | building up = putting more laranjas on the deed; or "Puxadinho / Prédio" |
+| Puxadinho / Prédio | **Laranja / Assessor** | building up = up to 4 laranjas, then an assessor |
 
 ## Ruas and escrituras (cheapest first)
 
 | Rua today | New rua | Escrituras |
 |---|---|---|
 | Beco do Samba | **Camelódromo** | Barraca de DVD Pirata · Bolsa de Grife Falsificada |
-| Rua do Campinho | **Jogatina de Esquina** | Caça-Níquel no Boteco · Carteado no Fundo do Bar · Rinha de Galo |
+| Rua do Campinho | **Jogatina de Esquina** | Caça-Níquel no Boteco · Carteado no Fundo do Bar · Jogo da Galera |
 | Travessa da Feira | **Biqueira** | Ponto de Rua · Biqueira · Casa do Traficante |
 | Rua das Flores | **Vida Noturna Sem Alvará** | Casa de Massagem · Boate Sem Alvará · Cabaré |
 | Rua da Igreja | **Agiotagem e Falsificação** | Agiota do Bairro · Diploma Comprado · Gráfica de Nota Falsa |
@@ -89,7 +89,7 @@ Spare ideas, to swap in: Rinha de Cachorro, Bingo Clandestino, Bets Pirata, Rasp
 
 ## Log and screen words that would change with it
 
-Built: the winner is the **Dono do Esquema**, buildings are **laranjas** (up to 4) and then **o esquema montado**, and the lawyer card reads **Pagamento pro Ministro** everywhere. The game keeps its name, Dono do Bairro; the theme is a lobby option.
+Built: the winner is the **Dono do Esquema**, buildings are **laranjas** (up to 4) and then an **assessor**, and the lawyer card reads **Pagamento pro Ministro** everywhere. The game keeps its name, Dono do Bairro; the theme is a lobby option.
 
 Not built yet, ideas for later:
 - "pagou aluguel a" → "pagou propina a" (rent between players)

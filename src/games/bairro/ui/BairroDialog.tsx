@@ -12,6 +12,8 @@ interface Props {
   returnFocus?: HTMLElement | null;
   /** False: Escape, the backdrop and the close button do nothing, and the button is not shown. */
   dismissable?: boolean;
+  /** Tucked away to show the board: still mounted (nothing typed is lost) but not drawn, and Escape skips it. */
+  hidden?: boolean;
 }
 
 /** Open dialogs, oldest first: only the last one answers Escape. */
@@ -22,7 +24,7 @@ let lastRestored: HTMLElement | null = null;
 const focusable = (el: Element | null | undefined): el is HTMLElement => el instanceof HTMLElement && el.isConnected;
 
 /** The shared Bairro dialog: overlay, labelled title, Escape and the close button, focus back to the opener on close. */
-export function BairroDialog({ title, onClose, children, className = '', returnFocus, dismissable = true }: Props) {
+export function BairroDialog({ title, onClose, children, className = '', returnFocus, dismissable = true, hidden = false }: Props) {
   const { tr } = useLang();
   const titleId = useId();
   // Read while rendering, before the dialog takes focus.
@@ -30,8 +32,8 @@ export function BairroDialog({ title, onClose, children, className = '', returnF
   const closeButton = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const pressedBackdrop = useRef(false);
-  const latest = useRef({ onClose, dismissable });
-  latest.current = { onClose, dismissable };
+  const latest = useRef({ onClose, dismissable, hidden });
+  latest.current = { onClose, dismissable, hidden };
 
   useEffect(() => {
     const me = Symbol('dialog');
@@ -39,7 +41,7 @@ export function BairroDialog({ title, onClose, children, className = '', returnF
     // Without a close button, the panel itself takes focus so the keyboard starts inside the dialog.
     (closeButton.current ?? panel.current)?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && open.at(-1) === me && latest.current.dismissable) latest.current.onClose();
+      if (e.key === 'Escape' && open.at(-1) === me && latest.current.dismissable && !latest.current.hidden) latest.current.onClose();
     };
     addEventListener('keydown', onKey);
     return () => {
@@ -63,7 +65,7 @@ export function BairroDialog({ title, onClose, children, className = '', returnF
   };
 
   return (
-    <div className="overlay" role="dialog" aria-modal="true" aria-labelledby={titleId} onMouseDown={onBackdrop(true)} onClick={onBackdrop(false)}>
+    <div className={`overlay${hidden ? ' is-hidden' : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} onMouseDown={onBackdrop(true)} onClick={onBackdrop(false)}>
       <div ref={panel} tabIndex={-1} className={`prompt panel bsheet ${className}`}>
         <div className="bsheet__head">
           <h2 id={titleId}>{title}</h2>
