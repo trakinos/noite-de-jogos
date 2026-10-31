@@ -1100,6 +1100,10 @@ button.link:hover { color: var(--text); }
 .bplayer__cash { font-weight: 800; }
 .bplayer__tag { font-size: 12px; font-weight: 800; padding: 1px 6px; border-radius: 99px; background: var(--surface-2); color: var(--muted); }
 .bplayer__tag--card { background: color-mix(in srgb, #f2b632 25%, var(--surface-2)); color: var(--text); }
+.bplayer__tag--skill { background: color-mix(in srgb, var(--accent) 18%, var(--surface-2)); color: var(--text); }
+.bplayer__tag--skill.is-spent { opacity: 0.6; }
+.bplayer__tag--fiscal { background: color-mix(in srgb, #d9534f 25%, var(--surface-2)); color: var(--text); }
+.bcard + .bcard { margin-top: 6px; }
 .bcard { display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 8px 10px; border-radius: var(--r-md); border: 1px solid var(--border); }
 .bcard__icon { font-size: 22px; line-height: 1; }
 .bcard > span:last-child { display: grid; gap: 2px; }
@@ -1496,3 +1500,22 @@ button.link:hover { color: var(--text); }
 .bend__row.is-winner { background: color-mix(in srgb, var(--t-treasure) 22%, var(--surface)); border-color: var(--coin-edge); }
 .bend__place { font-family: var(--font-display); font-weight: 800; font-size: 22px; width: 32px; text-align: center; }
 .bend__name { flex: 1 1 6rem; min-width: 0; overflow-wrap: anywhere; }
+
+/* Table rules: your kept cards, your skill, the card dialog. */
+.bhand { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.bhand__card {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: var(--r-md);
+  border: 1px dashed var(--border); background: var(--surface); font-size: 13px; font-weight: 700;
+}
+.bhand__card.is-ready { border-style: solid; border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent); }
+.pracinha__skill { margin: 0; font-size: 13px; text-align: center; }
+.pracinha__skill.is-spent b { opacity: 0.6; }
+.pracinha__skillhint { display: block; font-size: 12px; max-width: 28rem; margin: 2px auto 0; }
+.pracinha--compact .pracinha__skillhint { display: none; }
+.pracinha__ask { color: var(--text); }
+.bcarddlg { text-align: left; }
+.bcarddlg__prompt { margin: 12px 0 6px; font-weight: 700; }
+.bcarddlg__options { display: flex; flex-wrap: wrap; gap: 6px; }
+.bcarddlg__options button { display: grid; justify-items: center; gap: 2px; padding: 6px 10px; border-radius: var(--r-md); }
+.bcarddlg__options button.is-picked { outline: 3px solid var(--accent); outline-offset: 1px; }
+.bcarddlg__options--dadoViciado .bdie { --die: 34px; }

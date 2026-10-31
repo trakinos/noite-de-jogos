@@ -3,7 +3,7 @@ import type { BonusKind } from './motion';
 import { BONUS_MS } from './useBairroMotion';
 
 const EASE = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
-const ICONS: Record<BonusKind, string> = { start: '🧦', iptu: '🧾', bolao: '🎟️' };
+const ICONS: Record<BonusKind, string> = { start: '🧦', iptu: '🧾', bolao: '🎟️', pracinha: '👑', home: '🏠', bicho: '🦁' };
 /** Coins around the amount: they burst out for money in, and get sucked into the square for the IPTU. */
 const COINS = 5;
 

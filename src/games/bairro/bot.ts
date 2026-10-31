@@ -2,7 +2,9 @@
 import { canBuild, canUnmortgage, liquidationValue, ruaPositions } from './assets';
 import { BOARD, JAIL_FINE, RUAS, unmortgageCost } from './board';
 import type { PontoSquare, RuaId, ServicoSquare } from './board';
-import { liquidate } from './engine';
+import { caronaTargets, liquidate } from './engine';
+import { pocketKind } from './deck';
+import { buildCost, buyPrice } from './skills';
 import { MAX_TRADES_PER_TURN } from './trades';
 import { bidders } from './auction';
 import type { BairroIntent, BairroState, Offer, OfferSide, OfferTerms } from './types';
@@ -57,10 +59,31 @@ function completingTrade(s: BairroState, player: number): OfferTerms | null {
 
 /** A bot bids up to 70% of the price, keeping its buying reserve; less than that and it passes. */
 function auctionBid(s: BairroState, player: number, pos: number): number {
+  if (s.players[player]!.fiscal) return 0;
   const price = (BOARD[pos] as PontoSquare | ServicoSquare).price;
   const spare = s.players[player]!.cash - BUY_RESERVE;
   const bid = Math.floor((price * 0.7) / 10) * 10;
   return spare >= bid ? bid : 0;
+}
+
+/** The bot's first card of `kind`, if it holds one. */
+const cardOf = (s: BairroState, player: number, kind: string) => s.players[player].hand.find(id => pocketKind(id) === kind);
+
+/** Rent at least this big is worth a Calote. */
+const CALOTE_FROM = 50;
+
+/** A card to play instead of an ordinary roll: a loaded 6, a Carona to the farthest safe square, or backing up 3. */
+function rollCard(s: BairroState, player: number): BairroIntent | null {
+  const p = s.players[player];
+  const dado = cardOf(s, player, 'dadoViciado');
+  if (dado) return { type: 'playCard', card: dado, die: 6 };
+  if (p.jailTurns !== null) return null;
+  const carona = cardOf(s, player, 'carona');
+  const safe = caronaTargets(p.pos).filter(i => BOARD[i].kind !== 'goToJail');
+  if (carona && safe.length > 0) return { type: 'playCard', card: carona, pos: safe[safe.length - 1]! };
+  const back = cardOf(s, player, 'marchaRe');
+  if (back) return { type: 'playCard', card: back, steps: 3 };
+  return null;
 }
 
 /** Who acts next and what they do. The game must not be over. */
@@ -83,13 +106,21 @@ export function botMove(s: BairroState): { player: number; intent: BairroIntent 
   const ph = s.phase;
   const act = (intent: BairroIntent) => ({ player, intent });
   if (ph.kind === 'buy') {
-    const price = (BOARD[ph.square] as PontoSquare | ServicoSquare).price;
-    return act(p.cash - price >= BUY_RESERVE ? { type: 'buy' } : { type: 'decline' });
+    const price = buyPrice(s, player, ph.square);
+    return act(!p.fiscal && p.cash - price >= BUY_RESERVE ? { type: 'buy' } : { type: 'decline' });
   }
+  if (ph.kind === 'rent') {
+    const calote = cardOf(s, player, 'calote');
+    return act(calote && ph.amount >= CALOTE_FROM ? { type: 'playCard', card: calote } : { type: 'payRent' });
+  }
+  // The richest rival gets the Fiscal na Porta.
+  const fiscal = cardOf(s, player, 'fiscal');
+  const rivals = s.players.flatMap((x, i) => (i === player || x.bankrupt ? [] : [i])).sort((a, b) => s.players[b].cash - s.players[a].cash);
+  if (fiscal && rivals.length > 0) return act({ type: 'playCard', card: fiscal, target: rivals[0]! });
   if (ph.kind === 'roll') {
     if (p.jailTurns !== null && p.lawyerCards > 0) return act({ type: 'useLawyer' });
     if (p.jailTurns !== null && p.cash >= FINE_RESERVE + JAIL_FINE) return act({ type: 'payJailFine' });
-    return act({ type: 'roll' });
+    return act(rollCard(s, player) ?? { type: 'roll' });
   }
   const offer = s.tradesThisTurn < MAX_TRADES_PER_TURN ? completingTrade(s, player) : null;
   if (offer) return act({ type: 'proposeTrade', offer });
@@ -101,9 +132,11 @@ export function botMove(s: BairroState): { player: number; intent: BairroIntent 
   }
   for (const pos of assetsOf(s, player)) {
     const sq = BOARD[pos];
-    if (sq.kind === 'ponto' && canBuild(s, player, pos) === null && p.cash >= BUILD_RESERVE + sq.houseCost) {
+    if (sq.kind === 'ponto' && canBuild(s, player, pos) === null && p.cash >= BUILD_RESERVE + buildCost(s, player, pos)) {
       return act({ type: 'build', pos });
     }
   }
-  return act(ph.rollAgain ? { type: 'roll' } : { type: 'endTurn' });
+  if (ph.rollAgain) return act(rollCard(s, player) ?? { type: 'roll' });
+  if (p.skill === 'malandro' && !p.skillUsed && p.jailTurns === null) return act({ type: 'useSkill' });
+  return act({ type: 'endTurn' });
 }

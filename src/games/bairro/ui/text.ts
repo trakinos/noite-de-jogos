@@ -15,12 +15,13 @@ export function money(lang: Lang, n: number): string {
 }
 
 /** How each log param is shown. Every param the engine logs must be listed here (text.test.ts checks it). */
-export const PARAM_KIND: Record<string, 'seat' | 'square' | 'card' | 'money' | 'plain'> = {
-  player: 'seat', creditor: 'seat', debtor: 'seat', to: 'seat', from: 'seat', owner: 'seat', winner: 'seat',
+export const PARAM_KIND: Record<string, 'seat' | 'square' | 'card' | 'money' | 'skill' | 'pocket' | 'plain'> = {
+  player: 'seat', creditor: 'seat', debtor: 'seat', to: 'seat', from: 'seat', owner: 'seat', winner: 'seat', who: 'seat',
   pos: 'square', square: 'square',
   card: 'card',
   amount: 'money', price: 'money', rent: 'money', fine: 'money', total: 'money', cost: 'money', refund: 'money',
-  d1: 'plain', d2: 'plain', turns: 'plain',
+  skill: 'skill', name: 'pocket', guard: 'pocket',
+  d1: 'plain', d2: 'plain', turns: 'plain', die: 'plain', steps: 'plain', max: 'plain',
 };
 
 const own = (o: Record<string, string>, k: string): string | undefined => (Object.hasOwn(o, k) ? o[k] : undefined);
@@ -67,6 +68,8 @@ export function bairroText(lang: Lang, theme: BairroTheme = 'bairro') {
           case 'square': params[k] = square(Number(v)); break;
           case 'card': params[k] = card(String(v)); break;
           case 'money': params[k] = money(lang, Number(v)); break;
+          case 'skill': params[k] = own(d.ui, `skill_${v}`) ?? String(v); break;
+          case 'pocket': params[k] = own(d.ui, `pocket_${v}`) ?? String(v); break;
           default: params[k] = v;
         }
       }

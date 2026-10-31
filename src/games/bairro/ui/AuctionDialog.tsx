@@ -47,7 +47,7 @@ export function AuctionDialog({ view, names, colors, pieces, clock, awaiting, on
 
   return (
     <BairroDialog title={text.ui('auctionTitle')} onClose={() => undefined} dismissable={false} className="bauction">
-      <p className="muted">{text.ui('auctionIntro', { name: name(a.from) })}</p>
+      <p className="muted">{a.declined ? text.ui('auctionIntroDeclined') : text.ui('auctionIntro', { name: name(a.from) })}</p>
       {clock && <TimerBar clock={clock} />}
       <div className="bauction__lot">
         {sq.kind === 'ponto' && <span className="bauction__swatch" style={{ backgroundColor: RUA_COLORS[sq.rua] }} aria-hidden="true" />}
@@ -73,7 +73,16 @@ export function AuctionDialog({ view, names, colors, pieces, clock, awaiting, on
         })}
       </ul>
       {last && <p className="bauction__last" role="status">{text.logLine(last, names)}</p>}
-      {view.pending === 'bid' ? (
+      {view.pending === 'bid' && view.players[view.you]?.fiscal ? (
+        <>
+          <p className="besc__reason">{text.ui('auctionFiscal')}</p>
+          <div className="besc__actions">
+            <button type="button" className="primary" disabled={awaiting} onClick={() => onIntent({ type: 'bid', amount: 0 })}>
+              {text.ui('auctionPass')}
+            </button>
+          </div>
+        </>
+      ) : view.pending === 'bid' ? (
         <>
           <label className="btrade__cash">
             <span>{text.ui('auctionYourBidLabel', { max: $(cash) })}</span>

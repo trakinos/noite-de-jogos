@@ -48,6 +48,8 @@ export function mortgageOne(s: BairroState, player: number, pos: number): void {
 
 /** Hands the turn to the next solvent player. */
 export function passTurn(s: BairroState): void {
+  // A Fiscal na Porta lasts until the end of its target's turn.
+  s.players[s.current].fiscal = false;
   const n = s.players.length;
   let next = s.current;
   for (let k = 1; k <= n; k++) {

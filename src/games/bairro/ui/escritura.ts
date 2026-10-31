@@ -1,6 +1,7 @@
 import { canBuild, canMortgage, canSell, canUnmortgage } from '../assets';
 import { BOARD, unmortgageCost } from '../board';
 import type { RuaId } from '../board';
+import { buildCost } from '../skills';
 import type { BairroView } from '../view';
 
 export type RentLabel = 'base' | '1' | '2' | '3' | '4' | 'predio';
@@ -81,7 +82,7 @@ export function escrituraFor(view: BairroView, pos: number): Escritura | null {
       add('unmortgage', canUnmortgage(view, view.you, pos), unmortgageCost(sq));
     } else {
       if (sq.kind === 'ponto') {
-        add('build', canBuild(view, view.you, pos), sq.houseCost);
+        add('build', canBuild(view, view.you, pos), buildCost(view, view.you, pos));
         add('sell', canSell(view, view.you, pos), sq.houseCost / 2);
       }
       add('mortgage', canMortgage(view, view.you, pos), sq.mortgage);

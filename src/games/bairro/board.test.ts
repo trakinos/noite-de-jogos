@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { BOARD, RUAS, unmortgageCost, type PontoSquare } from './board';
-import { DECK } from './deck';
+import { DECK, deckIds } from './deck';
 
 const pontos = BOARD.filter((s): s is PontoSquare => s.kind === 'ponto');
 
@@ -30,8 +30,11 @@ describe('board', () => {
 });
 
 describe('deck', () => {
-  it('has 30 cards with unique ids', () => {
-    expect(DECK).toHaveLength(30);
-    expect(new Set(DECK.map(c => c.id)).size).toBe(30);
+  it('has 30 cards with unique ids, and 12 more to keep for the lobby setting', () => {
+    expect(DECK).toHaveLength(42);
+    expect(new Set(DECK.map(c => c.id)).size).toBe(42);
+    expect(deckIds(false)).toHaveLength(30);
+    expect(deckIds(true)).toHaveLength(42);
+    expect(DECK.slice(30).every(c => c.effect.kind === 'pocket')).toBe(true);
   });
 });

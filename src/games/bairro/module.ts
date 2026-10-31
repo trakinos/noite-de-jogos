@@ -86,6 +86,12 @@ export interface BairroOptions {
   openTrades: boolean;
   /** The board's names and look; the rules are the same in every theme. */
   theme: BairroTheme;
+  /** An escritura nobody buys on landing goes to auction. */
+  auctionDeclined: boolean;
+  /** Each player gets a skill at random. */
+  skills: boolean;
+  /** The Tigrinho also has cards to keep and play later. */
+  pocketCards: boolean;
 }
 
 /** The guest receives views as unknown; in a bairro room they are this game's views. */
@@ -97,13 +103,16 @@ export const bairroModule: GameModule<BairroOptions> = {
   id: 'bairro',
   minPlayers: 2,
   maxPlayers: 6,
-  defaultOptions: () => ({ openTrades: false, theme: 'bairro' }),
+  defaultOptions: () => ({ openTrades: false, theme: 'bairro', auctionDeclined: true, skills: true, pocketCards: true }),
   parseOptions(raw): BairroOptions | { error: string } {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { error: 'Bad options' };
-    // Anything but a real true leaves trades private, and an unknown theme is the neighborhood, so a room
+    // Anything but a real true leaves a rule off, and an unknown theme is the neighborhood, so a room
     // from before these settings reads as it always did.
-    const { openTrades, theme } = raw as { openTrades?: unknown; theme?: unknown };
-    return { openTrades: openTrades === true, theme: isBairroTheme(theme) ? theme : 'bairro' };
+    const o = raw as Record<string, unknown>;
+    return {
+      openTrades: o.openTrades === true, theme: isBairroTheme(o.theme) ? o.theme : 'bairro',
+      auctionDeclined: o.auctionDeclined === true, skills: o.skills === true, pocketCards: o.pocketCards === true,
+    };
   },
   create(seats: SeatInfo[], options, seed) {
     return new BairroInstance(createBairro(seats, seed, options));

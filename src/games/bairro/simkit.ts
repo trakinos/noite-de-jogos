@@ -4,7 +4,7 @@ import { ruaPositions } from './assets';
 import { BOARD, RUAS } from './board';
 import type { RuaId } from './board';
 import { botMove } from './bot';
-import { DECK } from './deck';
+import { HAND_MAX, deckIds } from './deck';
 import { apply } from './engine';
 import { createBairro } from './setup';
 import type { BairroIntent, BairroState } from './types';
@@ -15,6 +15,8 @@ export function invariantViolations(s: BairroState): string[] {
   s.players.forEach((p, i) => {
     if (p.cash < 0) out.push(`player ${i} cash ${p.cash}`);
     if (p.bankrupt && p.lawyerCards !== 0) out.push(`bankrupt player ${i} holds lawyer cards`);
+    if (p.bankrupt && p.hand.length !== 0) out.push(`bankrupt player ${i} holds cards`);
+    if (p.hand.length > HAND_MAX) out.push(`player ${i} holds ${p.hand.length} cards`);
   });
   for (const [key, own] of Object.entries(s.owned)) {
     if (s.players[own.owner].bankrupt) out.push(`bankrupt player ${own.owner} owns ${key}`);
@@ -29,7 +31,10 @@ export function invariantViolations(s: BairroState): string[] {
     out.push(`bankruptOrder [${s.bankruptOrder.join(',')}] != bankrupt seats [${broke.join(',')}]`);
   }
   const lawyers = s.players.reduce((n, p) => n + p.lawyerCards, 0);
-  if (lawyers + s.deck.length !== DECK.length) out.push(`lawyer cards ${lawyers} + deck ${s.deck.length} != ${DECK.length}`);
+  const held = s.players.flatMap(p => p.hand);
+  const size = deckIds(s.pocketCards).length;
+  if (lawyers + held.length + s.deck.length !== size) out.push(`lawyer cards ${lawyers} + hands ${held.length} + deck ${s.deck.length} != ${size}`);
+  if (new Set([...held, ...s.deck]).size !== held.length + s.deck.length) out.push('a card is in two places');
   return out;
 }
 
@@ -44,6 +49,8 @@ export interface RunStats {
 }
 
 const seats = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `p${i}`, name: `P${i}` }));
+/** Every other seed plays with all the table rules on, so both kinds of game are covered. */
+const rulesFor = (seed: number) => (seed % 2 === 0 ? { auctionDeclined: true, skills: true, pocketCards: true } : {});
 const newStats = (): RunStats => ({ games: 0, winners: 0, logKeys: new Set(), logParams: new Set(), reasons: new Set(), violations: [] });
 
 /** A state's fingerprint, without the log's contents (only its length) to keep it cheap. */
@@ -73,7 +80,7 @@ function finish(s: BairroState, stats: RunStats): void {
 export function runSimulation(seeds: number, maxTurns: number): RunStats {
   const stats = newStats();
   for (let seed = 1; seed <= seeds; seed++) {
-    const s = createBairro(seats(2 + (seed % 5)), seed);
+    const s = createBairro(seats(2 + (seed % 5)), seed, rulesFor(Math.floor(seed / 5)));
     while (s.winner === null && s.turnNumber < maxTurns) {
       const { player, intent } = botMove(s);
       const r = apply(s, player, intent);
@@ -89,7 +96,8 @@ const pick = <T>(rng: RngState, xs: readonly T[]): T => xs[nextInt(rng, xs.lengt
 
 const TYPES = [
   'roll', 'buy', 'decline', 'endTurn', 'payJailFine', 'useLawyer', 'build', 'sellBuilding', 'mortgage',
-  'unmortgage', 'payDebt', 'goBankrupt', 'proposeTrade', 'cancelTrade', 'answerTrade', 'counterTrade', 'bid', 'fly', '', 'ROLL',
+  'unmortgage', 'payDebt', 'goBankrupt', 'proposeTrade', 'cancelTrade', 'answerTrade', 'counterTrade', 'bid',
+  'payRent', 'useSkill', 'playCard', 'playCard', 'fly', '', 'ROLL',
 ];
 
 function randomPos(rng: RngState, s: BairroState): unknown {
@@ -117,8 +125,13 @@ function junkIntent(rng: RngState, s: BairroState, player: number): unknown {
   // A counter-offer asks for what the proposer owns, so its `get` side is usually theirs.
   const counterTo = type === 'counterTrade' && s.offer && nextFloat(rng) < 0.8 ? s.offer.from : null;
   const to = counterTo ?? (nextFloat(rng) < 0.9 ? nextInt(rng, s.players.length) : pick(rng, [-1, s.players.length, 'p1', 0.5]));
+  const hand = s.players[player]?.hand ?? [];
   return {
     type,
+    card: hand.length && nextFloat(rng) < 0.8 ? pick(rng, hand) : pick(rng, ['c31', 'c07', 'x', 3, null]),
+    die: pick(rng, [1, 3, 6, 6, 0, 7, 2.5, 'x']),
+    steps: pick(rng, [1, 2, 3, 3, 0, 4, -1]),
+    target: pick(rng, [0, 1, 2, 3, player, -1, 9, 'p1']),
     pos: randomPos(rng, s),
     accept: pick(rng, [true, false, true, 'yes', undefined]),
     amount: pick(rng, [0, 10, 60, 150, 5000, -1, 1.5, 'x', undefined]),
@@ -130,7 +143,7 @@ function junkIntent(rng: RngState, s: BairroState, player: number): unknown {
 export function runFuzz(seeds: number, maxSteps: number): RunStats {
   const stats = newStats();
   for (let seed = 1; seed <= seeds; seed++) {
-    const s = createBairro(seats(2 + (seed % 5)), 1000 + seed);
+    const s = createBairro(seats(2 + (seed % 5)), 1000 + seed, rulesFor(Math.floor(seed / 5)));
     const rng = createRng(seed);
     for (let i = 0; i < maxSteps && s.winner === null; i++) {
       if (nextFloat(rng) < 0.5) {

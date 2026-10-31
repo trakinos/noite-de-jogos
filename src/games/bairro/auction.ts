@@ -23,6 +23,12 @@ export function startAuction(s: BairroState, from: number, lots: number[]): void
   log(s, from, 'auctionStarted', { pos: s.auction.lots[0]! });
 }
 
+/** Lobby setting: the escritura at `pos`, which `from` just declined, goes to everyone's sealed bids (`from` included). */
+export function auctionDeclined(s: BairroState, from: number, pos: number): void {
+  s.auction = { from, lots: [pos], bids: s.players.map(() => null), declined: true };
+  log(s, from, 'auctionDeclined', { pos });
+}
+
 /** One sealed bid on the escritura up for auction: 0 passes, anything up to your cash bids. Once each. */
 export function placeBid(s: BairroState, player: number, intent: BairroIntent): ApplyResult {
   const a = s.auction;
@@ -32,6 +38,7 @@ export function placeBid(s: BairroState, player: number, intent: BairroIntent): 
   const amount = (intent as { amount?: unknown }).amount;
   if (!Number.isInteger(amount) || (amount as number) < 0) return fail('badBid');
   if ((amount as number) > s.players[player]!.cash) return fail('notEnoughCash');
+  if ((amount as number) > 0 && s.players[player]!.fiscal) return fail('fiscalBlocked');
   a.bids[player] = amount as number;
   if (bidders(s).every(i => a.bids[i] !== null)) closeLot(s);
   return ok();

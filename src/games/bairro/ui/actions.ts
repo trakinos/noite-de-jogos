@@ -1,10 +1,14 @@
 import { liquidationValue } from '../assets';
-import { BOARD, JAIL_FINE } from '../board';
+import { JAIL_FINE } from '../board';
+import { pocketKind } from '../deck';
+import { buyPrice } from '../skills';
 import type { BairroIntent } from '../types';
 import type { BairroView } from '../view';
 import { tradePartners, tradesLeft } from './trade';
 
-export type ActionId = 'roll' | 'buy' | 'decline' | 'endTurn' | 'payJailFine' | 'useLawyer' | 'payDebt' | 'goBankrupt' | 'trade';
+export type ActionId =
+  | 'roll' | 'buy' | 'decline' | 'endTurn' | 'payJailFine' | 'useLawyer' | 'payDebt' | 'goBankrupt' | 'trade'
+  | 'payRent' | 'calote' | 'useSkill';
 
 export interface Action {
   id: ActionId;
@@ -42,13 +46,22 @@ function available(view: BairroView): Action[] {
       return [...list, ...tradeAction(view)];
     }
     case 'buy': {
-      const sq = view.phase.kind === 'buy' ? BOARD[view.phase.square] : undefined;
-      const price = sq && (sq.kind === 'ponto' || sq.kind === 'servico') ? sq.price : 0;
-      return [act('buy', 'actBuy', me.cash >= price, price), act('decline', 'actDecline')];
+      const price = view.phase.kind === 'buy' ? buyPrice(view, view.you, view.phase.square) : 0;
+      const buy = act('buy', 'actBuy', me.cash >= price && !me.fiscal, price);
+      return [me.fiscal ? { ...buy, reason: 'fiscalBlocked' } : buy, act('decline', 'actDecline')];
+    }
+    case 'rent': {
+      const amount = view.phase.kind === 'rent' ? view.phase.amount : 0;
+      const card = me.hand.find(id => pocketKind(id) === 'calote');
+      const list = [act('payRent', 'actPayRent', true, amount)];
+      if (card) list.push({ id: 'calote', intent: { type: 'playCard', card }, enabled: true, label: 'actCalote' });
+      return list;
     }
     case 'manage': {
-      const main = view.phase.kind === 'manage' && view.phase.rollAgain ? act('roll', 'actRollAgain') : act('endTurn', 'actEndTurn');
-      return [main, ...tradeAction(view)];
+      const again = view.phase.kind === 'manage' && view.phase.rollAgain;
+      const main = again ? act('roll', 'actRollAgain') : act('endTurn', 'actEndTurn');
+      const malandro = !again && me.skill === 'malandro' && !me.skillUsed && me.jailTurns === null ? [act('useSkill', 'actMalandro')] : [];
+      return [main, ...malandro, ...tradeAction(view)];
     }
     case 'debt': {
       const mine = view.debts.filter(d => d.debtor === view.you);

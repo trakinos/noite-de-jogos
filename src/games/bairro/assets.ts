@@ -1,6 +1,7 @@
 // Pure rules for buildings and mortgages. Must not import engine.ts (engine imports this).
 import { BOARD, RUAS, unmortgageCost } from './board';
 import type { PontoSquare, RuaId } from './board';
+import { buildCost } from './skills';
 import type { BairroState } from './types';
 
 /** The part of the state these rules read, so a player's view works too. */
@@ -56,7 +57,8 @@ export function canBuild(s: AssetState, player: number, pos: number): string | n
   const own = s.owned[t.pos];
   if (own.houses >= MAX_LEVEL) return 'alreadyPredio';
   if (own.houses > Math.min(...housesOf(s, rua))) return 'unevenBuild';
-  if (s.players[player].cash < t.sq.houseCost) return 'notEnoughCash';
+  if (s.players[player].fiscal) return 'fiscalBlocked';
+  if (s.players[player].cash < buildCost(s, player, t.pos)) return 'notEnoughCash';
   return null;
 }
 

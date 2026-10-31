@@ -108,8 +108,11 @@ export class TurnClock {
 
   private expire(kind: ClockKind): void {
     this.timer = null;
-    if (kind === 'turn') this.runningSince = null;
-    else this.response = null;
+    // A turn that ran out stays out: if a prompt the expiry opened (an auction) hands it back, it expires again at once.
+    if (kind === 'turn') {
+      this.runningSince = null;
+      this.turnLeft = 0;
+    } else this.response = null;
     this.onExpire(kind);
   }
 }

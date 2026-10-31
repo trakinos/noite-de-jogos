@@ -2,7 +2,7 @@ import { HIDDEN_BID } from './auction';
 import type { BairroState } from './types';
 
 /** What this player is asked to do now. */
-export type BairroPending = 'roll' | 'buy' | 'manage' | 'debt' | 'tradeAnswer' | 'bid' | 'wait';
+export type BairroPending = 'roll' | 'buy' | 'rent' | 'manage' | 'debt' | 'tradeAnswer' | 'bid' | 'wait';
 
 /** The state as one player sees it: everything but the deck order, the rng and the test dice. */
 export interface BairroView extends Omit<BairroState, 'deck' | 'rng' | 'riggedDice'> {

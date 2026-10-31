@@ -76,7 +76,8 @@ Full list and notes: `docs/playtest-26.10.29.md`.
 - [x] **Trades:** any trade window can be tucked away to see the board, and a pill brings it back.
 - [x] **Esquema theme:** the top building is an assessor; Rinha de Galo became Jogo da Galera.
 - [x] **Cigarette:** hidden for now (`Cigarette.tsx`, `SHOWN`).
-- [ ] **Less luck:** brainstorm rules, cards to keep and per-player skills.
+- [x] **Less luck:** three table rules, each a lobby setting (on by default): the auction for declined escrituras; cards to keep from the Tigrinho (Dado Viciado, Marcha à Ré, Calote, Fiscal na Porta, Carona, Seguro; up to 3 in hand); and one random skill per player (Dono da Casa, Rei da Pracinha, Empreiteiro, Corretor, Malandro, Bicheiro).
+- [ ] **Balance the skills:** play a few hundred bot games per skill and compare win rates; the values (Rei da Pracinha $100, Bicheiro $100, Empreiteiro −25%, Corretor −10%) are first guesses.
 
 ### C. Dono do Bairro, later
 - [ ] Replace the working values with the checked classic numbers and Sorte ou Revés cards.

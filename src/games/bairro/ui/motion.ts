@@ -13,11 +13,12 @@ export interface TokenMove {
   arrestAt?: number;
   /** A Tigrinho card drawn on the way: shown after the first `after` steps, before the rest (a jump or the arrest). */
   card?: { id: string; pos: number; after: number };
-  /** Money from the board on the way: passing the Pé de Meia, the IPTU or the Bolão, as the token reaches step `at`. */
+  /** Money from the board on the way: passing the Pé de Meia, the IPTU, the Bolão or a skill paying, as the token reaches step `at`. */
   bonuses?: Bonus[];
 }
 
-export type BonusKind = 'start' | 'iptu' | 'bolao';
+/** `pracinha`, `home` and `bicho` are the skills that pay on the board (the bicho pays someone else: the bicheiro). */
+export type BonusKind = 'start' | 'iptu' | 'bolao' | 'pracinha' | 'home' | 'bicho';
 export interface Bonus {
   /** Index into `steps`: the token is on this square when the money moves. */
   at: number;
@@ -29,7 +30,9 @@ export interface Bonus {
 
 const BOLAO_POS = BOARD.findIndex(sq => sq.kind === 'bolao');
 
-/** The board's money in `mine` (one player's new log entries), placed on the move's steps. */
+const SKILL_BONUS: Record<string, BonusKind> = { skillPracinha: 'pracinha', skillHome: 'home', skillBicheiro: 'bicho' };
+
+/** The board's money in `mine` (the moving player's new log entries, and the bicheiro's for their stops), placed on the move's steps. */
 function bonusesOn(steps: number[], mine: BairroView['log']): Bonus[] {
   const last = steps.length - 1;
   const on = (pos: number) => {
@@ -41,6 +44,11 @@ function bonusesOn(steps: number[], mine: BairroView['log']): Bonus[] {
     if (!Number.isFinite(amount)) return [];
     if (e.key === 'passStart') return [{ at: on(0), pos: 0, kind: 'start', amount }];
     if (e.key === 'wonBolao') return [{ at: on(BOLAO_POS), pos: BOLAO_POS, kind: 'bolao', amount }];
+    const skill = SKILL_BONUS[e.key];
+    if (skill) {
+      const pos = Number(e.params?.pos);
+      return Number.isInteger(pos) ? [{ at: on(pos), pos, kind: skill, amount }] : [];
+    }
     if (e.key === 'paidTax') {
       const pos = Number(e.params?.pos);
       return Number.isInteger(pos) ? [{ at: on(pos), pos, kind: 'iptu', amount: -amount }] : [];
@@ -63,11 +71,25 @@ const advancesToStart = (card: unknown) => DECK.find(c => c.id === card)?.effect
 const walk = (from: number, to: number) =>
   Array.from({ length: (to - from + BOARD_SIZE) % BOARD_SIZE }, (_, i) => (from + i + 1) % BOARD_SIZE);
 
-/** Where the dice put `player` this roll, or null when no roll explains the move. */
+/** Square by square backwards, for the Marcha à Ré (and a Carona back along the side). */
+const walkBack = (from: number, to: number) =>
+  Array.from({ length: (from - to + BOARD_SIZE) % BOARD_SIZE }, (_, i) => (from - i - 1 + BOARD_SIZE) % BOARD_SIZE);
+
+/** Where the dice put `player` this roll, or where a Marcha à Ré or a Carona took them; null when nothing explains the move. */
 function rolledTo(mine: BairroView['log'], from: number): number | null {
+  const back = mine.find(e => e.key === 'cardMarchaRe');
+  if (back) return (from - Number(back.params?.steps) + BOARD_SIZE) % BOARD_SIZE;
+  const ride = mine.find(e => e.key === 'cardCarona');
+  if (ride) return Number(ride.params?.pos);
   const roll = mine.find(e => e.key === 'rolled');
   const sum = Number(roll?.params?.d1) + Number(roll?.params?.d2);
   return Number.isFinite(sum) ? (from + sum) % BOARD_SIZE : null;
+}
+
+/** The path to where the dice or card put the token: backwards for a Marcha à Ré or a Carona back along the side. */
+function pathTo(mine: BairroView['log'], from: number, to: number): number[] {
+  const backwards = mine.some(e => e.key === 'cardMarchaRe') || (mine.some(e => e.key === 'cardCarona') && (to - from + BOARD_SIZE) % BOARD_SIZE > 10);
+  return backwards ? walkBack(from, to) : walk(from, to);
 }
 
 /**
@@ -83,8 +105,9 @@ export function movesBetween(prev: BairroView, next: BairroView): TokenMove[] {
     const to = p.pos;
     if (from === to) return [];
     const mine = fresh.filter(e => e.player === player);
+    const paid = fresh.filter(e => e.player === player || (e.key === 'skillBicheiro' && e.params?.who === player));
     return moveOf(player, from, to, mine).map(m => {
-      const bonuses = bonusesOn(m.steps, mine);
+      const bonuses = bonusesOn(m.steps, paid);
       return bonuses.length > 0 ? { ...m, bonuses } : m;
     });
   });
@@ -98,15 +121,16 @@ function moveOf(player: number, from: number, to: number, mine: BairroView['log'
   const landed = third ? from : rolledTo(mine, from);
 
   if (landed !== null && drawn !== undefined) {
-    const card = { id: String(drawn), pos: landed, after: walk(from, landed).length };
-    const path = walk(from, landed);
+    const path = pathTo(mine, from, landed);
+    const card = { id: String(drawn), pos: landed, after: path.length };
     if (landed === to) return [{ player, from, to, steps: path, card }];
     return [{ player, from, to, steps: [...path, to], card, ...(arrested ? { arrestAt: landed } : {}) }];
   }
   if (arrested) {
-    if (landed !== null) return [{ player, from, to, steps: [...walk(from, landed), to], arrestAt: landed }];
+    if (landed !== null) return [{ player, from, to, steps: [...pathTo(mine, from, landed), to], arrestAt: landed }];
     return [{ player, from, to, steps: [to] }];
   }
+  if (landed === to && mine.some(e => e.key === 'cardMarchaRe' || e.key === 'cardCarona')) return [{ player, from, to, steps: pathTo(mine, from, to) }];
   const jumped = drawn !== undefined && advancesToStart(drawn);
   const distance = (to - from + BOARD_SIZE) % BOARD_SIZE;
   if (jumped || distance > MAX_WALK) return [{ player, from, to, steps: [to] }];

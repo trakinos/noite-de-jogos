@@ -1,5 +1,6 @@
 import type { HostSession } from '../../../net/host';
 import type { LobbyState } from '../../../net/protocol';
+import { HAND_MAX } from '../deck';
 import { BAIRRO_THEMES } from '../i18n/themes';
 import { bairroModule } from '../module';
 import type { BairroOptions } from '../module';
@@ -10,7 +11,14 @@ interface Props {
   host: HostSession | null;
 }
 
-/** The Dono do Bairro's lobby settings, the theme and open trades: controls for the host, the chosen settings for guests. */
+/** The on/off table rules, each with its label and hint keys. */
+const RULES = [
+  { key: 'auctionDeclined', label: 'lobbyAuctionDeclined', hint: 'lobbyAuctionDeclinedHint' },
+  { key: 'skills', label: 'lobbySkills', hint: 'lobbySkillsHint' },
+  { key: 'pocketCards', label: 'lobbyPocketCards', hint: 'lobbyPocketCardsHint' },
+] as const;
+
+/** The Dono do Bairro's lobby settings, the theme, open trades and the table rules: controls for the host, the chosen settings for guests. */
 export function BairroLobbyOptions({ lobby, host }: Props) {
   const text = useBairroText();
   const parsed = bairroModule.parseOptions(lobby.options);
@@ -48,6 +56,19 @@ export function BairroLobbyOptions({ lobby, host }: Props) {
         )}
         <span className="zone__hint">{text.ui('lobbyOpenTradesHint')}</span>
       </div>
+      {RULES.map(rule => (
+        <div key={rule.key} className="bsetting">
+          {host ? (
+            <label className="bsetting__switch">
+              <input type="checkbox" checked={options[rule.key]} onChange={e => host.setOptions({ ...options, [rule.key]: e.target.checked })} />
+              <span>{text.ui(rule.label)}</span>
+            </label>
+          ) : (
+            <b>{text.ui(options[rule.key] ? 'lobbyOn' : 'lobbyOff', { name: text.ui(rule.label) })}</b>
+          )}
+          <span className="zone__hint">{text.ui(rule.hint, { max: HAND_MAX })}</span>
+        </div>
+      ))}
     </>
   );
 }

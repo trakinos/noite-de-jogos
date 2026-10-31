@@ -139,10 +139,11 @@ describe('clock input', () => {
 describe('bairroModule', () => {
   it('seats 2 to 6 players with no options', () => {
     expect(bairroModule).toMatchObject({ id: 'bairro', minPlayers: 2, maxPlayers: 6 });
-    expect(bairroModule.defaultOptions()).toEqual({ openTrades: false, theme: 'bairro' });
-    expect(bairroModule.parseOptions({})).toEqual({ openTrades: false, theme: 'bairro' });
-    expect(bairroModule.parseOptions({ openTrades: true, theme: 'esquema', anything: 1 })).toEqual({ openTrades: true, theme: 'esquema' });
-    expect(bairroModule.parseOptions({ openTrades: 'yes', theme: 'castelo' })).toEqual({ openTrades: false, theme: 'bairro' });
+    const off = { auctionDeclined: false, skills: false, pocketCards: false };
+    expect(bairroModule.defaultOptions()).toEqual({ openTrades: false, theme: 'bairro', auctionDeclined: true, skills: true, pocketCards: true });
+    expect(bairroModule.parseOptions({})).toEqual({ openTrades: false, theme: 'bairro', ...off });
+    expect(bairroModule.parseOptions({ openTrades: true, theme: 'esquema', skills: true, anything: 1 })).toEqual({ openTrades: true, theme: 'esquema', ...off, skills: true });
+    expect(bairroModule.parseOptions({ openTrades: 'yes', theme: 'castelo', pocketCards: 1 })).toEqual({ openTrades: false, theme: 'bairro', ...off });
     for (const raw of [null, undefined, 3, 'x', []]) expect(bairroModule.parseOptions(raw)).toHaveProperty('error');
   });
 
@@ -186,7 +187,10 @@ describe('trade privacy', () => {
 
   it('starts a room with the lobby setting', () => {
     const seats = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }];
-    expect(bairroModule.create(seats, { openTrades: true, theme: 'bairro' }, 1)).toMatchObject({ state: { openTrades: true } });
-    expect(bairroModule.create(seats, bairroModule.defaultOptions(), 1)).toMatchObject({ state: { openTrades: false } });
+    const off = { openTrades: false, theme: 'bairro', auctionDeclined: false, skills: false, pocketCards: false } as const;
+    expect(bairroModule.create(seats, { ...off, openTrades: true }, 1)).toMatchObject({ state: { openTrades: true } });
+    expect(bairroModule.create(seats, bairroModule.defaultOptions(), 1)).toMatchObject({ state: { openTrades: false, auctionDeclined: true, pocketCards: true } });
+    expect((bairroModule.create(seats, off, 1) as BairroInstance).state.players.every(p => p.skill === null)).toBe(true);
+    expect((bairroModule.create(seats, bairroModule.defaultOptions(), 1) as BairroInstance).state.players.every(p => p.skill !== null)).toBe(true);
   });
 });

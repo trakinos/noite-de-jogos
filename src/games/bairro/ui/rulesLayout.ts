@@ -7,5 +7,6 @@ export const RULES_LAYOUT: { title: string; items: string[] }[] = [
   { title: 'mortgageTitle', items: ['mortgage1', 'mortgage2'] },
   { title: 'debtsTitle', items: ['debts1', 'debts2', 'debts3'] },
   { title: 'tradesTitle', items: ['trades1', 'trades2', 'trades3'] },
+  { title: 'extrasTitle', items: ['extras0', 'extrasAuction', 'extrasSkills', 'extrasCards'] },
   { title: 'provisionalTitle', items: ['provisional1'] },
 ];

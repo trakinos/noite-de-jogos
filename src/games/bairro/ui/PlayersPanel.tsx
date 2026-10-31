@@ -5,7 +5,9 @@ import { ownsWholeRua, ruaPositions } from '../assets';
 import { BOARD, JAIL_POS, RUAS } from '../board';
 import type { RuaId } from '../board';
 import type { BairroView } from '../view';
+import { pocketKind } from '../deck';
 import { RUA_COLORS } from './geometry';
+import { POCKET_ICONS, SKILL_ICONS, useSkillHint } from './PocketCards';
 import { money } from './text';
 import { useBairroText } from './useBairroText';
 
@@ -51,6 +53,9 @@ export function PlayersPanel({ view, names, colors, pieces = [], onOpenSquare }:
   const ruas = (Object.keys(RUAS) as RuaId[]).map(rua => ({ rua, positions: mine(ruaPositions(rua)) })).filter(g => g.positions.length > 0);
   const servicos = mine(BOARD.flatMap((sq, i) => (sq.kind === 'servico' ? [i] : [])));
   const cards = view.players[shown]?.lawyerCards ?? 0;
+  const hand = view.players[shown]?.hand ?? [];
+  const skill = view.players[shown]?.skill ?? null;
+  const skillHint = useSkillHint();
 
   const deedsTitle = shown === view.you ? text.ui('yourDeeds') : text.ui('theirDeeds', { name: names[shown] || text.ui('ownerFallback') });
 
@@ -102,6 +107,19 @@ export function PlayersPanel({ view, names, colors, pieces = [], onOpenSquare }:
                         <span className="muted">{n === 1 ? text.ui('deedOne') : text.ui('deeds', { n })}</span>
                         {p.jailTurns !== null && <span className="bplayer__tag">{text.square(JAIL_POS)}</span>}
                         {p.lawyerCards > 0 && <LawyerTag n={p.lawyerCards} />}
+                        {p.skill && (
+                          <span className={`bplayer__tag bplayer__tag--skill${p.skillUsed ? ' is-spent' : ''}`} title={skillHint(p.skill)}>
+                            <span aria-hidden="true">{SKILL_ICONS[p.skill]} </span>
+                            {text.ui(`skill_${p.skill}`)}
+                          </span>
+                        )}
+                        {p.hand.length > 0 && (
+                          <span className="bplayer__tag bplayer__tag--card" title={text.ui('cardsInHand')}>
+                            <span aria-hidden="true">🃏 {p.hand.length}</span>
+                            <span className="sr-only">{text.ui('cardsInHand')}</span>
+                          </span>
+                        )}
+                        {p.fiscal && <span className="bplayer__tag bplayer__tag--fiscal">🕵️ {text.ui('fiscalTag')}</span>}
                       </span>
                     </>
                   )}
@@ -113,7 +131,19 @@ export function PlayersPanel({ view, names, colors, pieces = [], onOpenSquare }:
       </section>
       <section className="panel bpanel__box" aria-label={deedsTitle}>
         <h2>{deedsTitle}</h2>
-        {ruas.length === 0 && servicos.length === 0 && cards === 0 && <p className="muted">{text.ui('noDeeds')}</p>}
+        {skill && (
+          <div className="bdeeds">
+            <h3>{text.ui('skill')}</h3>
+            <p className="bcard">
+              <span className="bcard__icon" aria-hidden="true">{SKILL_ICONS[skill]}</span>
+              <span>
+                <b>{text.ui(`skill_${skill}`)}</b>
+                <small className="muted">{skillHint(skill)}</small>
+              </span>
+            </p>
+          </div>
+        )}
+        {ruas.length === 0 && servicos.length === 0 && cards === 0 && hand.length === 0 && <p className="muted">{text.ui('noDeeds')}</p>}
         {ruas.map(({ rua, positions }) => (
           <div key={rua} className="bdeeds">
             <h3>
@@ -130,16 +160,30 @@ export function PlayersPanel({ view, names, colors, pieces = [], onOpenSquare }:
             <ul>{servicos.map(deed)}</ul>
           </div>
         )}
-        {cards > 0 && (
+        {(cards > 0 || hand.length > 0) && (
           <div className="bdeeds">
             <h3>{text.ui('cardsInHand')}</h3>
-            <p className="bcard">
-              <span className="bcard__icon" aria-hidden="true">📜</span>
-              <span>
-                <b>{cards === 1 ? text.ui('lawyerCardOne') : text.ui('lawyerCardMany', { n: cards })}</b>
-                <small className="muted">{text.ui('lawyerCardHint')}</small>
-              </span>
-            </p>
+            {hand.map(id => {
+              const kind = pocketKind(id)!;
+              return (
+                <p key={id} className="bcard">
+                  <span className="bcard__icon" aria-hidden="true">{POCKET_ICONS[kind]}</span>
+                  <span>
+                    <b>{text.ui(`pocket_${kind}`)}</b>
+                    <small className="muted">{text.ui(`pocketHint_${kind}`)}</small>
+                  </span>
+                </p>
+              );
+            })}
+            {cards > 0 && (
+              <p className="bcard">
+                <span className="bcard__icon" aria-hidden="true">📜</span>
+                <span>
+                  <b>{cards === 1 ? text.ui('lawyerCardOne') : text.ui('lawyerCardMany', { n: cards })}</b>
+                  <small className="muted">{text.ui('lawyerCardHint')}</small>
+                </span>
+              </p>
+            )}
           </div>
         )}
       </section>

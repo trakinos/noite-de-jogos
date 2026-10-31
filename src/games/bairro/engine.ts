@@ -1,12 +1,13 @@
 import { nextInt } from '../../engine/rng';
 import type { ApplyResult } from '../module';
 import { canBuild, canMortgage, canSell, canUnmortgage, liquidationValue, ruaPositions } from './assets';
-import { DECK } from './deck';
+import { DECK, HAND_MAX, pocketKind } from './deck';
 import { BOARD, JAIL_FINE, JAIL_POS, PASS_START, RUAS, unmortgageCost } from './board';
 import type { PontoSquare, RuaId, ServicoSquare } from './board';
 import { charge, credit, lawyerCardId, log, mortgageOne, passTurn, sellOne } from './ops';
 import { answerTrade, cancelTrade, counterTrade, proposeTrade } from './trades';
-import { bidders, placeBid, startAuction } from './auction';
+import { auctionDeclined, bidders, placeBid, startAuction } from './auction';
+import { BICHEIRO_BONUS, BICHO_SQUARES, PRACINHA_BONUS, buildCost, buyPrice, hasSkill } from './skills';
 import type { BairroIntent, BairroState } from './types';
 
 const ok = (): ApplyResult => ({ ok: true });
@@ -19,7 +20,7 @@ type Handler = (s: BairroState, player: number, intent: BairroIntent) => ApplyRe
 const INTENT_TYPES: ReadonlySet<string> = new Set<IntentType>([
   'roll', 'buy', 'decline', 'endTurn', 'payJailFine', 'useLawyer', 'build', 'sellBuilding',
   'mortgage', 'unmortgage', 'payDebt', 'goBankrupt', 'proposeTrade', 'cancelTrade', 'answerTrade',
-  'counterTrade', 'bid',
+  'counterTrade', 'bid', 'payRent', 'useSkill', 'playCard',
 ]);
 
 const HANDLERS: Partial<Record<IntentType, Handler>> = {
@@ -40,6 +41,9 @@ const HANDLERS: Partial<Record<IntentType, Handler>> = {
   answerTrade: (s, player, i) => answerTrade(s, player, i),
   counterTrade: (s, player, i) => counterTrade(s, player, i),
   bid: (s, player, i) => placeBid(s, player, i),
+  payRent: s => payRent(s),
+  useSkill: s => useSkill(s),
+  playCard: (s, player, i) => playCard(s, player, i as Extract<BairroIntent, { type: 'playCard' }>),
 };
 
 /** While any debt is open, these are the only intents accepted, and only from a debtor, on or off turn. */
@@ -68,21 +72,41 @@ export function apply(s: BairroState, player: number, intent: BairroIntent): App
 
 // ---- helpers shared by the rules ----
 
-function rollDice(s: BairroState): [number, number] {
+/** The dice; a Dado Viciado sets the first one. */
+function rollDice(s: BairroState, fixed?: number): [number, number] {
   const rigged = s.riggedDice?.shift();
-  if (rigged) return rigged;
-  return [nextInt(s.rng, 6) + 1, nextInt(s.rng, 6) + 1];
+  if (rigged) return fixed === undefined ? rigged : [fixed, rigged[1]];
+  return [fixed ?? nextInt(s.rng, 6) + 1, nextInt(s.rng, 6) + 1];
 }
 
-/** Moves forward by `steps`, paying PASS_START when passing or landing on 0. */
+const PRACINHA_POS = BOARD.findIndex(sq => sq.kind === 'pracinha');
+/** Serviço rent on a move without dice (Marcha à Ré, Carona): as if they rolled 7. */
+const NO_DICE_SUM = 7;
+
+/** Moves forward by `steps`, paying PASS_START when passing or landing on 0 (and the Rei da Pracinha at the Pracinha). */
 export function moveBy(s: BairroState, player: number, steps: number): void {
   const p = s.players[player];
   const to = (p.pos + steps) % BOARD.length;
+  if (steps > 0 && hasSkill(s, player, 'reiDaPracinha') && (PRACINHA_POS - p.pos + BOARD.length) % BOARD.length <= steps && p.pos !== PRACINHA_POS) {
+    credit(s, player, PRACINHA_BONUS);
+    log(s, player, 'skillPracinha', { pos: PRACINHA_POS, amount: PRACINHA_BONUS });
+  }
   if (to < p.pos || (to === 0 && steps > 0)) {
     credit(s, player, PASS_START);
     log(s, player, 'passStart', { amount: PASS_START });
+    // The Malandro's extra roll comes back every lap.
+    p.skillUsed = false;
   }
   p.pos = to;
+}
+
+/** Bicheiro: someone stopped at the Pé de Meia, the IPTU or the Bolão. */
+function bicho(s: BairroState, player: number, pos: number): void {
+  if (!BICHO_SQUARES.has(BOARD[pos].id)) return;
+  const bicheiro = s.players.findIndex(p => p.skill === 'bicheiro' && !p.bankrupt);
+  if (bicheiro < 0) return;
+  credit(s, bicheiro, BICHEIRO_BONUS);
+  log(s, bicheiro, 'skillBicheiro', { who: player, pos, amount: BICHEIRO_BONUS });
 }
 
 export function sendToJail(s: BairroState, player: number): void {
@@ -109,7 +133,7 @@ export function rentFor(s: BairroState, pos: number, diceSum: number): number {
   return sq.rent[0] * (monopoly ? 2 : 1);
 }
 
-/** Takes the top card and applies it. Used cards go to the bottom; a lawyer card is kept by the drawer. */
+/** Takes the top card and applies it. Used cards go to the bottom; a lawyer card and the cards to keep stay with the drawer. */
 function drawLuck(s: BairroState, player: number): void {
   const id = s.deck.shift();
   if (id === undefined) return;
@@ -120,8 +144,15 @@ function drawLuck(s: BairroState, player: number): void {
     p.lawyerCards++;
     return;
   }
+  if (effect.kind === 'pocket' && p.hand.length < HAND_MAX) {
+    p.hand.push(id);
+    return;
+  }
   s.deck.push(id);
   switch (effect.kind) {
+    case 'pocket':
+      log(s, player, 'handFull', { max: HAND_MAX });
+      return;
     case 'money':
       if (effect.amount > 0) credit(s, player, effect.amount);
       else charge(s, player, null, -effect.amount);
@@ -138,6 +169,7 @@ function drawLuck(s: BairroState, player: number): void {
     }
     case 'advanceToStart':
       moveBy(s, player, BOARD.length - p.pos);
+      bicho(s, player, 0);
       return;
     case 'goToJail':
       sendToJail(s, player);
@@ -154,17 +186,30 @@ function land(s: BairroState, player: number, diceSum: number, rollAgain: boolea
     case 'servico': {
       const own = s.owned[pos];
       if (!own) { s.phase = { kind: 'buy', square: pos, rollAgain }; return; }
-      if (own.owner === player) return;
       const amount = rentFor(s, pos, diceSum);
-      if (amount > 0 && charge(s, player, own.owner, amount)) log(s, player, 'paidRent', { to: own.owner, pos, amount });
+      if (own.owner === player) {
+        // Dono da Casa: the Prefeitura pays half the rent you would charge.
+        const half = Math.floor(amount / 2);
+        if (half > 0 && hasSkill(s, player, 'donoDaCasa')) {
+          credit(s, player, half);
+          log(s, player, 'skillHome', { pos, amount: half });
+        }
+        return;
+      }
+      if (amount <= 0) return;
+      // Holding a Calote, you choose: pay or skip it.
+      if (handOf(s, player, 'calote')) { s.phase = { kind: 'rent', square: pos, amount, rollAgain }; return; }
+      if (charge(s, player, own.owner, amount)) log(s, player, 'paidRent', { to: own.owner, pos, amount });
       return;
     }
     case 'iptu':
       if (charge(s, player, null, sq.amount)) log(s, player, 'paidTax', { pos, amount: sq.amount });
+      bicho(s, player, pos);
       return;
     case 'bolao':
       credit(s, player, sq.amount);
       log(s, player, 'wonBolao', { amount: sq.amount });
+      bicho(s, player, pos);
       return;
     case 'goToJail':
       sendToJail(s, player);
@@ -173,6 +218,8 @@ function land(s: BairroState, player: number, diceSum: number, rollAgain: boolea
       drawLuck(s, player);
       return;
     case 'start':
+      bicho(s, player, pos);
+      return;
     case 'jail':
     case 'pracinha':
       return;
@@ -181,13 +228,15 @@ function land(s: BairroState, player: number, diceSum: number, rollAgain: boolea
 
 // ---- intents ----
 
-function roll(s: BairroState): ApplyResult {
-  const ph = s.phase;
-  if (!(ph.kind === 'roll' || (ph.kind === 'manage' && ph.rollAgain))) return fail('notNow');
+/** Whether the current player may roll now: before moving, or again after doubles. */
+const mayRoll = (s: BairroState) => s.phase.kind === 'roll' || (s.phase.kind === 'manage' && s.phase.rollAgain);
+
+function roll(s: BairroState, fixed?: number): ApplyResult {
+  if (!mayRoll(s)) return fail('notNow');
   const player = s.current;
   const p = s.players[player];
   const wasJailed = p.jailTurns !== null;
-  const dice = rollDice(s);
+  const dice = rollDice(s, fixed);
   const doubles = dice[0] === dice[1];
   s.lastRoll = dice;
   log(s, player, 'rolled', { d1: dice[0], d2: dice[1] });
@@ -252,29 +301,33 @@ function buy(s: BairroState): ApplyResult {
   const sq = BOARD[pos];
   if ((sq.kind !== 'ponto' && sq.kind !== 'servico') || s.owned[pos]) return fail('notNow');
   const p = s.players[s.current];
-  if (p.cash < sq.price) return fail('notEnoughCash');
-  p.cash -= sq.price;
+  if (p.fiscal) return fail('fiscalBlocked');
+  const price = buyPrice(s, s.current, pos);
+  if (p.cash < price) return fail('notEnoughCash');
+  p.cash -= price;
   s.owned[pos] = { owner: s.current, houses: 0, mortgaged: false };
-  log(s, s.current, 'bought', { pos, price: sq.price });
+  log(s, s.current, 'bought', { pos, price });
   afterBuyDecision(s);
   return ok();
 }
 
 function decline(s: BairroState): ApplyResult {
   if (s.phase.kind !== 'buy') return fail('notNow');
-  log(s, s.current, 'declined', { pos: s.phase.square });
+  const pos = s.phase.square;
+  log(s, s.current, 'declined', { pos });
   afterBuyDecision(s);
+  if (s.auctionDeclined) auctionDeclined(s, s.current, pos);
   return ok();
 }
 
 function build(s: BairroState, player: number, pos: number): ApplyResult {
   const why = canBuild(s, player, pos);
   if (why) return fail(why);
-  const sq = BOARD[pos] as PontoSquare;
-  s.players[player].cash -= sq.houseCost;
+  const cost = buildCost(s, player, pos);
+  s.players[player].cash -= cost;
   const own = s.owned[pos];
   own.houses++;
-  log(s, player, own.houses === 5 ? 'builtPredio' : 'builtPuxadinho', { pos, cost: sq.houseCost });
+  log(s, player, own.houses === 5 ? 'builtPredio' : 'builtPuxadinho', { pos, cost });
   return ok();
 }
 
@@ -306,6 +359,112 @@ function endTurn(s: BairroState): ApplyResult {
   if (s.phase.kind !== 'manage' || s.phase.rollAgain) return fail('notNow');
   passTurn(s);
   return ok();
+}
+
+// ---- rent choice, skills and cards to keep ----
+
+/** The first card of `kind` in the player's hand, if any. */
+function handOf(s: BairroState, player: number, kind: string): string | undefined {
+  return s.players[player].hand.find(id => pocketKind(id) === kind);
+}
+
+function payRent(s: BairroState): ApplyResult {
+  const ph = s.phase;
+  if (ph.kind !== 'rent') return fail('notNow');
+  const owner = s.owned[ph.square].owner;
+  s.phase = { kind: 'manage', rollAgain: ph.rollAgain };
+  if (charge(s, s.current, owner, ph.amount)) log(s, s.current, 'paidRent', { to: owner, pos: ph.square, amount: ph.amount });
+  return ok();
+}
+
+/** Malandro: once per lap, after moving, roll again. */
+function useSkill(s: BairroState): ApplyResult {
+  const p = s.players[s.current];
+  if (p.skill !== 'malandro') return fail('noSkillToUse');
+  if (p.skillUsed) return fail('skillUsed');
+  if (s.phase.kind !== 'manage' || s.phase.rollAgain || p.jailTurns !== null) return fail('notNow');
+  p.skillUsed = true;
+  log(s, s.current, 'skillMalandro');
+  // A fresh roll: it doesn't count toward three doubles in a row.
+  s.doublesInRow = 0;
+  s.phase = { kind: 'manage', rollAgain: true };
+  return roll(s);
+}
+
+/** Squares a Carona can reach from `pos`: its side of the board up to the next corner, but not `pos` itself. */
+export function caronaTargets(pos: number): number[] {
+  const side = Math.floor(pos / 10) * 10;
+  return Array.from({ length: 11 }, (_, k) => (side + k) % BOARD.length).filter(i => i !== pos);
+}
+
+const isInt = (x: unknown, min: number, max: number): x is number => Number.isInteger(x) && (x as number) >= min && (x as number) <= max;
+
+/** Plays a kept card from the current player's hand. The card goes back under the deck. */
+function playCard(s: BairroState, player: number, intent: Extract<BairroIntent, { type: 'playCard' }>): ApplyResult {
+  const p = s.players[player];
+  const id = intent.card;
+  if (typeof id !== 'string' || !p.hand.includes(id)) return fail('notInHand');
+  const kind = pocketKind(id)!;
+  const moving = kind === 'dadoViciado' || kind === 'marchaRe' || kind === 'carona';
+  if (moving && !mayRoll(s)) return fail('notNow');
+  if ((kind === 'marchaRe' || kind === 'carona') && p.jailTurns !== null) return fail('notNow');
+  if (kind === 'calote' && s.phase.kind !== 'rent') return fail('notNow');
+  if (kind === 'fiscal' && s.phase.kind !== 'roll' && s.phase.kind !== 'manage') return fail('notNow');
+  if (kind === 'seguro') return fail('playsItself');
+  const choice = { dadoViciado: intent.die, marchaRe: intent.steps, carona: intent.pos, fiscal: intent.target, calote: 0 }[kind];
+  const valid = {
+    dadoViciado: isInt(choice, 1, 6),
+    marchaRe: isInt(choice, 1, 3),
+    carona: isInt(choice, 0, BOARD.length - 1) && caronaTargets(p.pos).includes(choice),
+    fiscal: isInt(choice, 0, s.players.length - 1) && choice !== player && !s.players[choice].bankrupt,
+    calote: true,
+  }[kind];
+  if (!valid) return fail('badCardChoice');
+  p.hand.splice(p.hand.indexOf(id), 1);
+  s.deck.push(id);
+  switch (kind) {
+    case 'dadoViciado':
+      log(s, player, 'cardDado', { name: kind, die: choice as number });
+      return roll(s, choice as number);
+    case 'marchaRe':
+    case 'carona': {
+      const to = choice as number;
+      if (kind === 'marchaRe') {
+        p.pos = (p.pos - to + BOARD.length) % BOARD.length;
+        log(s, player, 'cardMarchaRe', { name: kind, steps: to });
+      } else {
+        log(s, player, 'cardCarona', { name: kind, pos: to });
+        // Forward (up to the corner, which may be the Pé de Meia) pays on the way; back just goes there.
+        const ahead = (to - p.pos + BOARD.length) % BOARD.length;
+        if (ahead <= 10) moveBy(s, player, ahead);
+        else p.pos = to;
+      }
+      // Instead of the roll: no extra roll after it.
+      s.phase = { kind: 'manage', rollAgain: false };
+      land(s, player, NO_DICE_SUM, false);
+      return ok();
+    }
+    case 'calote': {
+      const ph = s.phase as Extract<BairroState['phase'], { kind: 'rent' }>;
+      log(s, player, 'cardCalote', { name: kind, to: s.owned[ph.square].owner, pos: ph.square, amount: ph.amount });
+      s.phase = { kind: 'manage', rollAgain: ph.rollAgain };
+      return ok();
+    }
+    case 'fiscal': {
+      const target = choice as number;
+      const seguro = handOf(s, target, 'seguro');
+      if (seguro) {
+        const t = s.players[target];
+        t.hand.splice(t.hand.indexOf(seguro), 1);
+        s.deck.push(seguro);
+        log(s, player, 'cardSeguro', { name: kind, to: target, guard: 'seguro' });
+      } else {
+        s.players[target].fiscal = true;
+        log(s, player, 'cardFiscal', { name: kind, to: target });
+      }
+      return ok();
+    }
+  }
 }
 
 // ---- debts and bankruptcy ----
@@ -340,6 +499,10 @@ function goBankrupt(s: BairroState, player: number): ApplyResult {
   const creditor = mine.find(d => d.creditor !== null)?.creditor ?? null;
   const p = s.players[player];
   const assets = Object.keys(s.owned).map(Number).filter(i => s.owned[i].owner === player);
+  // Kept cards go back under the deck either way.
+  s.deck.push(...p.hand);
+  p.hand = [];
+  p.fiscal = false;
   if (creditor === null) {
     for (; p.lawyerCards > 0; p.lawyerCards--) s.deck.push(lawyerCardId(s));
     log(s, player, 'bankruptToBank');

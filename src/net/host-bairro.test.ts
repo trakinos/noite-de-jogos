@@ -58,6 +58,11 @@ describe('HostSession running Dono do Bairro', () => {
     const mover = s.current;
     scheduler.advance(45_000);
     await flush();
+    // Declining may open the auction for declined escrituras: its 30 s run out too, then the turn ends at once.
+    if (s.auction) {
+      scheduler.advance(30_000);
+      await flush();
+    }
     expect(s.turnNumber).toBeGreaterThan(before);
     expect(s.current).not.toBe(mover);
   });

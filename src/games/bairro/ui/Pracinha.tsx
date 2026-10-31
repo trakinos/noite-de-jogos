@@ -11,6 +11,7 @@ import { Die } from './Die';
 import { money } from './text';
 import { useBairroText } from './useBairroText';
 import { waitingFor } from './waiting';
+import { PocketHand, SKILL_ICONS, useSkillHint } from './PocketCards';
 
 const PRACINHA_POS = BOARD.findIndex(sq => sq.kind === 'pracinha');
 
@@ -40,6 +41,9 @@ export function Pracinha({ view, live = view, moving = false, names, awaiting, o
   const last = [...view.log].reverse().find(e => e.key !== 'turnStarted');
   const faces = useDiceFaces(live);
   const burst = useDoublesBurst(live);
+  const skillHint = useSkillHint();
+  const me = view.players[view.you];
+  const rent = view.pending === 'rent' && view.phase.kind === 'rent' ? view.phase : null;
   const label = (a: Action) => text.ui(a.label, a.amount === undefined ? undefined : { amount: money(tr.lang, a.amount) });
 
   return (
@@ -77,6 +81,11 @@ export function Pracinha({ view, live = view, moving = false, names, awaiting, o
       {last && <p className="pracinha__log" aria-live={compact ? 'polite' : undefined}>{text.logLine(last, names)}</p>}
       {waiting && <p className="pracinha__log" role="status">{text.ui(waiting.key, waiting.params)}</p>}
       {view.pending === 'debt' && <p className="pracinha__log" role="status">{text.ui('debtOpenHint')}</p>}
+      {rent && (
+        <p className="pracinha__log pracinha__ask" role="status">
+          {text.ui('rentOwed', { amount: money(tr.lang, rent.amount), name: names[view.owned[rent.square]?.owner ?? -1] ?? '', pos: text.square(rent.square) })}
+        </p>
+      )}
       {actions.length > 0 && (
         <div className="pracinha__actions">
           {actions.map((a, i) => (
@@ -92,6 +101,14 @@ export function Pracinha({ view, live = view, moving = false, names, awaiting, o
           ))}
           {actions.map(a => a.reason && <small key={a.id} className="besc__reason">{text.reason(a.reason)}</small>)}
         </div>
+      )}
+      {me && !me.bankrupt && <PocketHand view={view} names={names} awaiting={awaiting} moving={moving} onIntent={onIntent} />}
+      {me?.skill && !me.bankrupt && (
+        <p className={`pracinha__skill${me.skillUsed ? ' is-spent' : ''}`} title={skillHint(me.skill)}>
+          <span aria-hidden="true">{SKILL_ICONS[me.skill]}</span> {text.ui('yourSkill')}: <b>{text.ui(`skill_${me.skill}`)}</b>
+          {me.skillUsed && <span className="muted"> · {text.ui('skillSpent')}</span>}
+          <small className="muted pracinha__skillhint">{skillHint(me.skill)}</small>
+        </p>
       )}
     </div>
   );

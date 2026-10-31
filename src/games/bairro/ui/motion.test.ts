@@ -6,6 +6,32 @@ import { DECK } from '../deck';
 import { BOARD } from '../board';
 import { doublesBetween, mortgagesBetween, releasesBetween, movesBetween, newEntries, rolledBetween, withPositions } from './motion';
 
+describe('movesBetween with the table rules', () => {
+  it('walks a Marcha à Ré backwards and a Carona to its square, showing the skills that pay', () => {
+    const s = game(2);
+    s.pocketCards = true;
+    s.players[0].hand = ['c33', 'c39'];
+    s.players[1].skill = 'bicheiro';
+    s.players[0].pos = 6;
+    let before = viewFor(s, 0);
+    apply(s, 0, { type: 'playCard', card: 'c33', steps: 2 }); // 6 → 4, the IPTU
+    const [back] = movesBetween(before, viewFor(s, 0));
+    expect(back.steps).toEqual([5, 4]);
+    expect(back.bonuses).toEqual([
+      { at: 1, pos: 4, kind: 'iptu', amount: -200 },
+      { at: 1, pos: 4, kind: 'bicho', amount: 100 },
+    ]);
+    s.phase = { kind: 'roll' };
+    s.players[0].skill = 'reiDaPracinha';
+    s.players[0].pos = 13;
+    before = viewFor(s, 0);
+    apply(s, 0, { type: 'playCard', card: 'c39', pos: 20 });
+    const [ride] = movesBetween(before, viewFor(s, 0));
+    expect(ride.steps).toEqual([14, 15, 16, 17, 18, 19, 20]);
+    expect(ride.bonuses).toEqual([{ at: 6, pos: 20, kind: 'pracinha', amount: 100 }]);
+  });
+});
+
 describe('movesBetween bonuses', () => {
   it('pays the Pé de Meia as the token passes it', () => {
     const s = game(2);

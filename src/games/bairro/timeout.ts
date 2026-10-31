@@ -30,6 +30,7 @@ const debtors = (s: BairroState, except: number | null) =>
 function turnMove(s: BairroState): BairroIntent {
   const ph = s.phase;
   if (ph.kind === 'buy') return { type: 'decline' };
+  if (ph.kind === 'rent') return { type: 'payRent' };
   if (ph.kind === 'roll' || ph.rollAgain) return { type: 'roll' };
   return { type: 'endTurn' };
 }

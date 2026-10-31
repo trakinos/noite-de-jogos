@@ -72,6 +72,20 @@ describe('TurnClock', () => {
 });
 
 describe('TurnClock edge cases', () => {
+  it('expires a run-out turn again at once when a prompt its expiry opened hands it back', () => {
+    const { sched, expired, clock } = setup();
+    const turn = {};
+    clock.sync({ turn, currentPlayer: 0, pending: null, over: false });
+    sched.advance(45_000);
+    const auction = {};
+    clock.sync({ turn, currentPlayer: 0, pending: null, group: auction, over: false });
+    sched.advance(RESPONSE_MS);
+    clock.sync({ turn, currentPlayer: 0, pending: null, over: false });
+    sched.advance(0);
+    expect(expired).toEqual(['turn', 'response', 'turn']);
+  });
+
+
   it('does not start a response clock for a prompt from the current player\'s own card', () => {
     const { sched, expired, clock } = setup();
     const turn = {};
