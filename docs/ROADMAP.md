@@ -78,6 +78,7 @@ Full list and notes: `docs/playtest-26.10.29.md`.
 - [x] **Cigarette:** hidden for now (`Cigarette.tsx`, `SHOWN`).
 - [x] **Less luck:** three table rules, each a lobby setting (on by default): the auction for declined escrituras; cards to keep from the Tigrinho (Dado Viciado, Marcha à Ré, Calote, Fiscal na Porta, Carona, Seguro; up to 3 in hand); and one random skill per player (Dono da Casa, Rei da Pracinha, Empreiteiro, Corretor, Malandro, Bicheiro).
 - [ ] **Balance the skills:** play a few hundred bot games per skill and compare win rates; the values (Rei da Pracinha $100, Bicheiro $100, Empreiteiro −25%, Corretor −10%) are first guesses.
+- [ ] **Dono da Casa, if once per lap is still too strong** (from the third playtest): (a) pay only the rent with no buildings, doubled with the whole rua; (b) a flat $25 per building, at most $125; and as a downside, the Prefeitura keeps 10% of the rent other players pay them.
 
 ### C. Dono do Bairro, later
 - [ ] Replace the working values with the checked classic numbers and Sorte ou Revés cards.

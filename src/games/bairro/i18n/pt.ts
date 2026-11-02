@@ -234,7 +234,7 @@ export const pt: BairroDictionary = {
     skill: 'Habilidade', yourSkill: 'Sua habilidade', skillSpent: 'usada nesta volta',
     skill_donoDaCasa: 'Dono da Casa', skill_reiDaPracinha: 'Rei da Pracinha', skill_empreiteiro: 'Empreiteiro',
     skill_corretor: 'Corretor', skill_malandro: 'Malandro', skill_bicheiro: 'Bicheiro',
-    skillHint_donoDaCasa: 'Parou numa escritura sua? A Prefeitura paga metade do aluguel dela a você.',
+    skillHint_donoDaCasa: 'Parou numa escritura sua? A Prefeitura paga metade do aluguel dela a você, uma vez por volta.',
     skillHint_reiDaPracinha: 'Passar ou parar em {pracinha} rende {amount}.',
     skillHint_empreiteiro: 'Suas construções custam 25% menos.',
     skillHint_corretor: 'Você compra escrituras da Prefeitura por 10% menos.',
@@ -293,7 +293,7 @@ export const pt: BairroDictionary = {
     extrasTitle: 'Regras da mesa',
     extras0: 'Quem cria a sala liga ou desliga estas regras no lobby.',
     extrasAuction: 'Leilão das recusadas: a escritura que alguém deixa de comprar vai a leilão na hora, com lance fechado para todos os outros: quem recusou não dá lance. Ninguém deu lance? Ela continua à venda.',
-    extrasSkills: 'Habilidades: cada jogador recebe uma, ao acaso e à vista de todos. Dono da Casa: parar numa escritura sua rende metade do aluguel dela. Rei da Pracinha: passar ou parar na Pracinha rende {pracinhaBonus}. Empreiteiro: construções 25% mais baratas. Corretor: escrituras 10% mais baratas. Malandro: uma vez por volta, rola os dados de novo depois de andar. Bicheiro: quando outro jogador para no Pé de Meia, no IPTU ou no Bolão, você recebe {bicheiroBonus}; quando é você que para, paga {bicheiroFine}.',
+    extrasSkills: 'Habilidades: cada jogador recebe uma, ao acaso e à vista de todos. Dono da Casa: parar numa escritura sua rende metade do aluguel dela, uma vez por volta. Rei da Pracinha: passar ou parar na Pracinha rende {pracinhaBonus}. Empreiteiro: construções 25% mais baratas. Corretor: escrituras 10% mais baratas. Malandro: uma vez por volta, rola os dados de novo depois de andar. Bicheiro: quando outro jogador para no Pé de Meia, no IPTU ou no Bolão, você recebe {bicheiroBonus}; quando é você que para, paga {bicheiroFine}.',
     extrasCards: 'Cartas na manga: o Tigrinho ganha cartas para guardar, até {handMax} na mão (a que passar disso volta pro monte). Dado Viciado: você escolhe o valor de um dado. Marcha à Ré: volta até 3 casas em vez de rolar. Carona: vai para qualquer casa do seu lado do tabuleiro em vez de rolar. Calote: deixa de pagar um aluguel. Fiscal na Porta: alguém fica sem comprar, dar lance nem construir até o fim da próxima vez dele. Seguro: barra sozinho o próximo Fiscal na Porta contra você.',
   },
 };

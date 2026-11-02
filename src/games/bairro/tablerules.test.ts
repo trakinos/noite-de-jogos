@@ -83,14 +83,23 @@ describe('skills', () => {
     expect(s.log.at(-1)).toMatchObject({ key: 'builtPuxadinho', params: { cost: 38 } });
   });
 
-  it('Dono da Casa gets half the rent from the Prefeitura on their own escritura', () => {
+  it('Dono da Casa gets half the rent from the Prefeitura on their own escritura, once per lap', () => {
     const s = table();
     skill(s, 0, 'donoDaCasa');
     give(s, 0, 3, { houses: 2 }); // rent 60
-    rig(s, [[1, 2]]);
+    give(s, 0, 6);
+    rig(s, [[1, 2], [1, 2], [1, 3]]);
     apply(s, 0, { type: 'roll' });
     expect(s.players[0].cash).toBe(1530);
     expect(s.log.at(-1)).toEqual({ player: 0, key: 'skillHome', params: { pos: 3, amount: 30 } });
+    expect(s.players[0].skillUsed).toBe(true);
+    s.phase = { kind: 'manage', rollAgain: true };
+    apply(s, 0, { type: 'roll' }); // 3 → 6, also theirs: nothing this lap
+    expect(s.players[0].cash).toBe(1530);
+    s.players[0].pos = 39;
+    s.phase = { kind: 'manage', rollAgain: true };
+    apply(s, 0, { type: 'roll' }); // past the Pé de Meia onto 3: paid again
+    expect(s.players[0].cash).toBe(1530 + 200 + 30);
   });
 
   it('Rei da Pracinha is paid passing or stopping at the Pracinha, not leaving it', () => {

@@ -234,7 +234,7 @@ export const en: BairroDictionary = {
     skill: 'Skill', yourSkill: 'Your skill', skillSpent: 'used this lap',
     skill_donoDaCasa: 'Homeowner', skill_reiDaPracinha: 'King of the Pracinha', skill_empreiteiro: 'Builder',
     skill_corretor: 'Broker', skill_malandro: 'Hustler', skill_bicheiro: 'Bookie',
-    skillHint_donoDaCasa: 'Stopped on your own escritura? The Prefeitura pays you half its rent.',
+    skillHint_donoDaCasa: 'Stopped on your own escritura? The Prefeitura pays you half its rent, once per lap.',
     skillHint_reiDaPracinha: 'Passing or stopping at {pracinha} pays {amount}.',
     skillHint_empreiteiro: 'Your buildings cost 25% less.',
     skillHint_corretor: 'You buy escrituras from the Prefeitura for 10% less.',
@@ -293,7 +293,7 @@ export const en: BairroDictionary = {
     extrasTitle: 'Table rules',
     extras0: 'Whoever creates the room turns these rules on or off in the lobby.',
     extrasAuction: 'Auction declined deeds: an escritura someone doesn\'t buy goes to auction at once, with sealed bids from everyone else: whoever declined doesn\'t bid. No bids? It stays for sale.',
-    extrasSkills: 'Skills: each player gets one, at random and in plain sight. Homeowner: stopping on your own escritura pays half its rent. King of the Pracinha: passing or stopping at the Pracinha pays {pracinhaBonus}. Builder: buildings 25% cheaper. Broker: escrituras 10% cheaper. Hustler: once per lap, roll again after moving. Bookie: whenever another player stops at the Pé de Meia, the IPTU or the Bolão, you get {bicheiroBonus}; when you stop there yourself, you pay {bicheiroFine}.',
+    extrasSkills: 'Skills: each player gets one, at random and in plain sight. Homeowner: stopping on your own escritura pays half its rent, once per lap. King of the Pracinha: passing or stopping at the Pracinha pays {pracinhaBonus}. Builder: buildings 25% cheaper. Broker: escrituras 10% cheaper. Hustler: once per lap, roll again after moving. Bookie: whenever another player stops at the Pé de Meia, the IPTU or the Bolão, you get {bicheiroBonus}; when you stop there yourself, you pay {bicheiroFine}.',
     extrasCards: 'Cards up the sleeve: the Tigrinho gets cards to keep, up to {handMax} in hand (one more goes back to the deck). Loaded Die: pick the value of one die. Reverse Gear: go back up to 3 squares instead of rolling. Ride: go to any square on your side of the board instead of rolling. Dodge: skip one rent. Inspector at the Door: someone can\'t buy, bid or build until the end of their next turn. Insurance: blocks the next Inspector at the Door sent your way, on its own.',
   },
 };

@@ -94,7 +94,7 @@ export function moveBy(s: BairroState, player: number, steps: number): void {
   if (to < p.pos || (to === 0 && steps > 0)) {
     credit(s, player, PASS_START);
     log(s, player, 'passStart', { amount: PASS_START });
-    // The Malandro's extra roll comes back every lap.
+    // The Malandro's extra roll and the Dono da Casa's rent come back every lap.
     p.skillUsed = false;
   }
   p.pos = to;
@@ -192,9 +192,11 @@ function land(s: BairroState, player: number, diceSum: number, rollAgain: boolea
       if (!own) { s.phase = { kind: 'buy', square: pos, rollAgain }; return; }
       const amount = rentFor(s, pos, diceSum);
       if (own.owner === player) {
-        // Dono da Casa: the Prefeitura pays half the rent you would charge.
+        // Dono da Casa: the Prefeitura pays half the rent you would charge, once per lap.
         const half = Math.floor(amount / 2);
-        if (half > 0 && hasSkill(s, player, 'donoDaCasa')) {
+        const p = s.players[player];
+        if (half > 0 && hasSkill(s, player, 'donoDaCasa') && !p.skillUsed) {
+          p.skillUsed = true;
           credit(s, player, half);
           log(s, player, 'skillHome', { pos, amount: half });
         }
