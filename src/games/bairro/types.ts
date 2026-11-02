@@ -29,7 +29,11 @@ export type Phase =
 export interface Debt { debtor: number; creditor: number | null /* null = bank */; amount: number }
 
 export interface OfferSide { assets: number[]; cash: number; lawyerCards: number }
-export interface OfferTerms { to: number; give: OfferSide; get: OfferSide }
+export interface OfferTerms {
+  to: number; give: OfferSide; get: OfferSide;
+  /** Who pays the Corretor's fee when a Corretor outside the trade gets one: the one proposing (default) or the one answering. */
+  fee?: 'from' | 'to';
+}
 /** An open offer. A counter-offer replaces it, with `from` and `to` swapped and `counters` one higher. */
 export interface Offer extends OfferTerms { from: number; counters: number }
 

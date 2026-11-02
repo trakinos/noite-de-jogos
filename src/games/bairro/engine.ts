@@ -7,7 +7,7 @@ import type { PontoSquare, RuaId, ServicoSquare } from './board';
 import { charge, credit, lawyerCardId, log, mortgageOne, passTurn, sellOne } from './ops';
 import { answerTrade, cancelTrade, counterTrade, proposeTrade } from './trades';
 import { auctionDeclined, bidders, placeBid, startAuction } from './auction';
-import { BICHEIRO_BONUS, BICHEIRO_FINE, BICHO_SQUARES, PRACINHA_BONUS, buildCost, buyPrice, hasSkill } from './skills';
+import { BICHEIRO_BONUS, BICHEIRO_FINE, BICHO_SQUARES, CORRETOR_MORTGAGE, CORRETOR_SALE, commission, PRACINHA_BONUS, buildCost, buyPrice, hasSkill } from './skills';
 import type { BairroIntent, BairroState } from './types';
 
 const ok = (): ApplyResult => ({ ok: true });
@@ -313,6 +313,7 @@ function buy(s: BairroState): ApplyResult {
   p.cash -= price;
   s.owned[pos] = { owner: s.current, houses: 0, mortgaged: false };
   log(s, s.current, 'bought', { pos, price });
+  commission(s, s.current, pos, CORRETOR_SALE);
   afterBuyDecision(s);
   return ok();
 }
@@ -358,6 +359,7 @@ function unmortgage(s: BairroState, player: number, pos: number): ApplyResult {
   s.players[player].cash -= cost;
   s.owned[pos].mortgaged = false;
   log(s, player, 'unmortgaged', { pos, amount: cost });
+  commission(s, player, pos, CORRETOR_MORTGAGE);
   return ok();
 }
 

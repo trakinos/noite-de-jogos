@@ -1,7 +1,7 @@
 import { useLang } from '../../../i18n/LangProvider';
 import { BOARD, JAIL_FINE, MORTGAGE_INTEREST, PASS_START, START_MONEY } from '../board';
 import { HAND_MAX } from '../deck';
-import { BICHEIRO_BONUS, BICHEIRO_FINE, PRACINHA_BONUS } from '../skills';
+import { BICHEIRO_BONUS, BICHEIRO_FINE, CORRETOR_MORTGAGE, CORRETOR_SALE, CORRETOR_TRADE, PRACINHA_BONUS } from '../skills';
 import { MAX_COUNTERS, MAX_TRADES_PER_TURN } from '../trades';
 import { BairroDialog } from './BairroDialog';
 import { RULES_LAYOUT } from './rulesLayout';
@@ -18,7 +18,7 @@ function ruleParams(lang: 'pt' | 'en'): Record<string, string | number> {
     iptu: $(amount('iptu')), bolao: $(amount('bolao')),
     multLow: Math.min(...mults), multHigh: Math.max(...mults),
     interest: Math.round(MORTGAGE_INTEREST * 100), maxTrades: MAX_TRADES_PER_TURN, maxCounters: MAX_COUNTERS,
-    pracinhaBonus: $(PRACINHA_BONUS), bicheiroBonus: $(BICHEIRO_BONUS), bicheiroFine: $(BICHEIRO_FINE), handMax: HAND_MAX,
+    pracinhaBonus: $(PRACINHA_BONUS), bicheiroBonus: $(BICHEIRO_BONUS), bicheiroFine: $(BICHEIRO_FINE), corretorSale: $(CORRETOR_SALE), corretorMortgage: $(CORRETOR_MORTGAGE), corretorTrade: $(CORRETOR_TRADE), handMax: HAND_MAX,
   };
 }
 

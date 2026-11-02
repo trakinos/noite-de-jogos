@@ -58,9 +58,9 @@ describe('bairro log and reason keys', () => {
     timedOut: 'only a clock running out writes it, and the sim and fuzz never expire one; covered in timeout.test.ts',
     tradeVoided: 'nothing can change while an offer is open, so an accepted offer is always still valid; covered in trades.test.ts',
     tradeCountered: 'the bots never counter and a random counter-offer has to be valid to land; covered in trades.test.ts',
-    tradeCancelled: 'only the fuzzed junk cancels an offer, and whether it lands on an open offer depends on the seed; covered in trades.test.ts',
   };
   const UNREACHED_REASONS: Record<string, string> = {
+    notEnoughCashFee: 'the bots never trade near their last dollar with a Corretor outside; covered in tablerules.test.ts',
     debtOpen: 'the debt gate in apply answers waitingForDebts before any asset rule runs; covered in engine.test.ts via canBuild',
     tooManyTrades: 'the bots stop at the cap and the fuzz rarely stacks three proposals in a turn; covered in trades.test.ts',
     fiscalBlocked: 'the bots never buy, bid or build under a Fiscal na Porta, and the fuzz rarely tries in that one turn; covered in engine.test.ts',

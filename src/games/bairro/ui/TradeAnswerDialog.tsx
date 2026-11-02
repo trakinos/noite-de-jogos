@@ -9,7 +9,7 @@ import { BairroDialog } from './BairroDialog';
 import { HideButton } from './TradePill';
 import { money } from './text';
 import { isEmptySide, tradeOptions } from './trade';
-import { Column } from './TradeDialog';
+import { Column, FeeLine, FeePicker } from './TradeDialog';
 import { AssetPrice, SideTotal, TradeBalance } from './TradeValues';
 import { useBairroText } from './useBairroText';
 
@@ -42,6 +42,8 @@ function Answer({ view, names, clock, awaiting, onIntent, hidden, onHide }: Prop
   const [countering, setCountering] = useState(false);
   const [give, setGive] = useState<OfferSide>(() => structuredClone(offer.get));
   const [get, setGet] = useState<OfferSide>(() => structuredClone(offer.give));
+  // The counter keeps the same payer: it turns around, so whoever was `to` is now `from`.
+  const [fee, setFee] = useState<'from' | 'to'>(offer.fee === 'to' ? 'from' : 'to');
 
   if (countering) {
     const opts = tradeOptions(view, offer.from);
@@ -54,12 +56,13 @@ function Answer({ view, names, clock, awaiting, onIntent, hidden, onHide }: Prop
           <Column view={view} title={text.ui('tradeIGet')} options={opts.get} side={get} onChange={setGet} />
         </div>
         <TradeBalance view={view} give={give} get={get} />
+        <FeePicker view={view} names={names} to={offer.from} fee={fee} onChange={setFee} />
         <div className="besc__actions">
           <button
             type="button"
             className="primary"
             disabled={awaiting || (isEmptySide(give) && isEmptySide(get))}
-            onClick={() => onIntent({ type: 'counterTrade', offer: { give, get } })}
+            onClick={() => onIntent({ type: 'counterTrade', offer: { give, get, fee } })}
           >
             {text.ui('counterSend')}
           </button>
@@ -113,6 +116,7 @@ function Answer({ view, names, clock, awaiting, onIntent, hidden, onHide }: Prop
         </section>
       </div>
       <TradeBalance view={view} give={offer.get} get={offer.give} />
+      <FeeLine view={view} names={names} offer={offer} />
       <div className="besc__actions">
         <button type="button" className="primary" disabled={awaiting} onClick={() => onIntent({ type: 'answerTrade', accept: true })}>
           {text.ui('answerAccept')}

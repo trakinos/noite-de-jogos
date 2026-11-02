@@ -4,7 +4,7 @@ import { BOARD } from '../board';
 import { pocketKind } from '../deck';
 import type { PocketKind } from '../deck';
 import { caronaTargets } from '../engine';
-import { BICHEIRO_BONUS, BICHEIRO_FINE, PRACINHA_BONUS } from '../skills';
+import { BICHEIRO_BONUS, BICHEIRO_FINE, CORRETOR_MORTGAGE, CORRETOR_SALE, CORRETOR_TRADE, PRACINHA_BONUS } from '../skills';
 import type { BairroIntent, SkillId } from '../types';
 import type { BairroView } from '../view';
 import { BairroDialog } from './BairroDialog';
@@ -37,6 +37,7 @@ export function useSkillHint(): (skill: SkillId) => string {
     text.ui(`skillHint_${skill}`, {
       pracinha: text.square(PRACINHA_POS), start: text.square(posOf('start')), iptu: text.square(posOf('iptu')), bolao: text.square(posOf('bolao')),
       amount: money(lang, skill === 'bicheiro' ? BICHEIRO_BONUS : PRACINHA_BONUS), fine: money(lang, BICHEIRO_FINE),
+      sale: money(lang, CORRETOR_SALE), mortgage: money(lang, CORRETOR_MORTGAGE), trade: money(lang, CORRETOR_TRADE),
     });
 }
 

@@ -229,7 +229,7 @@ describe('counter-offers', () => {
     give(s, 1, 3);
     propose(s, terms({ assets: [1] }, { assets: [3] }));
     expect(counter(s, 1, { assets: [3] }, { assets: [1], cash: 50 })).toEqual({ ok: true });
-    expect(s.offer).toEqual({ from: 1, to: 0, give: side({ assets: [3] }), get: side({ assets: [1], cash: 50 }), counters: 1 });
+    expect(s.offer).toEqual({ from: 1, to: 0, give: side({ assets: [3] }), get: side({ assets: [1], cash: 50 }), fee: 'from', counters: 1 });
     expect(s.tradesThisTurn).toBe(1);
     expect(apply(s, 0, { type: 'answerTrade', accept: true })).toEqual({ ok: true });
     expect(s.owned[1].owner).toBe(1);

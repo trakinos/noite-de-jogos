@@ -1,6 +1,7 @@
 // The Prefeitura's auction of a bankrupt player's escrituras. Must not import engine.ts (engine imports this).
 import type { ApplyResult } from '../module';
 import { log } from './ops';
+import { CORRETOR_SALE, commission } from './skills';
 import type { BairroIntent, BairroState } from './types';
 
 const ok = (): ApplyResult => ({ ok: true });
@@ -64,6 +65,7 @@ function closeLot(s: BairroState): void {
     s.players[winner]!.cash -= amount;
     s.owned[pos] = { owner: winner, houses: 0, mortgaged: false };
     log(s, winner, 'auctionWon', { pos, amount });
+    commission(s, winner, pos, CORRETOR_SALE);
   }
   a.lots.shift();
   a.bids = s.players.map(() => null);

@@ -148,6 +148,56 @@ describe('skills', () => {
     expect(keys(s).slice(-2)).toEqual(['wonBolao', 'skillBicheiroFine']);
   });
 
+  it('Corretor: the bank pays 25 when someone else buys (at auction too) and 10 when someone else pays off a mortgage', () => {
+    const s = table(3);
+    skill(s, 2, 'corretor');
+    rig(s, [[1, 2]]); // 0 → 3
+    apply(s, 0, { type: 'roll' });
+    apply(s, 0, { type: 'buy' });
+    expect(s.players[2].cash).toBe(1525);
+    expect(s.log.at(-1)).toEqual({ player: 2, key: 'skillCorretor', params: { who: 0, pos: 3, amount: 25 } });
+    give(s, 0, 1, { mortgaged: true });
+    expect(apply(s, 0, { type: 'unmortgage', pos: 1 })).toEqual({ ok: true });
+    expect(s.players[2].cash).toBe(1535);
+    // A declined escritura won at auction pays it too; the Corretor's own purchases don't.
+    s.auction = { from: 0, lots: [6], bids: [null, null, null], declined: true };
+    apply(s, 1, { type: 'bid', amount: 50 });
+    apply(s, 2, { type: 'bid', amount: 0 });
+    expect(s.owned[6]?.owner).toBe(1);
+    expect(s.players[2].cash).toBe(1560);
+    s.auction = { from: 0, lots: [8], bids: [null, null, null], declined: true };
+    apply(s, 1, { type: 'bid', amount: 0 });
+    apply(s, 2, { type: 'bid', amount: 40 });
+    expect(s.players[2].cash).toBe(1520);
+  });
+
+  it('Corretor: a trade between two others pays 25, from whoever the proposal says; none on their own trades', () => {
+    const s = table(3);
+    skill(s, 2, 'corretor');
+    give(s, 0, 1);
+    const terms = (to: number, fee?: 'from' | 'to') => ({ to, give: { assets: [1], cash: 0, lawyerCards: 0 }, get: { assets: [], cash: 10, lawyerCards: 0 }, fee });
+    apply(s, 0, { type: 'proposeTrade', offer: terms(1, 'to') });
+    apply(s, 1, { type: 'answerTrade', accept: true });
+    expect([s.players[0].cash, s.players[1].cash, s.players[2].cash]).toEqual([1510, 1500 - 10 - 25, 1525]);
+    expect(s.log.at(-1)).toEqual({ player: 1, key: 'skillCorretorTrade', params: { to: 2, amount: 25 } });
+    // By default the proposer pays, and the fee needs cash on top of what they put up.
+    give(s, 0, 3);
+    s.players[1].cash = 30;
+    s.players[0].cash = 20;
+    const back = { to: 1, give: { assets: [3], cash: 0, lawyerCards: 0 }, get: { assets: [], cash: 0, lawyerCards: 0 } };
+    expect(apply(s, 0, { type: 'proposeTrade', offer: back })).toEqual({ ok: false, reason: 'notEnoughCashFee' });
+    s.players[0].cash = 25;
+    expect(apply(s, 0, { type: 'proposeTrade', offer: back })).toEqual({ ok: true });
+    apply(s, 1, { type: 'answerTrade', accept: true });
+    expect(s.players[0].cash).toBe(0);
+    // The Corretor trading pays nobody a fee.
+    const before = s.players[2].cash;
+    apply(s, 0, { type: 'proposeTrade', offer: { to: 2, give: { assets: [], cash: 0, lawyerCards: 0 }, get: { assets: [], cash: 5, lawyerCards: 0 } } });
+    apply(s, 2, { type: 'answerTrade', accept: true });
+    expect(s.players[2].cash).toBe(before - 5);
+    expect(invariantViolations(s)).toEqual([]);
+  });
+
   it('Malandro rolls again once per lap, and gets it back passing the Pé de Meia', () => {
     const s = table();
     skill(s, 0, 'malandro');

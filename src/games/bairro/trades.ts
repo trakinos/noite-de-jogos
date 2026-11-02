@@ -2,7 +2,8 @@
 import type { ApplyResult } from '../module';
 import { BOARD } from './board';
 import { ruaPositions } from './assets';
-import { log } from './ops';
+import { credit, log } from './ops';
+import { CORRETOR_TRADE, corretorOutside, feePayer } from './skills';
 import type { BairroIntent, BairroState, Offer, OfferSide, OfferTerms } from './types';
 
 const ok = (): ApplyResult => ({ ok: true });
@@ -43,8 +44,19 @@ export function validateOffer(s: BairroState, offer: Offer): string | null {
   if (offer.to === offer.from || s.players[offer.to].bankrupt || s.players[offer.from].bankrupt) return 'badRecipient';
   const empty = (x: OfferSide) => x.assets.length === 0 && x.cash === 0 && x.lawyerCards === 0;
   if (empty(give) && empty(get)) return 'emptyOffer';
-  return validateSide(s, offer.from, give) ?? validateSide(s, offer.to, get);
+  const why = validateSide(s, offer.from, give) ?? validateSide(s, offer.to, get);
+  if (why) return why;
+  // The fee comes on top of the cash the payer puts up.
+  if (corretorOutside(s, offer.from, offer.to) !== null) {
+    const payer = feePayer(offer);
+    const cash = payer === offer.from ? give.cash : get.cash;
+    if (s.players[payer].cash < cash + CORRETOR_TRADE) return 'notEnoughCashFee';
+  }
+  return null;
 }
+
+/** Who pays the Corretor's fee, from an intent: the sender unless it says the other side. */
+const cleanFee = (fee: unknown): 'from' | 'to' => (fee === 'to' ? 'to' : 'from');
 
 /** Proposals allowed per turn. */
 export const MAX_TRADES_PER_TURN = 3;
@@ -55,7 +67,7 @@ export function proposeTrade(s: BairroState, player: number, intent: BairroInten
   const give = cleanSide(terms?.give);
   const get = cleanSide(terms?.get);
   if (!give || !get || !isSeat(s, terms?.to)) return fail('badOffer');
-  const offer: Offer = { from: player, to: terms.to, give, get, counters: 0 };
+  const offer: Offer = { from: player, to: terms.to, give, get, fee: cleanFee(terms.fee), counters: 0 };
   const why = validateOffer(s, offer);
   if (why) return fail(why);
   if (s.tradesThisTurn >= MAX_TRADES_PER_TURN) return fail('tooManyTrades');
@@ -81,7 +93,7 @@ export function counterTrade(s: BairroState, player: number, intent: BairroInten
   const give = cleanSide(terms?.give);
   const get = cleanSide(terms?.get);
   if (!give || !get) return fail('badOffer');
-  const offer: Offer = { from: player, to: open.from, give, get, counters: open.counters + 1 };
+  const offer: Offer = { from: player, to: open.from, give, get, fee: cleanFee(terms?.fee), counters: open.counters + 1 };
   const why = validateOffer(s, offer);
   if (why) return fail(why);
   s.offer = offer;
@@ -124,5 +136,12 @@ export function answerTrade(s: BairroState, player: number, intent: BairroIntent
   a.lawyerCards += offer.get.lawyerCards - offer.give.lawyerCards;
   b.lawyerCards += offer.give.lawyerCards - offer.get.lawyerCards;
   log(s, player, 'tradeAccepted', { to: offer.from });
+  const corretor = corretorOutside(s, offer.from, offer.to);
+  if (corretor !== null) {
+    const payer = feePayer(offer);
+    s.players[payer].cash -= CORRETOR_TRADE;
+    credit(s, corretor, CORRETOR_TRADE);
+    log(s, payer, 'skillCorretorTrade', { to: corretor, amount: CORRETOR_TRADE });
+  }
   return ok();
 }

@@ -1233,6 +1233,11 @@ button.link:hover { color: var(--text); }
 .btrade__cards b { min-width: 1.5em; text-align: center; font-variant-numeric: tabular-nums; }
 .btrade__summary { margin: 0; font-weight: 800; }
 .btrade__used { margin: 0; }
+.btrade__fee { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.btrade__fee > span { flex-basis: 100%; }
+.btrade__fee button { min-height: 44px; padding: 4px 12px; border-radius: var(--r-md); }
+.btrade__fee button.is-picked { outline: 3px solid var(--accent); outline-offset: 1px; }
+.btrade__feeline { margin: 0; }
 .bauction { max-width: 440px; }
 .bauction__lot { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--r-md); background: var(--surface-2); }
 .bauction__lot > div { display: grid; gap: 2px; }

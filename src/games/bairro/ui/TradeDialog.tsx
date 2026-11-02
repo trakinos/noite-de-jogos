@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLang } from '../../../i18n/LangProvider';
 import { MAX_TRADES_PER_TURN } from '../trades';
-import type { BairroIntent, OfferSide } from '../types';
+import { CORRETOR_TRADE, corretorOutside, feePayer } from '../skills';
+import type { BairroIntent, Offer, OfferSide } from '../types';
 import type { BairroView } from '../view';
 import { BairroDialog } from './BairroDialog';
 import { HideButton } from './TradePill';
@@ -87,6 +88,39 @@ export function Column({ view, title, options, side, onChange }: ColumnProps) {
   );
 }
 
+type Fee = 'from' | 'to';
+
+/** Who pays the Corretor's fee on the offer you're writing to `to`; nothing when no Corretor outside the trade gets one. */
+export function FeePicker({ view, names, to, fee, onChange }: { view: BairroView; names: string[]; to: number; fee: Fee; onChange(fee: Fee): void }) {
+  const { tr } = useLang();
+  const text = useBairroText();
+  const corretor = corretorOutside(view, view.you, to);
+  if (corretor === null) return null;
+  const label = text.ui('tradeFee', { amount: money(tr.lang, CORRETOR_TRADE), name: names[corretor] || text.ui('ownerFallback') });
+  const choices: [Fee, string][] = [['from', text.ui('tradeFeeMine')], ['to', text.ui('tradeFeeTheirs', { name: names[to] || text.ui('ownerFallback') })]];
+  return (
+    <div className="btrade__fee" role="radiogroup" aria-label={label}>
+      <span>{label}</span>
+      {choices.map(([value, name]) => (
+        <button key={value} type="button" role="radio" aria-checked={fee === value} className={fee === value ? 'is-picked' : ''} onClick={() => onChange(value)}>
+          {name}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Who pays the Corretor's fee on an open offer, in a line; nothing when there is no fee. */
+export function FeeLine({ view, names, offer }: { view: BairroView; names: string[]; offer: Offer }) {
+  const { tr } = useLang();
+  const text = useBairroText();
+  const corretor = corretorOutside(view, offer.from, offer.to);
+  if (corretor === null) return null;
+  const payer = feePayer(offer);
+  const params = { amount: money(tr.lang, CORRETOR_TRADE), corretor: names[corretor] || text.ui('ownerFallback'), name: names[payer] || text.ui('ownerFallback') };
+  return <p className="muted btrade__feeline">{text.ui(payer === view.you ? 'tradeFeeYou' : 'tradeFeeOther', params)}</p>;
+}
+
 /** Proposing a trade: pick a player and what each side puts up; then wait for the answer, with Cancel. */
 export function TradeDialog({ view, names, awaiting, onIntent, onClose, hidden, onHide }: Props) {
   const { tr } = useLang();
@@ -95,6 +129,7 @@ export function TradeDialog({ view, names, awaiting, onIntent, onClose, hidden, 
   const [to, setTo] = useState(partners[0] ?? 0);
   const [give, setGive] = useState<OfferSide>(emptySide);
   const [get, setGet] = useState<OfferSide>(emptySide);
+  const [fee, setFee] = useState<Fee>('from');
   const name = (seat: number) => names[seat] || text.ui('ownerFallback');
 
   // The offer I sent is open: the dialog turns into the waiting state until it is answered or cancelled.
@@ -115,6 +150,7 @@ export function TradeDialog({ view, names, awaiting, onIntent, onClose, hidden, 
       <BairroDialog key="waiting" title={text.ui('tradeTitle')} onClose={() => undefined} dismissable={false} className="btrade" hidden={hidden}>
         <p className="btrade__summary">{summary}</p>
         <TradeBalance view={view} give={mine.give} get={mine.get} />
+        <FeeLine view={view} names={names} offer={mine} />
         <p role="status" className="muted">{text.ui('tradeWaiting', { name: name(mine.to) })}</p>
         <div className="besc__actions">
           <button type="button" disabled={awaiting} onClick={() => onIntent({ type: 'cancelTrade' })}>
@@ -126,7 +162,7 @@ export function TradeDialog({ view, names, awaiting, onIntent, onClose, hidden, 
     );
   }
 
-  const send = () => onIntent({ type: 'proposeTrade', offer: { to, give, get } });
+  const send = () => onIntent({ type: 'proposeTrade', offer: { to, give, get, fee } });
   return (
     <BairroDialog key="compose" title={text.ui('tradeTitle')} onClose={onClose} className="btrade" hidden={hidden}>
       {partners.length > 1 ? (
@@ -157,6 +193,7 @@ export function TradeDialog({ view, names, awaiting, onIntent, onClose, hidden, 
       </div>
       <p className="btrade__summary" aria-live="polite">{summary}</p>
       <TradeBalance view={view} give={give} get={get} />
+      <FeePicker view={view} names={names} to={to} fee={fee} onChange={setFee} />
       <p className="muted btrade__used">{text.ui('tradeUsed', { n: view.tradesThisTurn, max: MAX_TRADES_PER_TURN })}</p>
       <div className="besc__actions">
         <button type="button" className="primary" disabled={awaiting || tradesLeft(view) === 0 || (isEmptySide(give) && isEmptySide(get))} onClick={send}>
