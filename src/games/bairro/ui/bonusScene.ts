@@ -1,11 +1,13 @@
+import { emoji } from '../../../ui/emoji';
 import { arrestLayer, squareRect } from './jailScenes';
 import type { BonusKind } from './motion';
 import { BONUS_MS } from './useBairroMotion';
 
 const EASE = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
-const ICONS: Record<BonusKind, string> = { start: '🧦', iptu: '🧾', bolao: '🎟️', pracinha: '👑', home: '🏠', bicho: '🦁' };
+const ICONS: Record<BonusKind, string> = { start: emoji('🧦', '💰'), iptu: emoji('🧾', '📄'), bolao: '🎟️', pracinha: '👑', home: '🏠', bicho: '🦁' };
 /** Coins around the amount: they burst out for money in, and get sucked into the square for the IPTU. */
 const COINS = 5;
+const COIN = emoji('🪙', '💰');
 
 /**
  * Money from the board on `pos`: the square's icon and the amount (`label`) pop off the square and float up,
@@ -24,7 +26,7 @@ export function playBonus(pos: number, kind: BonusKind, gain: boolean, label: st
   for (let i = 0; i < COINS; i++) {
     const coin = document.createElement('span');
     coin.className = 'bbonus__coin';
-    coin.textContent = '🪙';
+    coin.textContent = COIN;
     el.append(coin);
   }
   arrestLayer().append(el);

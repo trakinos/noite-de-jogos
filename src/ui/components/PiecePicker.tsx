@@ -1,6 +1,6 @@
 import type { UiKey } from '../../i18n';
 import { useLang } from '../../i18n/LangProvider';
-import { PLAYER_PIECES, type PlayerPieceId } from '../../theme/playerPieces';
+import { PLAYER_PIECES, pieceEmoji, type PlayerPieceId } from '../../theme/playerPieces';
 
 export const PIECE_LABELS: Record<PlayerPieceId, UiKey> = {
   'vira-lata': 'pieceViraLata', chinelo: 'pieceChinelo', bola: 'pieceBola', moto: 'pieceMoto', coco: 'pieceCoco',
@@ -31,7 +31,7 @@ export function PiecePicker({ value, onPick, color }: Props) {
           style={color && p.id === value ? { background: color } : undefined}
           onClick={() => onPick(p.id)}
         >
-          {p.emoji}
+          {pieceEmoji(p.id)}
         </button>
       ))}
     </div>

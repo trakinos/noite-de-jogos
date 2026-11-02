@@ -25,6 +25,9 @@ What changed for players, newest first. Every push to `main` deploys to https://
 - **Mortgage stamps.** Mortgaging an escritura slams a red "HIPOTECADA" stamp onto it, with the cash floating up in green; paying it off lands a green "QUITADA" stamp that lifts away, with the payment in red. Everyone sees it, one stamp after another when several land at once.
 - **Someone's been in the Pracinha.** A park bench on the Pracinha's lawn has a cigarette left burning on it: the ember glows and smoke curls up. On phones the cigarette sits in the corner of the Pracinha panel. It stays still under reduced motion.
 
+### Fixed
+- **Missing icons on older phones.** Phones and computers without the newer emoji showed an empty box for some pieces and icons. Those devices now get an older lookalike: the chinelo 🩴 becomes a sandal 👡, the pipa 🪁 a carp streamer 🎏, the papagaio 🦜 a bird 🐦, the coins 🪙 money bags 💰, the Carona 🛺 a taxi 🚕, the Empreiteiro 🧱 a hammer 🔨, and the Pé de Meia 🧦 and IPTU 🧾 squares 💰 and 📄.
+
 ## Unreleased — Dono do Bairro, after the first playtest
 
 ### Added

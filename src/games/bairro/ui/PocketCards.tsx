@@ -12,12 +12,13 @@ import { Die } from './Die';
 import { money } from './text';
 import { useBairroText } from './useBairroText';
 import { useLang } from '../../../i18n/LangProvider';
+import { emoji } from '../../../ui/emoji';
 
 export const POCKET_ICONS: Record<PocketKind, string> = {
-  dadoViciado: '🎲', marchaRe: '⏪', calote: '🙈', fiscal: '🕵️', carona: '🛺', seguro: '🛡️',
+  dadoViciado: '🎲', marchaRe: '⏪', calote: '🙈', fiscal: '🕵️', carona: emoji('🛺', '🚕'), seguro: '🛡️',
 };
 export const SKILL_ICONS: Record<SkillId, string> = {
-  donoDaCasa: '🏠', reiDaPracinha: '👑', empreiteiro: '🧱', corretor: '🤝', malandro: '😎', bicheiro: '🦁',
+  donoDaCasa: '🏠', reiDaPracinha: '👑', empreiteiro: emoji('🧱', '🔨'), corretor: '🤝', malandro: '😎', bicheiro: '🦁',
 };
 
 /** When each kind of card is played, as a `ui` key. */

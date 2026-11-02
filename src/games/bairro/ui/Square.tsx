@@ -3,12 +3,13 @@ import type { BairroTheme } from '../i18n/themes';
 import { useBairroText, useBairroTheme } from './useBairroText';
 import { money } from './text';
 import { useLang } from '../../../i18n/LangProvider';
+import { emoji } from '../../../ui/emoji';
 import type { Facing } from './geometry';
 import type { SquareInfo } from './squareInfo';
 
 const ICONS: Record<BairroTheme, Record<string, string>> = {
   bairro: {
-    start: '🧦', luck: '🐯', iptu: '🧾', jail: '🚓', pracinha: '🌳', 'go-to-jail': '👮', bolao: '🎟️',
+    start: emoji('🧦', '💰'), luck: '🐯', iptu: emoji('🧾', '📄'), jail: '🚓', pracinha: '🌳', 'go-to-jail': '👮', bolao: '🎟️',
     kombi: '🚐', mototaxi: '🛵', 'carro-do-ovo': '🥚', 'caminhao-do-gas': '🛢️', 'carro-da-pamonha': '🌽', 'van-escolar': '🚌',
   },
   esquema: {
