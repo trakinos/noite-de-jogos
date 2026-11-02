@@ -7,8 +7,10 @@ export const SKILLS: readonly SkillId[] = ['donoDaCasa', 'reiDaPracinha', 'empre
 
 /** Rei da Pracinha: passing or stopping at the Pracinha pays this. */
 export const PRACINHA_BONUS = 100;
-/** Bicheiro: anyone stopping at the Pé de Meia, the IPTU or the Bolão pays this to the bicheiro (from the Prefeitura). */
+/** Bicheiro: anyone else stopping at the Pé de Meia, the IPTU or the Bolão pays this to the bicheiro (from the Prefeitura). */
 export const BICHEIRO_BONUS = 100;
+/** Bicheiro: stopping there yourself costs this, to the Prefeitura. */
+export const BICHEIRO_FINE = 200;
 /** Empreiteiro: buildings cost this share of the price. */
 const EMPREITEIRO_SHARE = 0.75;
 /** Corretor: escrituras cost this share of the price. */
@@ -30,5 +32,5 @@ export function buildCost(s: Players, player: number, pos: number): number {
   return hasSkill(s, player, 'empreiteiro') ? Math.ceil(cost * EMPREITEIRO_SHARE) : cost;
 }
 
-/** The squares where stopping pays the bicheiro. */
+/** The squares where stopping pays the bicheiro (or costs the bicheiro). */
 export const BICHO_SQUARES: ReadonlySet<string> = new Set(['start', 'iptu', 'bolao']);

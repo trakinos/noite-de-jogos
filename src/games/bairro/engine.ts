@@ -7,7 +7,7 @@ import type { PontoSquare, RuaId, ServicoSquare } from './board';
 import { charge, credit, lawyerCardId, log, mortgageOne, passTurn, sellOne } from './ops';
 import { answerTrade, cancelTrade, counterTrade, proposeTrade } from './trades';
 import { auctionDeclined, bidders, placeBid, startAuction } from './auction';
-import { BICHEIRO_BONUS, BICHO_SQUARES, PRACINHA_BONUS, buildCost, buyPrice, hasSkill } from './skills';
+import { BICHEIRO_BONUS, BICHEIRO_FINE, BICHO_SQUARES, PRACINHA_BONUS, buildCost, buyPrice, hasSkill } from './skills';
 import type { BairroIntent, BairroState } from './types';
 
 const ok = (): ApplyResult => ({ ok: true });
@@ -100,11 +100,15 @@ export function moveBy(s: BairroState, player: number, steps: number): void {
   p.pos = to;
 }
 
-/** Bicheiro: someone stopped at the Pé de Meia, the IPTU or the Bolão. */
+/** Bicheiro: someone stopped at the Pé de Meia, the IPTU or the Bolão. The bicheiro gets paid, or pays when it's them. */
 function bicho(s: BairroState, player: number, pos: number): void {
   if (!BICHO_SQUARES.has(BOARD[pos].id)) return;
   const bicheiro = s.players.findIndex(p => p.skill === 'bicheiro' && !p.bankrupt);
   if (bicheiro < 0) return;
+  if (bicheiro === player) {
+    if (charge(s, player, null, BICHEIRO_FINE)) log(s, player, 'skillBicheiroFine', { pos, amount: BICHEIRO_FINE });
+    return;
+  }
   credit(s, bicheiro, BICHEIRO_BONUS);
   log(s, bicheiro, 'skillBicheiro', { who: player, pos, amount: BICHEIRO_BONUS });
 }

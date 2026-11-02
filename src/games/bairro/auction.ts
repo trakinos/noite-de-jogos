@@ -9,8 +9,9 @@ const fail = (reason: string): ApplyResult => ({ ok: false, reason });
 /** In a view, another player's bid that is in but not yet revealed. */
 export const HIDDEN_BID = -1;
 
-/** Who may bid: everyone still in the game. */
-export const bidders = (s: Pick<BairroState, 'players'>): number[] => s.players.flatMap((p, i) => (p.bankrupt ? [] : [i]));
+/** Who may bid: everyone still in the game, except whoever declined the escritura on the block. */
+export const bidders = (s: Pick<BairroState, 'players' | 'auction'>): number[] =>
+  s.players.flatMap((p, i) => (p.bankrupt || (s.auction?.declined && s.auction.from === i) ? [] : [i]));
 
 /**
  * Opens the auction of `lots` (board positions) after `from` went bankrupt to the Prefeitura. Each escritura is
@@ -23,7 +24,7 @@ export function startAuction(s: BairroState, from: number, lots: number[]): void
   log(s, from, 'auctionStarted', { pos: s.auction.lots[0]! });
 }
 
-/** Lobby setting: the escritura at `pos`, which `from` just declined, goes to everyone's sealed bids (`from` included). */
+/** Lobby setting: the escritura at `pos`, which `from` just declined, goes to everyone else's sealed bids. */
 export function auctionDeclined(s: BairroState, from: number, pos: number): void {
   s.auction = { from, lots: [pos], bids: s.players.map(() => null), declined: true };
   log(s, from, 'auctionDeclined', { pos });

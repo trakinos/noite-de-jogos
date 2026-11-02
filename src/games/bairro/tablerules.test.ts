@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import { bidders } from './auction';
+import { BOARD } from './board';
 import { apply, caronaTargets } from './engine';
 import { deckIds } from './deck';
 import { invariantViolations } from './simkit';
@@ -6,6 +8,7 @@ import { createBairro } from './setup';
 import { SKILLS } from './skills';
 import { game, give, rig } from './testkit';
 import type { BairroState, SkillId } from './types';
+import { pendingFor } from './view';
 
 /** A game with every table rule on and nobody's skill dealt yet. */
 function table(n = 2): BairroState {
@@ -39,14 +42,16 @@ describe('setup', () => {
 });
 
 describe('auction for declined escrituras', () => {
-  it('auctions the escritura the player declined, to everyone, and keeps their roll again', () => {
+  it('auctions the escritura the player declined, to everyone else, and keeps their roll again', () => {
     const s = table(3);
     rig(s, [[1, 2]]); // 0 → 3, the lava-jato
     apply(s, 0, { type: 'roll' });
     expect(apply(s, 0, { type: 'decline' })).toEqual({ ok: true });
     expect(s.auction).toMatchObject({ from: 0, lots: [3], declined: true });
     expect(keys(s).slice(-2)).toEqual(['declined', 'auctionDeclined']);
-    apply(s, 0, { type: 'bid', amount: 30 });
+    expect(bidders(s)).toEqual([1, 2]);
+    expect([0, 1, 2].map(p => pendingFor(s, p))).toEqual(['wait', 'bid', 'bid']);
+    expect(apply(s, 0, { type: 'bid', amount: 30 })).toEqual({ ok: false, reason: 'auctionOpen' });
     apply(s, 1, { type: 'bid', amount: 40 });
     apply(s, 2, { type: 'bid', amount: 0 });
     expect(s.auction).toBeNull();
@@ -115,6 +120,23 @@ describe('skills', () => {
     rig(s, [[3, 3]]); // 36 → 2: passes the Pé de Meia
     apply(s, 0, { type: 'roll' });
     expect(s.players[1].cash).toBe(1600);
+  });
+
+  it('Bicheiro pays 200 to the Prefeitura when they stop there themselves', () => {
+    const s = table();
+    skill(s, 0, 'bicheiro');
+    rig(s, [[1, 3]]); // 0 → 4, the IPTU
+    apply(s, 0, { type: 'roll' });
+    expect(s.players[0].cash).toBe(1500 - 200 - 200);
+    expect(s.players[1].cash).toBe(1500);
+    expect(s.log.at(-1)).toEqual({ player: 0, key: 'skillBicheiroFine', params: { pos: 4, amount: 200 } });
+    s.players[0].cash = 100;
+    s.players[0].pos = BOARD.findIndex(sq => sq.kind === 'bolao') - 5;
+    s.phase = { kind: 'manage', rollAgain: true };
+    rig(s, [[2, 3]]); // onto the Bolão: +200, then the 200 fine
+    apply(s, 0, { type: 'roll' });
+    expect(s.players[0].cash).toBe(100);
+    expect(keys(s).slice(-2)).toEqual(['wonBolao', 'skillBicheiroFine']);
   });
 
   it('Malandro rolls again once per lap, and gets it back passing the Pé de Meia', () => {
@@ -236,8 +258,10 @@ describe('cards to keep', () => {
     apply(s, 1, { type: 'roll' }); // 1 → 3
     expect(apply(s, 1, { type: 'buy' })).toEqual({ ok: false, reason: 'fiscalBlocked' });
     apply(s, 1, { type: 'decline' });
-    expect(apply(s, 1, { type: 'bid', amount: 10 })).toEqual({ ok: false, reason: 'fiscalBlocked' });
-    apply(s, 1, { type: 'bid', amount: 0 });
+    // A fiscal'd bidder can only pass (here player 2, as the decliner doesn't bid).
+    s.players[2].fiscal = true;
+    expect(apply(s, 2, { type: 'bid', amount: 10 })).toEqual({ ok: false, reason: 'fiscalBlocked' });
+    s.players[2].fiscal = false;
     give(s, 1, 6);
     give(s, 1, 8);
     give(s, 1, 9);

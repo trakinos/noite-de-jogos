@@ -1,4 +1,4 @@
-import { HIDDEN_BID } from './auction';
+import { HIDDEN_BID, bidders } from './auction';
 import type { BairroState } from './types';
 
 /** What this player is asked to do now. */
@@ -16,7 +16,7 @@ export interface BairroView extends Omit<BairroState, 'deck' | 'rng' | 'riggedDi
 export function pendingFor(s: BairroState, player: number): BairroPending {
   // At game over, current and debts may be stale: nobody acts.
   if (s.winner !== null || s.players[player]?.bankrupt) return 'wait';
-  if (s.auction) return s.auction.bids[player] === null ? 'bid' : 'wait';
+  if (s.auction) return s.auction.bids[player] === null && bidders(s).includes(player) ? 'bid' : 'wait';
   if (s.offer) return player === s.offer.to ? 'tradeAnswer' : 'wait';
   if (s.debts.length > 0) return s.debts.some(d => d.debtor === player) ? 'debt' : 'wait';
   if (player !== s.current) return 'wait';

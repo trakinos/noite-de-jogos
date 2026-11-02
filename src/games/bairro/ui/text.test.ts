@@ -30,7 +30,7 @@ const SAMPLE: Record<string, Record<string, string | number>> = {
   tradeProposed: { to: 1 }, tradeAccepted: { to: 1 }, tradeDeclined: { to: 1 }, tradeCountered: { to: 1 }, auctionStarted: { pos: 1 }, auctionNext: { pos: 3 }, auctionWon: { pos: 1, amount: 50 }, auctionUnsold: { pos: 1 }, tradeCancelled: { to: 1 },
   tradeVoided: { to: 1 }, won: {}, turnStarted: {}, timedOut: {},
   auctionDeclined: { pos: 1 }, skillDealt: { skill: 'corretor' }, skillHome: { pos: 1, amount: 1 }, skillPracinha: { pos: 20, amount: 100 },
-  skillBicheiro: { who: 1, pos: 4, amount: 100 }, skillMalandro: {}, handFull: { max: 3 }, cardDado: { name: 'dadoViciado', die: 6 },
+  skillBicheiro: { who: 1, pos: 4, amount: 100 }, skillBicheiroFine: { pos: 4, amount: 200 }, skillMalandro: {}, handFull: { max: 3 }, cardDado: { name: 'dadoViciado', die: 6 },
   cardMarchaRe: { name: 'marchaRe', steps: 2 }, cardCarona: { name: 'carona', pos: 8 }, cardCalote: { name: 'calote', to: 1, pos: 1, amount: 2 },
   cardFiscal: { name: 'fiscal', to: 1 }, cardSeguro: { name: 'fiscal', to: 1, guard: 'seguro' },
 };

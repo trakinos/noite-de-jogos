@@ -49,9 +49,9 @@ function bonusesOn(steps: number[], mine: BairroView['log']): Bonus[] {
       const pos = Number(e.params?.pos);
       return Number.isInteger(pos) ? [{ at: on(pos), pos, kind: skill, amount }] : [];
     }
-    if (e.key === 'paidTax') {
+    if (e.key === 'paidTax' || e.key === 'skillBicheiroFine') {
       const pos = Number(e.params?.pos);
-      return Number.isInteger(pos) ? [{ at: on(pos), pos, kind: 'iptu', amount: -amount }] : [];
+      return Number.isInteger(pos) ? [{ at: on(pos), pos, kind: e.key === 'paidTax' ? 'iptu' : 'bicho', amount: -amount }] : [];
     }
     return [];
   });

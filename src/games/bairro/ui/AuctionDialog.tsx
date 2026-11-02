@@ -47,7 +47,7 @@ export function AuctionDialog({ view, names, colors, pieces, clock, awaiting, on
 
   return (
     <BairroDialog title={text.ui('auctionTitle')} onClose={() => undefined} dismissable={false} className="bauction">
-      <p className="muted">{a.declined ? text.ui('auctionIntroDeclined') : text.ui('auctionIntro', { name: name(a.from) })}</p>
+      <p className="muted">{a.declined ? text.ui('auctionIntroDeclined', { name: name(a.from) }) : text.ui('auctionIntro', { name: name(a.from) })}</p>
       {clock && <TimerBar clock={clock} />}
       <div className="bauction__lot">
         {sq.kind === 'ponto' && <span className="bauction__swatch" style={{ backgroundColor: RUA_COLORS[sq.rua] }} aria-hidden="true" />}
@@ -108,7 +108,7 @@ export function AuctionDialog({ view, names, colors, pieces, clock, awaiting, on
         </>
       ) : (
         <p className="muted" role="status">
-          {mine === null ? text.ui('auctionWatching') : text.ui('auctionWaiting')}
+          {a.declined && a.from === view.you ? text.ui('auctionYouDeclined') : mine === null ? text.ui('auctionWatching') : text.ui('auctionWaiting')}
         </p>
       )}
       {left > 0 && <p className="muted bauction__left">{left === 1 ? text.ui('auctionLeftOne') : text.ui('auctionLeft', { n: left })}</p>}
