@@ -3,14 +3,17 @@ import { DICTIONARIES } from '../i18n';
 import { GAMES, isGameId } from './catalog';
 
 describe('game catalog', () => {
-  it('lists Dominion first, then Dono do Bairro, Chess, Pista Certa, Vida Adulta and Batalha Naval, all playable', () => {
+  it('lists every game in front-page order, all playable', () => {
     expect(GAMES.map((g) => [g.id, g.available, g.minPlayers, g.maxPlayers])).toEqual([
       ['dominion', true, 2, 4],
       ['bairro', true, 2, 6],
       ['chess', true, 2, 2],
-      ['pista', true, 4, 8],
+      ['pista', true, 2, 8],
       ['vida', true, 2, 6],
       ['naval', true, 2, 2],
+      ['zerou', true, 2, 8],
+      ['velha', true, 2, 2],
+      ['forca', true, 2, 8],
     ]);
   });
 

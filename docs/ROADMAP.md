@@ -2,13 +2,18 @@
 
 Last updated: 2026-10-29
 
-Noite de Jogos (formerly Dominion Friends) is a site where one group of friends plays board games online, each person on their own device, usually while on a call. It has six games:
+Noite de Jogos (formerly Dominion Friends) is a site where one group of friends plays board games online, each person on their own device, usually while on a call. It has nine games:
 - **Dominion Friends:** Dominion with the Feira theme. Playable now.
 - **Dono do Bairro:** the classic rules of Banco Imobiliário with a neighborhood theme. Playable now.
 - **Xadrez:** standard chess. Playable now.
 - **Pista Certa:** a team word-clue game (Codenames-style rules). Playable now.
 - **Vida Adulta:** a life-path board game (Game of Life-style rules). Playable now.
 - **Batalha Naval:** classic battleship, 2 players. Playable now.
+- **Zerou!:** a shedding card game (UNO-style rules), 2–8 players. Playable now.
+- **Jogo da Velha:** tic-tac-toe, a match to 3. Playable now.
+- **Forca:** hangman for 2–8 players, with points. Playable now.
+
+The site installs as an app (manifest, icons in `public/icons` from `tools/make-icons.py`, service worker `public/sw.js`).
 
 Design: `docs/superpowers/specs/2026-10-24-noite-de-jogos-banco-imobiliario-design.md`
 
@@ -101,6 +106,9 @@ Built on a shared frame (`src/games/shared/`): each game is an engine + module +
 - [ ] Vida Adulta: square names on phones (labels are hidden at that width), and a check of its money values.
 - [ ] Pista Certa: more words in both pools.
 - [x] **Batalha Naval** (added 2026-11-14): classic fleet, alternating shots, placing by hand or at random.
+- [x] **Playtest 2026-11-14:** chess pieces drawn as SVG (phones showed both sides white), 0.6 s/square slides, A–H/1–8 labels, end modal; Pista Certa 2–3 players vs. an automatic rival; Batalha Naval miss color and landscape layout; Vida Adulta path, walk, wheel, salary coins and event cards; sound with a mute switch; Zerou!, Jogo da Velha, Forca; install as an app.
+- [ ] Check on a real iPhone: chess pieces, the install steps, sound after the first tap, safe areas in the installed app.
+- [ ] Sound in Dominion and Dono do Bairro (they don't use the shared sound module yet).
 
 ## Dominion Friends
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { useLang } from '../../i18n/LangProvider';
 import { interpolate, type Params } from '../../i18n';
 import type { LocalClock } from '../../net/guest';
@@ -6,6 +6,7 @@ import type { LobbyState } from '../../net/protocol';
 import { ConfirmDialog } from '../../ui/components/ConfirmDialog';
 import { Icon } from '../../ui/components/Icon';
 import { TimerBar } from '../../ui/components/TimerBar';
+import { isMuted, onMuteChange, setMuted } from './sound';
 
 /** What App hands every newer game's screens. */
 export interface GameScreenProps {
@@ -71,6 +72,7 @@ export function GameFrame({ title, code, clock, error, reason, onDismissError, o
           <span className="room">{code}</span>
         </div>
         {clock && <TimerBar clock={clock} />}
+        <MuteButton />
         {onRules && (
           <button type="button" className="rules-btn" onClick={onRules} title={tr.t('rules')}>
             <Icon name="book" />
@@ -190,4 +192,16 @@ export function useReason(t: TextFn): (text: string) => string {
     const own = t(key);
     return own === key ? tr.reason(text) : own;
   };
+}
+
+/** Sound on/off for this device. */
+export function MuteButton() {
+  const { tr } = useLang();
+  const muted = useSyncExternalStore(onMuteChange, isMuted);
+  const label = tr.lang === 'pt' ? (muted ? 'Ligar o som' : 'Desligar o som') : muted ? 'Sound on' : 'Sound off';
+  return (
+    <button type="button" className="gframe__mute" onClick={() => setMuted(!muted)} aria-label={label} title={label} aria-pressed={muted}>
+      <span aria-hidden="true">{muted ? '🔇' : '🔊'}</span>
+    </button>
+  );
 }

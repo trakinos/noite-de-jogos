@@ -2,7 +2,22 @@
 
 What changed for players, newest first. Every push to `main` deploys to https://trakinos.github.io/noite-de-jogos/.
 
-## Unreleased — Batalha Naval
+## Unreleased — playtest fixes, sound, three more games, install as an app
+
+### Added
+- **Zerou! (2–8 players).** A card game in the shedding family: match the top card's color or symbol and empty your hand first. Pula, Inverte, +2, Coringa and Coringa +4 (only without the current color). Down to one card, call **Última!** or anyone can catch you for +2 until the next player acts.
+- **Jogo da Velha (2 players).** A match to 3 round wins; the starter alternates and plays X. Marks draw themselves and the winning line lights up.
+- **Forca (2–8 players).** Five words with categories (Portuguese or English). Take turns guessing letters: every copy scores, a right letter keeps the turn, a wrong one hangs another piece. Guess the whole word for a bonus.
+- **Sound.** Synthesized effects (no downloads) in the newer games: moves, shots, splashes, sinking, coins, the spinner, cards, wins and losses. A 🔊 button in the game header mutes it on that device.
+- **Install as an app.** The site has an icon, a manifest and an offline-ready service worker, so "Add to Home Screen" (iPhone) or "Install app" (Android) opens it full screen like an app. The front page shows how, once, until dismissed.
+- **Pista Certa with 2–3 players:** one team against an automatic rival that uncovers one of its words after each of your turns.
+
+### Changed
+- **Xadrez:** drawn pieces instead of font symbols (some phones showed both sides white); pieces slide 0.6 s per square; the board is labeled A–H and 1–8 and the selected square is named; a Victory / Defeat / Draw window at the end.
+- **Batalha Naval:** misses show as a lighter square; on a phone held sideways both seas sit side by side.
+- **Vida Adulta:** the path is clearer (numbered squares, arrows, the campus and the career start marked); the wheel spins on screen, the token walks square by square, paydays pop a coin with the salary, and each event shows as a card. Choices wait for the animation.
+
+## Batalha Naval
 
 ### Added
 - **Batalha Naval, 2 players.** Hide a fleet of five ships (5, 4, 3, 3, 2) on a 10×10 sea: pick a ship, rotate it and tap where it starts, or let Aleatório place them. Once both fleets are ready, a draw picks who fires first and players alternate shots: miss, hit or sunk, with the sunk ship announced. You see your shots on the enemy sea and theirs on your fleet. Sinking the whole fleet wins. With the turn timer on, a timed-out turn fires at a random square.

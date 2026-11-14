@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
+import type { LobbyState } from '../../net/protocol';
 import { useLang } from '../../i18n/LangProvider';
 import { pieceEmoji } from '../../theme/playerPieces';
 import { Avatar } from '../../ui/components/Avatar';
@@ -6,6 +7,7 @@ import { playerColor } from '../../ui/playerColor';
 import { EndActions, GameFrame, RulesSheet, useGameText, useReason, type GameScreenProps, type TextFn } from '../shared/GameFrame';
 import { BOARD, CAREER_START, CAREERS, HOUSES, LOAN_PAYBACK, type Square } from './board';
 import { asVidaView, type VidaLog, type VidaView } from './game';
+import { useVidaMotion } from './useVidaMotion';
 import { RULE_KEYS, VIDA_TEXT } from './text';
 
 const COLS = 9;
@@ -66,6 +68,14 @@ function squareText(sq: Square, t: TextFn): { label: string; amount?: string } {
   }
 }
 
+/** Which way the path leaves cell `i`: along the row, or down at the row's end. */
+function direction(i: number, total: number): 'right' | 'left' | 'down' | 'end' {
+  if (i === total - 1) return 'end';
+  const row = Math.floor(i / COLS);
+  if (i % COLS === COLS - 1) return 'down';
+  return row % 2 === 0 ? 'right' : 'left';
+}
+
 /** Grid row and column for cell `i` (0 is the start), snaking left-right then right-left. */
 function place(i: number): { gridRow: number; gridColumn: number } {
   const row = Math.floor(i / COLS);
@@ -74,61 +84,85 @@ function place(i: number): { gridRow: number; gridColumn: number } {
 }
 
 function VidaTable({ view, lobby, awaiting, onIntent, t }: Inner) {
+  const motion = useVidaMotion(view);
   const current = view.players[view.current]!;
   const myTurn = view.current === view.me;
   const me = view.players[view.me]!;
   const tokens = (pos: number) =>
-    view.players.map((p, i) => ({ p, i })).filter(({ p }) => (pos === -1 ? !p.started || p.pos === -1 : p.started && p.pos === pos));
+    view.players.map((p, i) => ({ p, i })).filter(({ p, i }) => (pos === -1 ? motion.positions[i]! < 0 : motion.positions[i] === pos));
 
   const cells = [-1, ...BOARD.map((_, i) => i)];
   return (
     <div className="vida__table">
-      <div className="vida__board" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}>
-        {cells.map((pos, i) => {
-          const sq = pos >= 0 ? BOARD[pos]! : null;
-          const text = sq ? squareText(sq, t) : { label: t('start') };
-          const here = tokens(pos);
-          const kind = sq ? (sq.k === 'stop' ? `stop vida__sq--${sq.s}` : sq.k) : 'start';
-          return (
-            <div
-              key={pos}
-              className={`vida__sq vida__sq--${kind}${pos >= 0 && pos < CAREER_START ? ' is-campus' : ''}${pos === CAREER_START ? ' is-career-start' : ''}`}
-              style={place(i)}
-              title={text.label}
-            >
-              <span className="vida__icon" aria-hidden="true">{sq ? squareIcon(sq) : '🚩'}</span>
-              <span className="vida__label">{text.label}</span>
-              {text.amount && <span className="vida__amount">{text.amount}</span>}
-              {here.length > 0 && (
-                <span className="vida__tokens">
-                  {here.map(({ p, i: seat }) => (
-                    <span
-                      key={p.id}
-                      className={`vida__token${seat === view.current ? ' is-current' : ''}`}
-                      style={{ background: playerColor(lobby, p.id) }}
-                      title={p.name}
-                    >
-                      {pieceEmoji(lobby.players.find(lp => lp.id === p.id)?.piece) ?? p.name.charAt(0)}
-                    </span>
-                  ))}
-                </span>
-              )}
-            </div>
-          );
-        })}
+      <div className="vida__boardwrap">
+        <p className="vida__legend">
+          <span className="vida__legendcampus">🎓 {t('legendCampus')}</span>
+          <span>💼 {t('legendCareer')}</span>
+        </p>
+        <div className="vida__board" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)` }}>
+          {cells.map((pos, i) => {
+            const sq = pos >= 0 ? BOARD[pos]! : null;
+            const text = sq ? squareText(sq, t) : { label: t('start') };
+            const here = tokens(pos);
+            const kind = sq ? (sq.k === 'stop' ? `stop vida__sq--${sq.s}` : sq.k) : 'start';
+            const coins = motion.coins.filter(c => c.pos === pos);
+            return (
+              <div
+                key={pos}
+                className={`vida__sq vida__sq--${kind} go-${direction(i, cells.length)}${pos >= 0 && pos < CAREER_START ? ' is-campus' : ''}${pos === CAREER_START ? ' is-career-start' : ''}`}
+                style={place(i)}
+                title={text.label}
+              >
+                {pos >= 0 && <span className="vida__num">{pos + 1}</span>}
+                <span className="vida__icon" aria-hidden="true">{sq ? squareIcon(sq) : '🚩'}</span>
+                <span className="vida__label">{text.label}</span>
+                {text.amount && <span className="vida__amount">{text.amount}</span>}
+                {pos === CAREER_START && <span className="vida__badge">💼 {t('legendCareerShort')}</span>}
+                {here.length > 0 && (
+                  <span className="vida__tokens">
+                    {here.map(({ p, i: seat }) => (
+                      <span
+                        key={p.id}
+                        className={`vida__token${seat === view.current ? ' is-current' : ''}`}
+                        style={{ background: playerColor(lobby, p.id) }}
+                        title={p.name}
+                      >
+                        {pieceEmoji(lobby.players.find(lp => lp.id === p.id)?.piece) ?? p.name.charAt(0)}
+                      </span>
+                    ))}
+                  </span>
+                )}
+                {coins.map(c => (
+                  <span key={c.key} className="vida__coin" aria-hidden="true">
+                    +{money(c.amount)}
+                  </span>
+                ))}
+              </div>
+            );
+          })}
+        </div>
       </div>
+
+      {motion.wheel && <Wheel n={motion.wheel.n} key={motion.wheel.key} />}
+      {motion.event && <EventCard key={motion.event.key} entry={motion.event.entry} view={view} lobby={lobby} t={t} />}
 
       <aside className="vida__side">
         <section className={`panel vida__turn${myTurn ? ' is-mine' : ''}`}>
           <h2>{myTurn ? t('yourTurn') : t('theirTurn', { name: current.name })}</h2>
-          {view.lastSpin && (
+          {view.lastSpin && !motion.wheel && (
             <p className="vida__spin">
-              <span className="vida__wheel" aria-hidden="true">{view.lastSpin.n}</span>
+              <span className="vida__wheelchip" aria-hidden="true">{view.lastSpin.n}</span>
               {view.players[view.lastSpin.seat]!.name}: {t('spun', { n: view.lastSpin.n })}
             </p>
           )}
-          {myTurn ? <Actions view={view} awaiting={awaiting} onIntent={onIntent} t={t} /> : view.choosing && <p className="muted">{t('choosing', { name: current.name })}</p>}
-          {me.loans > 0 && me.cash >= LOAN_PAYBACK && myTurn && !view.prompt && (
+          {motion.busy ? (
+            <p className="muted">…</p>
+          ) : myTurn ? (
+            <Actions view={view} awaiting={awaiting} onIntent={onIntent} t={t} />
+          ) : (
+            view.choosing && <p className="muted">{t('choosing', { name: current.name })}</p>
+          )}
+          {me.loans > 0 && me.cash >= LOAN_PAYBACK && myTurn && !view.prompt && !motion.busy && (
             <button type="button" className="vida__repay" disabled={awaiting} onClick={() => onIntent({ type: 'repay' })}>
               {t('repay')}
             </button>
@@ -298,5 +332,52 @@ function VidaEnd({ view, lobby, isHost, onPlayAgain, onBackToLobby, onLeave, t }
       </div>
       <EndActions isHost={isHost} onPlayAgain={onPlayAgain} onBackToLobby={onBackToLobby} onLeave={onLeave} playAgain={t('playAgain')} />
     </section>
+  );
+}
+
+/** The spinner: ten numbered slices that spin several turns and stop with `n` under the pointer. */
+function Wheel({ n }: { n: number }) {
+  const [turn, setTurn] = useState(0);
+  useLayoutEffect(() => {
+    let second = 0;
+    const first = requestAnimationFrame(() => {
+      second = requestAnimationFrame(() => setTurn(5 * 360 - ((n - 1) * 36 + 18)));
+    });
+    return () => {
+      cancelAnimationFrame(first);
+      cancelAnimationFrame(second);
+    };
+  }, []);
+  const colors = ['#c8372d', '#f2b632', '#2f7a35', '#2c4ba8', '#6b3f9f', '#17716f', '#b83c78', '#a66509', '#4a5568', '#d4380d'];
+  const slices = colors.map((c, i) => `${c} ${i * 36}deg ${(i + 1) * 36}deg`).join(', ');
+  return (
+    <div className="vida__wheelstage" aria-hidden="true">
+      <span className="vida__pointer" />
+      <div className="vida__bigwheel" style={{ background: `conic-gradient(${slices})`, transform: `rotate(${turn}deg)` }}>
+        {colors.map((_, i) => (
+          <span key={i} style={{ transform: `rotate(${i * 36 + 18}deg)` }}>
+            {i + 1}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** What just happened, as a card that pops over the board for a moment. */
+function EventCard({ entry, view, lobby, t }: { entry: VidaLog; view: VidaView; lobby: LobbyState; t: TextFn }) {
+  const icon: Record<string, string> = {
+    cash: 'n' in entry && entry.n >= 0 ? '💰' : '💳', raise: '📈', life: '⭐', baby: '👶', tax: '🧾', sue: '⚖️', marry: '💍', house: '🏠',
+    retire: '🌅', loan: '🏦', career: '💼', mansion: '🏰',
+  };
+  const good = (entry.k === 'cash' && entry.n >= 0) || ['raise', 'life', 'baby', 'marry', 'house', 'retire', 'career', 'mansion', 'sue'].includes(entry.k);
+  const seat = 'seat' in entry ? entry.seat : null;
+  const who = seat === null ? null : view.players[seat];
+  return (
+    <div className={`vida__event ${good ? 'is-good' : 'is-bad'}`} role="status">
+      <span className="vida__eventicon" aria-hidden="true">{icon[entry.k] ?? '✨'}</span>
+      <span className="vida__eventtext">{logLine(entry, view, t)}</span>
+      {who && <span className="vida__eventwho" style={{ background: playerColor(lobby, who.id) }} />}
+    </div>
   );
 }

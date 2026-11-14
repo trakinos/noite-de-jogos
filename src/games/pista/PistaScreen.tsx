@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLang } from '../../i18n/LangProvider';
 import { Avatar } from '../../ui/components/Avatar';
 import { playerColor } from '../../ui/playerColor';
 import { EndActions, GameFrame, RulesSheet, useGameText, useReason, type GameScreenProps, type TextFn } from '../shared/GameFrame';
 import { asPistaView, MAX_CLUE, MAX_CLUE_LENGTH, type PistaLog, type PistaView, type Team } from './game';
 import { PISTA_TEXT, RULE_KEYS } from './text';
+import { playSound } from '../shared/sound';
 
 const TEAMS: Team[] = ['red', 'blue'];
 
@@ -39,11 +40,11 @@ function Teams({ view, lobby, awaiting, onIntent, t }: Inner) {
   return (
     <section className="panel pista__teams">
       <h2>{t('pickTeams')}</h2>
-      <p>{t('pickTeamsHint')}</p>
-      <div className="pista__cols">
-        {TEAMS.map(team => (
+      <p>{t(view.mode === 'solo' ? 'pickSoloHint' : 'pickTeamsHint')}</p>
+      <div className={`pista__cols${view.mode === 'solo' ? ' is-solo' : ''}`}>
+        {(view.mode === 'solo' ? (['red'] as Team[]) : TEAMS).map(team => (
           <div key={team} className={`pista__team pista__team--${team}`}>
-            <h3>{t(team === 'red' ? 'teamRed' : 'teamBlue')}</h3>
+            <h3>{view.mode === 'solo' ? t('yourTeam') : t(team === 'red' ? 'teamRed' : 'teamBlue')}</h3>
             <ul>
               {view.players.map((p, i) =>
                 p.team !== team ? null : (
@@ -85,13 +86,16 @@ function Teams({ view, lobby, awaiting, onIntent, t }: Inner) {
 function Table({ view, lobby, awaiting, onIntent, isHost, onPlayAgain, onBackToLobby, onLeave, t }: Inner) {
   const me = view.players[view.me]!;
   const over = view.winner !== null;
-  const teamName = (team: Team) => t(team);
+  const solo = view.mode === 'solo';
+  const teamName = (team: Team) => (solo ? t(team === 'red' ? 'yourTeam' : 'rival') : t(team));
+  usePistaSounds(view);
   const myClue = !over && view.phase === 'clue' && me.team === view.turn && me.role === 'chief';
   const myGuess = !over && view.phase === 'guess' && me.team === view.turn && me.role === 'guess';
   const markers = (card: number) => view.marks.map((m, i) => (m === card ? i : -1)).filter(i => i >= 0);
 
   let status: string;
-  if (over) status = t('win', { team: teamName(view.winner!) });
+  if (over && solo) status = t(view.winner === 'red' ? 'soloWin' : 'soloLose');
+  else if (over) status = t('win', { team: teamName(view.winner!) });
   else if (view.phase === 'clue') status = myClue ? t('yourClue') : t('turnClue', { team: teamName(view.turn) });
   else status = myGuess ? t('yourGuess') : t('theyGuess', { team: teamName(view.turn) });
 
@@ -107,7 +111,7 @@ function Table({ view, lobby, awaiting, onIntent, isHost, onPlayAgain, onBackToL
 
       <div className={`pista__status pista__status--${over ? view.winner : view.turn}`}>
         <b>{status}</b>
-        {over && <span>{t(`end_${view.endReason}`)}</span>}
+        {over && <span>{t(solo && view.winner === 'blue' && view.endReason === 'found' ? 'end_rival' : `end_${view.endReason}`)}</span>}
         {!over && view.clue && (
           <span className="pista__clue">
             {t('clue', { word: view.clue.word.toUpperCase(), count: view.clue.count })} ·{' '}
@@ -167,7 +171,7 @@ function Table({ view, lobby, awaiting, onIntent, isHost, onPlayAgain, onBackToL
       {over && <EndActions isHost={isHost} onPlayAgain={onPlayAgain} onBackToLobby={onBackToLobby} onLeave={onLeave} playAgain={t('playAgain')} />}
 
       <div className="pista__bottom">
-        {TEAMS.map(team => (
+        {(solo ? (['red'] as Team[]) : TEAMS).map(team => (
           <div key={team} className={`pista__roster pista__roster--${team}`}>
             {view.players.map((p, i) =>
               p.team !== team ? null : (
@@ -236,7 +240,10 @@ function logLine(entry: PistaLog, view: PistaView, t: TextFn): string {
       return t('log_clue', { name: name(entry.seat), word: entry.word.toUpperCase(), count: entry.count });
     case 'reveal': {
       const kind = entry.card === 'red' || entry.card === 'blue' ? t(entry.card) : t(`kind_${entry.card}`);
-      const line = entry.seat === null ? t('log_revealTimeout', { word: entry.word }) : t('log_reveal', { name: name(entry.seat), word: entry.word });
+      const line =
+        entry.seat === null
+          ? t(view.mode === 'solo' && entry.team === 'blue' ? 'log_rival' : 'log_revealTimeout', { word: entry.word })
+          : t('log_reveal', { name: name(entry.seat), word: entry.word });
       return `${line} (${kind})`;
     }
     case 'pass':
@@ -244,4 +251,21 @@ function logLine(entry: PistaLog, view: PistaView, t: TextFn): string {
     case 'win':
       return t('log_win', { team: t(entry.team) });
   }
+}
+
+/** A pop for every word revealed (a boom for the bomb), then a fanfare or a sad tune at the end. */
+function usePistaSounds(view: PistaView) {
+  const revealed = view.revealed.filter(Boolean).length;
+  const seen = useRef(revealed);
+  useEffect(() => {
+    if (revealed <= seen.current) return void (seen.current = revealed);
+    seen.current = revealed;
+    const last = [...view.log].reverse().find(e => e.kind === 'reveal');
+    playSound(last && last.kind === 'reveal' && last.card === 'bomb' ? 'sunk' : 'pop');
+    if (view.winner) {
+      const me = view.players[view.me]!;
+      const timer = setTimeout(() => playSound(view.winner === me.team ? 'win' : 'lose'), 700);
+      return () => clearTimeout(timer);
+    }
+  }, [revealed]);
 }

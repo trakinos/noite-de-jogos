@@ -4,6 +4,7 @@ import { MAX_NAME_LENGTH } from '../../net/protocol';
 import { useLang } from '../../i18n/LangProvider';
 import { CODE_LENGTH, normalizeRoomCode } from '../../net/roomCode';
 import { Icon } from '../components/Icon';
+import { InstallHint } from '../components/InstallHint';
 import { PiecePicker } from '../components/PiecePicker';
 import { PLAYER_PIECES, pieceEmoji, type PlayerPieceId } from '../../theme/playerPieces';
 import { loadPiece, savePiece } from '../storage';
@@ -44,6 +45,7 @@ export function FrontPage({ initialName, invitedCode, busy, error, onHost, onJoi
         <h1 className="front__title">{tr.t('siteName')}</h1>
         <p className="front__tagline">{tr.t('siteTagline')}</p>
       </header>
+      <InstallHint />
 
       {editingName ? (
         <div className="front__me">

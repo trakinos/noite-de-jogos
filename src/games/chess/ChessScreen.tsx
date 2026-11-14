@@ -1,17 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLang } from '../../i18n/LangProvider';
 import { Avatar } from '../../ui/components/Avatar';
 import { ConfirmDialog } from '../../ui/components/ConfirmDialog';
+import { Icon } from '../../ui/components/Icon';
 import { playerColor } from '../../ui/playerColor';
 import { EndActions, GameFrame, RulesSheet, useGameText, useReason, type GameScreenProps } from '../shared/GameFrame';
+import { playSound } from '../shared/sound';
 import { asChessView, type ChessView } from './game';
+import { PieceSvg } from './Pieces';
 import type { Move, PieceType } from './rules';
 import { CHESS_TEXT, RULE_KEYS } from './text';
 
-/** Solid glyphs for both sides (colored by CSS); the variation selector keeps phones from drawing emoji. */
-const GLYPH: Record<PieceType, string> = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
-const glyph = (t: PieceType) => `${GLYPH[t]}︎`;
 const VALUE: Record<PieceType, number> = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+/** How long a piece takes to slide one square. */
+export const SECONDS_PER_SQUARE = 0.6;
+const FILES = 'abcdefgh';
 
 export function ChessScreen(props: GameScreenProps) {
   const view = asChessView(props.view);
@@ -36,20 +39,72 @@ export function ChessScreen(props: GameScreenProps) {
   );
 }
 
+interface Slide {
+  key: number;
+  pieces: { piece: string; from: number; to: number }[];
+  seconds: number;
+}
+
+function distance(a: number, b: number): number {
+  return Math.max(Math.abs((a & 7) - (b & 7)), Math.abs((a >> 3) - (b >> 3)));
+}
+
+/** The last move as pieces sliding (two for castling), timed at SECONDS_PER_SQUARE per square of the longest slide. */
+function slideFor(view: ChessView): Slide | null {
+  const last = view.history.at(-1);
+  if (!last) return null;
+  const piece = view.board[last.to]!;
+  const pieces = [{ piece, from: last.from, to: last.to }];
+  if (piece[1] === 'k' && Math.abs(last.to - last.from) === 2) {
+    const kingside = last.to > last.from;
+    const rookFrom = kingside ? last.from + 3 : last.from - 4;
+    const rookTo = kingside ? last.from + 1 : last.from - 1;
+    pieces.push({ piece: view.board[rookTo]!, from: rookFrom, to: rookTo });
+  }
+  return { key: view.history.length, pieces, seconds: Math.max(...pieces.map(p => distance(p.from, p.to))) * SECONDS_PER_SQUARE };
+}
+
 function ChessTable({ view, lobby, awaiting, onIntent, isHost, onPlayAgain, onBackToLobby, onLeave }: Omit<GameScreenProps, 'view'> & { view: ChessView }) {
   const t = useGameText(CHESS_TEXT);
   const [selected, setSelected] = useState<number | null>(null);
   const [promoting, setPromoting] = useState<Move | null>(null);
   const [confirmResign, setConfirmResign] = useState(false);
+  const [slide, setSlide] = useState<Slide | null>(null);
+  const [endOpen, setEndOpen] = useState(false);
   const plies = view.history.length;
-  // A new position clears any half-made move.
+  const seen = useRef(plies);
+
+  // A new position clears any half-made move and slides the piece that moved.
   useEffect(() => {
     setSelected(null);
     setPromoting(null);
+    if (plies === seen.current) return;
+    const grew = plies === seen.current + 1;
+    seen.current = plies;
+    const next = grew ? slideFor(view) : null;
+    setSlide(next);
+    if (!next) return;
+    const last = view.history.at(-1)!;
+    playSound(last.san.includes('#') ? 'win' : last.san.includes('+') ? 'alert' : last.san.includes('x') ? 'hit' : 'move');
+    const timer = setTimeout(() => setSlide(null), next.seconds * 1000 + 60);
+    return () => clearTimeout(timer);
   }, [plies]);
 
+  // The result modal opens once the last slide has landed.
+  const over = view.result !== null;
+  useEffect(() => {
+    if (!over) return setEndOpen(false);
+    if (slide) return;
+    const timer = setTimeout(() => {
+      setEndOpen(true);
+      const r = view.result!;
+      playSound(r.winner === null ? 'alert' : r.winner === view.me ? 'win' : 'lose');
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [over, slide === null]);
+
   const flip = view.mySide === 'b';
-  const myTurn = view.moves.length > 0;
+  const myTurn = view.moves.length > 0 && !slide;
   const targets = selected === null ? [] : view.moves.filter(m => m.from === selected);
   const me = view.players[view.me]!;
   const them = view.players[1 - view.me]!;
@@ -69,12 +124,18 @@ function ChessTable({ view, lobby, awaiting, onIntent, isHost, onPlayAgain, onBa
     setSelected(piece && piece[0] === view.mySide && view.moves.some(m => m.from === sq) ? (sq === selected ? null : sq) : null);
   }
 
+  /** Where square `sq` sits on screen: column and row from the top-left, as this player sees the board. */
+  const spot = (sq: number) => {
+    const file = sq & 7;
+    const rank = sq >> 3;
+    return flip ? { col: 7 - file, row: rank } : { col: file, row: 7 - rank };
+  };
   const squares = Array.from({ length: 64 }, (_, i) => {
-    // Rows top to bottom, files left to right, as the player sits.
     const row = Math.floor(i / 8);
     const col = i % 8;
     return flip ? row * 8 + (7 - col) : (7 - row) * 8 + col;
   });
+  const sliding = new Set(slide?.pieces.map(p => p.to) ?? []);
 
   const material = (who: 'w' | 'b') => view.captured[who].reduce((a, p) => a + VALUE[p], 0);
   const lead = (who: 'w' | 'b') => material(who) - material(who === 'w' ? 'b' : 'w');
@@ -88,9 +149,7 @@ function ChessTable({ view, lobby, awaiting, onIntent, isHost, onPlayAgain, onBa
         <span className="muted">{side(p.side)}</span>
         <span className="chess__taken" aria-hidden="true">
           {view.captured[p.side].map((pt, i) => (
-            <span key={i} className={`chess__glyph chess__glyph--${p.side === 'w' ? 'b' : 'w'}`}>
-              {glyph(pt)}
-            </span>
+            <PieceSvg key={i} type={pt} side={p.side === 'w' ? 'b' : 'w'} />
           ))}
           {lead(p.side) > 0 && <span className="muted"> +{lead(p.side)}</span>}
         </span>
@@ -99,52 +158,70 @@ function ChessTable({ view, lobby, awaiting, onIntent, isHost, onPlayAgain, onBa
   };
 
   const winner = view.result && view.result.winner !== null ? view.players[view.result.winner]! : null;
+  const outcome = !view.result ? null : view.result.winner === null ? 'draw' : view.result.winner === view.me ? 'win' : 'lose';
   const pairs: string[][] = [];
   view.history.forEach((m, i) => {
     if (i % 2 === 0) pairs.push([m.san]);
     else pairs[pairs.length - 1]!.push(m.san);
   });
+  const selectedName = selected === null ? null : `${FILES[selected & 7]!.toUpperCase()}${(selected >> 3) + 1}`;
 
   return (
     <div className="chess__table">
       <div className="chess__left">
         {playerRow(them, false)}
-        <div className={`chess__board${flip ? ' is-flipped' : ''}`} role="grid">
-          {squares.map(sq => {
-            const piece = view.board[sq]!;
-            const dark = ((sq >> 3) + (sq & 7)) % 2 === 0;
-            const target = targets.some(m => m.to === sq);
-            const last = view.lastMove && (view.lastMove.from === sq || view.lastMove.to === sq);
-            const cls = [
-              'chess__sq', dark ? 'is-dark' : 'is-light', sq === selected && 'is-selected', last && 'is-last', sq === view.check && 'is-check',
-              target && (piece ? 'is-capture' : 'is-target'),
-            ].filter(Boolean).join(' ');
-            return (
-              <button key={sq} type="button" className={cls} onClick={() => click(sq)} aria-label={squareLabel(sq, piece)}>
-                {piece && <span className={`chess__glyph chess__glyph--${piece[0]}`}>{glyph(piece[1] as PieceType)}</span>}
-              </button>
-            );
-          })}
-          {promoting && (
-            <div className="chess__promo panel" role="dialog" aria-label={t('promoteTo')}>
-              <b>{t('promoteTo')}</b>
-              <div>
-                {(['q', 'r', 'b', 'n'] as PieceType[]).map(p => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => {
-                      onIntent({ type: 'move', ...promoting, promo: p });
-                      setPromoting(null);
-                      setSelected(null);
-                    }}
-                  >
-                    <span className={`chess__glyph chess__glyph--${view.mySide}`}>{glyph(p)}</span>
-                  </button>
-                ))}
+        <div className="chess__frame">
+          <div className="chess__ranks" aria-hidden="true">
+            {Array.from({ length: 8 }, (_, row) => (
+              <span key={row}>{flip ? row + 1 : 8 - row}</span>
+            ))}
+          </div>
+          <div className={`chess__board${flip ? ' is-flipped' : ''}`} role="grid">
+            {squares.map(sq => {
+              const piece = view.board[sq]!;
+              const dark = ((sq >> 3) + (sq & 7)) % 2 === 0;
+              const target = targets.some(m => m.to === sq);
+              const last = view.lastMove && (view.lastMove.from === sq || view.lastMove.to === sq);
+              const cls = [
+                'chess__sq', dark ? 'is-dark' : 'is-light', sq === selected && 'is-selected', last && 'is-last', sq === view.check && 'is-check',
+                target && (piece ? 'is-capture' : 'is-target'),
+              ].filter(Boolean).join(' ');
+              return (
+                <button key={sq} type="button" className={cls} onClick={() => click(sq)} aria-label={squareLabel(sq, piece)}>
+                  {piece && !sliding.has(sq) && <PieceSvg type={piece[1] as PieceType} side={piece[0] as 'w' | 'b'} />}
+                </button>
+              );
+            })}
+            {slide?.pieces.map(p => (
+              <SlidingPiece key={`${slide.key}-${p.to}`} piece={p.piece} from={spot(p.from)} to={spot(p.to)} seconds={slide.seconds} />
+            ))}
+            {promoting && (
+              <div className="chess__promo panel" role="dialog" aria-label={t('promoteTo')}>
+                <b>{t('promoteTo')}</b>
+                <div>
+                  {(['q', 'r', 'b', 'n'] as PieceType[]).map(p => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => {
+                        onIntent({ type: 'move', ...promoting, promo: p });
+                        setPromoting(null);
+                        setSelected(null);
+                      }}
+                    >
+                      <PieceSvg type={p} side={view.mySide} />
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+          <span />
+          <div className="chess__files" aria-hidden="true">
+            {Array.from({ length: 8 }, (_, col) => (
+              <span key={col}>{FILES[flip ? 7 - col : col]!.toUpperCase()}</span>
+            ))}
+          </div>
         </div>
         {playerRow(me, true)}
       </div>
@@ -162,6 +239,7 @@ function ChessTable({ view, lobby, awaiting, onIntent, isHost, onPlayAgain, onBa
               {myTurn ? t('yourTurn') : t('theirTurn', { name: them.name })}
               {view.check !== null && <b> {t('check')}</b>}
             </p>
+            {selectedName && <p className="chess__picked">{t('selected', { square: selectedName })}</p>}
             {view.drawOffer !== null &&
               (view.drawOffer === view.me ? (
                 <p className="banner">{t('drawPending')}</p>
@@ -199,6 +277,24 @@ function ChessTable({ view, lobby, awaiting, onIntent, isHost, onPlayAgain, onBa
         )}
       </aside>
 
+      {endOpen && outcome && view.result && (
+        <div className="overlay" role="dialog" aria-modal="true" aria-label={t(`outcome_${outcome}`)} onClick={() => setEndOpen(false)}>
+          <div className={`panel chess__endmodal is-${outcome}`} onClick={e => e.stopPropagation()}>
+            <div className="chess__endicon" aria-hidden="true">
+              {outcome === 'win' ? <Icon name="trophy" /> : <PieceSvg type="k" side={outcome === 'lose' ? view.mySide : 'w'} />}
+            </div>
+            <h2>{t(`outcome_${outcome}`)}</h2>
+            <p>
+              {winner ? t('win', { name: winner.name }) : t('draw')} · {t(`end_${view.result.reason}`)}
+            </p>
+            <EndActions isHost={isHost} onPlayAgain={onPlayAgain} onBackToLobby={onBackToLobby} onLeave={onLeave} playAgain={t('playAgain')} />
+            <button type="button" className="ghost" onClick={() => setEndOpen(false)}>
+              {t('seeBoard')}
+            </button>
+          </div>
+        </div>
+      )}
+
       {confirmResign && (
         <ConfirmDialog
           title={t('resignTitle')}
@@ -216,7 +312,32 @@ function ChessTable({ view, lobby, awaiting, onIntent, isHost, onPlayAgain, onBa
   );
 }
 
+/** A piece drawn over the board that glides from one square to another. */
+function SlidingPiece({ piece, from, to, seconds }: { piece: string; from: { col: number; row: number }; to: { col: number; row: number }; seconds: number }) {
+  const [at, setAt] = useState(from);
+  useLayoutEffect(() => {
+    // Two frames: the browser must paint the start square before the move to the end square can transition.
+    let second = 0;
+    const first = requestAnimationFrame(() => {
+      second = requestAnimationFrame(() => setAt(to));
+    });
+    return () => {
+      cancelAnimationFrame(first);
+      cancelAnimationFrame(second);
+    };
+  }, []);
+  return (
+    <span
+      className="chess__slide"
+      style={{ left: `${at.col * 12.5}%`, top: `${at.row * 12.5}%`, transitionDuration: `${seconds}s` }}
+      aria-hidden="true"
+    >
+      <PieceSvg type={piece[1] as PieceType} side={piece[0] as 'w' | 'b'} />
+    </span>
+  );
+}
+
 function squareLabel(sq: number, piece: string): string {
-  const name = 'abcdefgh'[sq & 7]! + String((sq >> 3) + 1);
+  const name = FILES[sq & 7]!.toUpperCase() + String((sq >> 3) + 1);
   return piece ? `${name} ${piece}` : name;
 }

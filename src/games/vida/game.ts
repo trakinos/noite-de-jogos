@@ -365,6 +365,8 @@ export interface VidaView {
   scores: VidaScore[] | null;
   winner: number | null;
   log: VidaLog[];
+  /** Entries ever written to the log; the host sends only the latest, so screens diff by this count. */
+  logTotal: number;
 }
 
 export function vidaView(s: VidaState, seat: number): VidaView {
@@ -381,6 +383,7 @@ export function vidaView(s: VidaState, seat: number): VidaView {
     scores: s.scores,
     winner: s.winner,
     log: s.log,
+    logTotal: s.log.length,
   };
 }
 

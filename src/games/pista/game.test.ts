@@ -102,3 +102,40 @@ describe('pista certa', () => {
     expect(inst.state.turn).not.toBe(team);
   });
 });
+
+describe('pista certa against the rival (2–3 players)', () => {
+  const pair = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }];
+
+  it('two players share the red team, which starts with nine words', () => {
+    const s = createPista(pair, 4, 'pt');
+    expect(s.mode).toBe('solo');
+    expect(s.members.map(m => [m.team, m.role])).toEqual([['red', 'chief'], ['red', 'guess']]);
+    expect(s.first).toBe('red');
+    expect(applyPista(s, 1, { type: 'join', team: 'blue', role: 'guess' }).ok).toBe(false);
+    expect(applyPista(s, 0, { type: 'begin' }).ok).toBe(true);
+  });
+
+  it('after the team stops, the rival uncovers one blue word and the team goes again', () => {
+    const s = createPista(pair, 4, 'pt');
+    applyPista(s, 0, { type: 'begin' });
+    applyPista(s, 0, { type: 'clue', word: 'XYZ', count: 1 });
+    const neutral = s.kinds.indexOf('neutral');
+    applyPista(s, 1, { type: 'reveal', card: neutral });
+    expect(s.turn).toBe('red');
+    expect(s.phase).toBe('clue');
+    expect(s.kinds.filter((k, i) => k === 'blue' && s.revealed[i])).toHaveLength(1);
+    expect(s.log.at(-1)).toMatchObject({ kind: 'reveal', seat: null, team: 'blue', card: 'blue' });
+  });
+
+  it('the rival wins when it uncovers its last word', () => {
+    const s = createPista(pair, 9, 'pt');
+    applyPista(s, 0, { type: 'begin' });
+    for (let round = 0; round < 8 && !s.winner; round++) {
+      applyPista(s, 0, { type: 'clue', word: `X${round}`, count: 1 });
+      // A neutral word ends the turn; once those run out, a blue one does (and helps the rival).
+      const miss = s.kinds.findIndex((k, i) => (k === 'neutral' || k === 'blue') && !s.revealed[i]);
+      applyPista(s, 1, { type: 'reveal', card: miss });
+    }
+    expect(s.winner).toBe('blue');
+  });
+});

@@ -1,4 +1,4 @@
-import { createRng, nextInt, shuffle } from '../../engine/rng';
+import { createRng, nextInt, shuffle, type RngState } from '../../engine/rng';
 import type { ClockInput, ClockKind } from '../../net/turnClock';
 import type { ApplyResult, GameInstance, GameModule, SeatInfo } from '../module';
 import { WORDS_EN, WORDS_PT } from './words';
@@ -36,7 +36,14 @@ export type PistaLog =
 
 export type PistaEnd = 'found' | 'bomb';
 
+/** 'duel': two teams of players. 'solo': 2–3 players on one team against an automatic rival that finds one of its words each round. */
+export type PistaMode = 'duel' | 'solo';
+/** Fewer players than this play against the automatic rival. */
+export const DUEL_MIN = 4;
+
 export interface PistaState {
+  mode: PistaMode;
+  rng: RngState;
   players: SeatInfo[];
   members: Member[];
   phase: 'teams' | 'clue' | 'guess';
@@ -67,6 +74,7 @@ export type PistaIntent =
   | { type: 'pass' };
 
 export interface PistaView {
+  mode: PistaMode;
   players: { id: string; name: string; team: Team; role: Role }[];
   me: number;
   phase: PistaState['phase'];
@@ -95,7 +103,9 @@ const otherTeam = (t: Team): Team => (t === 'red' ? 'blue' : 'red');
 
 export function createPista(seats: SeatInfo[], seed: number, lang: WordLang): PistaState {
   const rng = createRng(seed);
-  const first: Team = nextInt(rng, 2) === 0 ? 'red' : 'blue';
+  const mode: PistaMode = seats.length < DUEL_MIN ? 'solo' : 'duel';
+  // Against the rival, the players' team always starts (and so has the nine words).
+  const first: Team = mode === 'solo' || nextInt(rng, 2) === 0 ? 'red' : 'blue';
   const words = shuffle(rng, lang === 'en' ? WORDS_EN : WORDS_PT).slice(0, GRID);
   const kinds = shuffle<CardKind>(rng, [
     ...Array<CardKind>(9).fill(first),
@@ -104,15 +114,20 @@ export function createPista(seats: SeatInfo[], seed: number, lang: WordLang): Pi
     'bomb',
   ]);
   // Seats alternate teams; the first player seated on each team is its chief. Players can swap before starting.
-  const members: Member[] = seats.map((_, i) => ({ team: i % 2 === 0 ? 'red' : 'blue', role: i < 2 ? 'chief' : 'guess' }));
+  const members: Member[] =
+    mode === 'solo'
+      ? seats.map((_, i) => ({ team: 'red', role: i === 0 ? 'chief' : 'guess' }))
+      : seats.map((_, i) => ({ team: i % 2 === 0 ? 'red' : 'blue', role: i < 2 ? 'chief' : 'guess' }));
   return {
+    mode,
+    rng,
     players: seats, members, phase: 'teams', words, kinds, revealed: Array(GRID).fill(false), first, turn: first, turnNumber: 0,
     clue: null, guessesLeft: null, guessesMade: 0, marks: seats.map(() => null), winner: null, endReason: null, log: [],
   };
 }
 
 export function teamsProblem(s: PistaState): string | null {
-  for (const team of ['red', 'blue'] as Team[]) {
+  for (const team of (s.mode === 'solo' ? ['red'] : ['red', 'blue']) as Team[]) {
     const on = s.members.filter(m => m.team === team);
     if (on.filter(m => m.role === 'chief').length !== 1) return 'Each team needs exactly one chief';
     if (on.length < 2) return 'Each team needs at least two players';
@@ -129,7 +144,26 @@ function normalize(word: string): string {
 }
 
 function endTurn(s: PistaState): void {
+  if (s.mode === 'solo') return rivalTurn(s);
   s.turn = otherTeam(s.turn);
+  s.phase = 'clue';
+  s.clue = null;
+  s.guessesLeft = null;
+  s.guessesMade = 0;
+  s.marks = s.marks.map(() => null);
+  s.turnNumber++;
+}
+
+/** Against the rival: it uncovers one of its own words, then the players' team goes again. */
+function rivalTurn(s: PistaState): void {
+  const left = s.kinds.map((k, i) => (k === 'blue' && !s.revealed[i] ? i : -1)).filter(i => i >= 0);
+  if (left.length > 0) {
+    const card = left[nextInt(s.rng, left.length)]!;
+    s.revealed[card] = true;
+    s.log.push({ kind: 'reveal', seat: null, team: 'blue', word: s.words[card]!, card: 'blue' });
+    if (left.length === 1) return win(s, 'blue', 'found');
+  }
+  s.turn = 'red';
   s.phase = 'clue';
   s.clue = null;
   s.guessesLeft = null;
@@ -169,6 +203,7 @@ export function applyPista(s: PistaState, seat: number, intent: PistaIntent): Ap
     case 'join': {
       if (s.phase !== 'teams') return fail('Teams are set');
       if ((intent.team !== 'red' && intent.team !== 'blue') || (intent.role !== 'chief' && intent.role !== 'guess')) return fail('Bad move');
+      if (s.mode === 'solo' && intent.team !== 'red') return fail('Bad move');
       if (intent.role === 'chief') {
         // Taking the chief's seat moves the old chief to guessing.
         s.members.forEach((m, i) => {
@@ -232,6 +267,7 @@ export function pistaView(s: PistaState, seat: number): PistaView {
   const me = s.members[seat]!;
   const seesAll = me.role === 'chief' || s.winner !== null;
   return {
+    mode: s.mode,
     players: s.players.map((p, i) => ({ id: p.id, name: p.name, team: s.members[i]!.team, role: s.members[i]!.role })),
     me: seat,
     phase: s.phase,
@@ -303,7 +339,7 @@ export interface PistaOptions {
 
 export const pistaModule: GameModule<PistaOptions> = {
   id: 'pista',
-  minPlayers: 4,
+  minPlayers: 2,
   maxPlayers: 8,
   defaultOptions: () => ({ words: 'pt' }),
   parseOptions(raw) {

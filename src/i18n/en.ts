@@ -195,6 +195,15 @@ const ui = {
   "gameNavalName": "Batalha Naval",
   "gameNavalTag": "Sink the enemy fleet",
   "gameNavalLength": "15–30 min",
+  "gameZerouName": "Zerou!",
+  "gameZerouTag": "Cards: empty your hand first",
+  "gameZerouLength": "15–30 min",
+  "gameVelhaName": "Jogo da Velha",
+  "gameVelhaTag": "Tic-tac-toe, first to three",
+  "gameVelhaLength": "5 min",
+  "gameForcaName": "Forca",
+  "gameForcaTag": "Hangman: guess the word letter by letter",
+  "gameForcaLength": "10–20 min",
 } as const;
 
 export type UiKey = keyof typeof ui;

@@ -1,6 +1,6 @@
 import type { Texts } from '../shared/GameFrame';
 
-export const RULE_KEYS = ['rules1', 'rules2', 'rules3', 'rules4', 'rules5'];
+export const RULE_KEYS = ['rules1', 'rules2', 'rules3', 'rules4', 'rules5', 'rules6'];
 
 export const PISTA_TEXT: Texts = {
   pt: {
@@ -10,6 +10,7 @@ export const PISTA_TEXT: Texts = {
     rules3: 'Os palpiteiros da equipe tocam numa palavra para marcá-la (os colegas veem a marca) e revelam. Acertou uma da equipe: pode continuar, até o número da pista mais um. Neutra ou do adversário: a vez passa. Depois do primeiro palpite, pode passar a vez.',
     rules4: 'Uma pista com 0 dá palpites sem limite. A equipe que revelar a bomba perde na hora.',
     rules5: 'Vence a equipe que encontrar todas as suas palavras primeiro, mesmo que seja o adversário que revele a última. Com o relógio ligado, quem deixa o tempo acabar perde a vez.',
+    rules6: 'Com 2 ou 3 jogadores: todos numa equipe (um chefe) contra um rival automático. A equipe sempre começa e tem 9 palavras; depois de cada vez da equipe, o rival descobre uma das suas 8. Vocês vencem se acharem as 9 antes dele.',
     lobbyWords: 'Palavras',
     words_pt: 'Português',
     words_en: 'Inglês',
@@ -20,6 +21,13 @@ export const PISTA_TEXT: Texts = {
     chief: 'Chefe',
     guess: 'Palpiteiro',
     pickTeams: 'Montem as equipes',
+    pickSoloHint: 'Com 2 ou 3 jogadores, vocês são uma equipe contra um rival automático: escolham quem é o chefe. A cada rodada, depois que vocês param, o rival descobre uma das 8 palavras dele.',
+    yourTeam: 'Sua equipe',
+    rival: 'Rival',
+    soloWin: 'Vocês venceram!',
+    soloLose: 'O rival venceu.',
+    end_rival: 'O rival encontrou todas as palavras dele primeiro.',
+    log_rival: 'O rival descobriu {word}',
     pickTeamsHint: 'Cada equipe precisa de pelo menos 2 jogadores e exatamente 1 chefe. Qualquer um pode começar quando estiver pronto.',
     joinAsGuess: 'Entrar como palpiteiro',
     joinAsChief: 'Ser o chefe',
@@ -69,6 +77,7 @@ export const PISTA_TEXT: Texts = {
     rules3: "The team's guessers tap a word to mark it (teammates see the mark) and reveal it. One of theirs: they may go on, up to the clue's number plus one. Neutral or the other team's: the turn passes. After the first guess they may pass.",
     rules4: 'A clue of 0 allows unlimited guesses. The team that reveals the bomb loses on the spot.',
     rules5: "The first team to find all its words wins, even if the other team reveals the last one. With the timer on, a team that runs out of time loses its turn.",
+    rules6: 'With 2 or 3 players: everyone on one team (one chief) against an automatic rival. Your team always starts with 9 words; after each of your turns, the rival uncovers one of its 8. You win by finding all 9 before it finishes.',
     lobbyWords: 'Words',
     words_pt: 'Portuguese',
     words_en: 'English',
@@ -79,6 +88,13 @@ export const PISTA_TEXT: Texts = {
     chief: 'Chief',
     guess: 'Guesser',
     pickTeams: 'Pick teams',
+    pickSoloHint: 'With 2 or 3 players you are one team against an automatic rival: pick who is chief. Each round, after you stop, the rival uncovers one of its 8 words.',
+    yourTeam: 'Your team',
+    rival: 'Rival',
+    soloWin: 'You win!',
+    soloLose: 'The rival wins.',
+    end_rival: 'The rival found all its words first.',
+    log_rival: 'The rival uncovered {word}',
     pickTeamsHint: 'Each team needs at least 2 players and exactly 1 chief. Anyone can start once it is ready.',
     joinAsGuess: 'Join as guesser',
     joinAsChief: 'Be the chief',

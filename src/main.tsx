@@ -11,3 +11,12 @@ createRoot(document.getElementById('root')!).render(
     </LangProvider>
   </StrictMode>,
 );
+
+// Installable as an app: the service worker only runs in the built site (in dev it would cache stale modules).
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    void navigator.serviceWorker.register('./sw.js').catch(() => {
+      // No offline support on this browser; the site works the same.
+    });
+  });
+}

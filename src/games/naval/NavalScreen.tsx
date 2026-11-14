@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLang } from '../../i18n/LangProvider';
 import { EndActions, GameFrame, RulesSheet, useGameText, useReason, type GameScreenProps, type TextFn } from '../shared/GameFrame';
 import { asNavalView, FLEET, randomFleet, shipCells, SIZE, validFleet, type Dir, type NavalView, type Placement, type Shot, type ShipId } from './game';
 import { NAVAL_TEXT, RULE_KEYS } from './text';
+import { playSound } from '../shared/sound';
 
 export function NavalScreen(props: GameScreenProps) {
   const view = asNavalView(props.view);
@@ -158,6 +159,20 @@ function Battle({ view, awaiting, onIntent, isHost, onPlayAgain, onBackToLobby, 
   const sunkIds = new Set(view.myShots.filter(s => s.result === 'sunk').map(s => s.ship));
   const lastMine = view.myShots.at(-1);
   const lastTheirs = view.theirShots.at(-1);
+
+  // A sound for every new shot, from either side, and for the end of the battle.
+  const counts = useRef({ mine: view.myShots.length, theirs: view.theirShots.length });
+  useEffect(() => {
+    const before = counts.current;
+    counts.current = { mine: view.myShots.length, theirs: view.theirShots.length };
+    const latest = view.myShots.length > before.mine ? lastMine : view.theirShots.length > before.theirs ? lastTheirs : null;
+    if (!latest) return;
+    playSound(latest.result);
+    if (over) {
+      const timer = setTimeout(() => playSound(view.winner === view.me ? 'win' : 'lose'), 900);
+      return () => clearTimeout(timer);
+    }
+  }, [view.myShots.length, view.theirShots.length]);
 
   return (
     <div className="naval__battle">
