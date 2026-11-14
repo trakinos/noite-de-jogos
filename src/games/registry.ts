@@ -2,6 +2,7 @@ import type { GameId } from './catalog';
 import { bairroModule } from './bairro/module';
 import { chessModule } from './chess/game';
 import { dominionModule } from './dominion/module';
+import { navalModule } from './naval/game';
 import { pistaModule } from './pista/game';
 import { vidaModule } from './vida/game';
 import type { GameModule } from './module';
@@ -13,6 +14,7 @@ export const MODULES: Partial<Record<GameId, GameModule>> = {
   chess: chessModule,
   pista: pistaModule,
   vida: vidaModule,
+  naval: navalModule,
 };
 
 export function moduleFor(id: GameId): GameModule {

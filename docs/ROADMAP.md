@@ -2,12 +2,13 @@
 
 Last updated: 2026-10-29
 
-Noite de Jogos (formerly Dominion Friends) is a site where one group of friends plays board games online, each person on their own device, usually while on a call. It has five games:
+Noite de Jogos (formerly Dominion Friends) is a site where one group of friends plays board games online, each person on their own device, usually while on a call. It has six games:
 - **Dominion Friends:** Dominion with the Feira theme. Playable now.
 - **Dono do Bairro:** the classic rules of Banco Imobiliário with a neighborhood theme. Playable now.
 - **Xadrez:** standard chess. Playable now.
 - **Pista Certa:** a team word-clue game (Codenames-style rules). Playable now.
 - **Vida Adulta:** a life-path board game (Game of Life-style rules). Playable now.
+- **Batalha Naval:** classic battleship, 2 players. Playable now.
 
 Design: `docs/superpowers/specs/2026-10-24-noite-de-jogos-banco-imobiliario-design.md`
 
@@ -99,6 +100,7 @@ Built on a shared frame (`src/games/shared/`): each game is an engine + module +
 - [ ] **Rule changes** to set Pista Certa and Vida Adulta apart from the originals (brainstorm later).
 - [ ] Vida Adulta: square names on phones (labels are hidden at that width), and a check of its money values.
 - [ ] Pista Certa: more words in both pools.
+- [x] **Batalha Naval** (added 2026-11-14): classic fleet, alternating shots, placing by hand or at random.
 
 ## Dominion Friends
 

@@ -2,6 +2,8 @@ import type { ComponentType } from 'react';
 import type { GameId } from './catalog';
 import { ChessScreen } from './chess/ChessScreen';
 import { CHESS_TEXT, RULE_KEYS as CHESS_RULES } from './chess/text';
+import { NavalScreen } from './naval/NavalScreen';
+import { NAVAL_TEXT, RULE_KEYS as NAVAL_RULES } from './naval/text';
 import { pistaModule } from './pista/game';
 import { PistaScreen } from './pista/PistaScreen';
 import { PISTA_TEXT, RULE_KEYS as PISTA_RULES } from './pista/text';
@@ -46,4 +48,5 @@ export const NEW_GAMES: Partial<Record<GameId, { Lobby: ComponentType<LobbyProps
   chess: { Lobby: rulesLobby(CHESS_TEXT, CHESS_RULES), Screen: ChessScreen },
   pista: { Lobby: PistaLobby, Screen: PistaScreen },
   vida: { Lobby: rulesLobby(VIDA_TEXT, VIDA_RULES), Screen: VidaScreen },
+  naval: { Lobby: rulesLobby(NAVAL_TEXT, NAVAL_RULES), Screen: NavalScreen },
 };

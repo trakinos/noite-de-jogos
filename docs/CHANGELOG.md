@@ -2,7 +2,12 @@
 
 What changed for players, newest first. Every push to `main` deploys to https://trakinos.github.io/noite-de-jogos/.
 
-## Unreleased — three new games
+## Unreleased — Batalha Naval
+
+### Added
+- **Batalha Naval, 2 players.** Hide a fleet of five ships (5, 4, 3, 3, 2) on a 10×10 sea: pick a ship, rotate it and tap where it starts, or let Aleatório place them. Once both fleets are ready, a draw picks who fires first and players alternate shots: miss, hit or sunk, with the sunk ship announced. You see your shots on the enemy sea and theirs on your fleet. Sinking the whole fleet wins. With the turn timer on, a timed-out turn fires at a random square.
+
+## Three new games
 
 ### Added
 - **Xadrez (Chess), 2 players.** Full rules: castling, en passant, promotion (pick the piece), check, checkmate, stalemate, threefold repetition, the 50-move rule and insufficient material. Colors are drawn at random; Black sees the board from their side. Tap a piece to see its legal moves. The move list is in standard notation, captured pieces and the material lead show by each player, and you can offer a draw or resign. With the room's turn timer on, running out of time plays a random move.

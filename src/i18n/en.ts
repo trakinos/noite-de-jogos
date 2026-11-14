@@ -192,6 +192,9 @@ const ui = {
   "gameVidaName": "Vida Adulta",
   "gameVidaTag": "From college to retirement",
   "gameVidaLength": "30–60 min",
+  "gameNavalName": "Batalha Naval",
+  "gameNavalTag": "Sink the enemy fleet",
+  "gameNavalLength": "15–30 min",
 } as const;
 
 export type UiKey = keyof typeof ui;

@@ -1696,3 +1696,51 @@ button.link:hover { color: var(--text); }
   .vida__amount { font-size: 9.5px; letter-spacing: -0.02em; }
   .vida__token { width: 18px; height: 18px; font-size: 10px; border-width: 1px; }
 }
+
+/* ---------- Batalha Naval ---------- */
+.front__art--naval { background: radial-gradient(circle at 70% 40%, #fff 0 3px, transparent 4px), repeating-linear-gradient(0deg, #1f5f8b 0 9px, #2a77ad 9px 10px), #1f5f8b; }
+.naval { --sea: #2a77ad; --sea-line: rgb(255 255 255 / 0.18); --ship: #5d6b78; --hit: #e0574a; }
+.naval__placing { display: grid; grid-template-columns: minmax(260px, 340px) minmax(0, 520px); gap: 18px; align-items: start; justify-content: center; }
+.naval__tools { display: grid; gap: 12px; }
+.naval__tools h2 { margin: 0; }
+.naval__tools p { margin: 0; }
+.naval__ships { display: grid; gap: 6px; }
+.naval__shipbtn { justify-content: flex-start; gap: 10px; min-height: 40px; }
+.naval__shipbtn.is-picked { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.naval__shipbtn.is-placed:not(.is-picked) { opacity: 0.6; }
+.naval__pips { display: inline-flex; gap: 2px; }
+.naval__pips i { width: 10px; height: 10px; border-radius: 2px; background: var(--ship); }
+.naval__status { font-weight: 800; color: var(--text) !important; }
+.naval__sea { margin: 0; display: grid; gap: 6px; }
+.naval__sea figcaption { font-weight: 800; }
+.naval__grid { display: grid; grid-template-columns: 18px repeat(10, 1fr); gap: 2px; background: var(--surface); padding: 6px; border-radius: var(--r-md); border: 2px solid var(--border); }
+.naval__axis { font-size: 11px; font-weight: 800; color: var(--muted); display: grid; place-items: center; }
+.naval__cell { aspect-ratio: 1; min-height: 0; padding: 0; border: 0; border-radius: 3px; background: var(--sea); box-shadow: inset 0 0 0 1px var(--sea-line); position: relative; display: grid; place-items: center; color: #fff; font-weight: 900; font-size: clamp(12px, 2.4vw, 20px); }
+.naval__cell:disabled { opacity: 1; cursor: default; }
+.naval__cell:active:not(:disabled) { transform: none; }
+.naval__cell.has-ship { background: var(--ship); border-radius: 0; }
+.naval__cell.has-ship.is-start.is-h { border-radius: 40% 0 0 40%; }
+.naval__cell.has-ship.is-end.is-h { border-radius: 0 40% 40% 0; }
+.naval__cell.has-ship.is-start.is-v { border-radius: 40% 40% 0 0; }
+.naval__cell.has-ship.is-end.is-v { border-radius: 0 0 40% 40%; }
+.naval__cell.is-miss { color: rgb(255 255 255 / 0.85); }
+.naval__cell.is-hit { background: var(--hit); }
+.naval__cell.has-ship.is-hit { background: color-mix(in srgb, var(--hit) 70%, var(--ship)); }
+.naval__cell.is-last { outline: 3px solid var(--coin); outline-offset: -1px; z-index: 1; animation: pop var(--dur-slow) var(--ease-spring); }
+.naval__cell.is-preview { background: color-mix(in srgb, var(--online) 75%, var(--sea)); }
+.naval__cell.is-bad { background: color-mix(in srgb, var(--danger) 70%, var(--sea)); }
+.naval__sea.is-aiming .naval__cell:not(.is-miss):not(.is-hit):hover { background: color-mix(in srgb, var(--coin) 60%, var(--sea)); cursor: crosshair; }
+.naval__battle { display: grid; gap: 14px; }
+.naval__banner { display: grid; gap: 4px; justify-items: center; text-align: center; padding: 12px 16px; }
+.naval__banner.is-mine { border-color: var(--accent); }
+.naval__banner h2 { margin: 0; }
+.naval__banner p { margin: 0; }
+.naval__seas { display: grid; grid-template-columns: minmax(0, 520px) minmax(0, 360px); gap: 22px; justify-content: center; align-items: start; }
+.naval__afloat { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; font-weight: 700; }
+.naval__afloat li { display: inline-flex; align-items: center; gap: 6px; }
+.naval__afloat li.is-sunk { text-decoration: line-through; color: var(--muted); }
+.naval__afloat li.is-sunk .naval__pips i { background: var(--hit); }
+@media (max-width: 860px) {
+  .naval__placing, .naval__seas { grid-template-columns: 1fr; }
+  .naval__sea.is-small { max-width: 300px; justify-self: center; width: 100%; }
+}

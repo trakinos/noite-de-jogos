@@ -190,6 +190,9 @@ const pt: Dictionary = {
     "gameVidaName": "Vida Adulta",
     "gameVidaTag": "Da faculdade à aposentadoria",
     "gameVidaLength": "30–60 min",
+    "gameNavalName": "Batalha Naval",
+    "gameNavalTag": "Afunde a frota inimiga",
+    "gameNavalLength": "15–30 min",
   },
   prompts: {
     "discardDownTo": "Descarte {n} carta(s) até ficar com 3",

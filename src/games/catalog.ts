@@ -1,6 +1,6 @@
 import type { UiKey } from '../i18n';
 
-export type GameId = 'dominion' | 'bairro' | 'chess' | 'pista' | 'vida';
+export type GameId = 'dominion' | 'bairro' | 'chess' | 'pista' | 'vida' | 'naval';
 
 export interface GameInfo {
   id: GameId;
@@ -19,6 +19,7 @@ export const GAMES: readonly GameInfo[] = [
   { id: 'chess', nameKey: 'gameChessName', tagKey: 'gameChessTag', minPlayers: 2, maxPlayers: 2, lengthKey: 'gameChessLength', available: true },
   { id: 'pista', nameKey: 'gamePistaName', tagKey: 'gamePistaTag', minPlayers: 4, maxPlayers: 8, lengthKey: 'gamePistaLength', available: true },
   { id: 'vida', nameKey: 'gameVidaName', tagKey: 'gameVidaTag', minPlayers: 2, maxPlayers: 6, lengthKey: 'gameVidaLength', available: true },
+  { id: 'naval', nameKey: 'gameNavalName', tagKey: 'gameNavalTag', minPlayers: 2, maxPlayers: 2, lengthKey: 'gameNavalLength', available: true },
 ];
 
 export function isGameId(x: unknown): x is GameId {

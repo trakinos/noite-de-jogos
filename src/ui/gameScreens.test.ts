@@ -10,7 +10,7 @@ describe('screensFor', () => {
     expect(screensFor('bairro')).toBe('bairro');
   });
 
-  it('has screens for chess, pista and vida', () => {
-    expect(['chess', 'pista', 'vida'].map((g) => screensFor(g as 'chess'))).toEqual(['chess', 'pista', 'vida']);
+  it('has screens for chess, pista, vida and naval', () => {
+    expect(['chess', 'pista', 'vida', 'naval'].map((g) => screensFor(g as 'chess'))).toEqual(['chess', 'pista', 'vida', 'naval']);
   });
 });
