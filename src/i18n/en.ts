@@ -183,6 +183,15 @@ const ui = {
   "gameBairroName": "Dono do Bairro",
   "gameBairroTag": "Buying up the neighborhood",
   "gameBairroLength": "45 min–2 h",
+  "gameChessName": "Chess",
+  "gameChessTag": "The classic board game",
+  "gameChessLength": "10–60 min",
+  "gamePistaName": "Pista Certa",
+  "gamePistaTag": "Team word clues",
+  "gamePistaLength": "15–30 min",
+  "gameVidaName": "Vida Adulta",
+  "gameVidaTag": "From college to retirement",
+  "gameVidaLength": "30–60 min",
 } as const;
 
 export type UiKey = keyof typeof ui;

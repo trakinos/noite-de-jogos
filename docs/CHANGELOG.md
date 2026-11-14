@@ -2,6 +2,14 @@
 
 What changed for players, newest first. Every push to `main` deploys to https://trakinos.github.io/noite-de-jogos/.
 
+## Unreleased — three new games
+
+### Added
+- **Xadrez (Chess), 2 players.** Full rules: castling, en passant, promotion (pick the piece), check, checkmate, stalemate, threefold repetition, the 50-move rule and insufficient material. Colors are drawn at random; Black sees the board from their side. Tap a piece to see its legal moves. The move list is in standard notation, captured pieces and the material lead show by each player, and you can offer a draw or resign. With the room's turn timer on, running out of time plays a random move.
+- **Pista Certa, 4–8 players.** A team word game: Red and Blue, each with a chief who sees which of the 25 words belong to whom (9 / 8 / 7 neutral / 1 bomb). Teams are picked in-game before the first clue. The chief gives a one-word clue and a number; teammates mark words (teammates see each mark) and reveal them, up to the number plus one (0 = unlimited). A wrong word passes the turn; the bomb loses the game. Words in Portuguese or English (lobby setting).
+- **Vida Adulta, 2–6 players.** A life-path board game: college (two loans, degree careers) or straight to work, a spinner from 1 to 10, paydays, raises, children, taxes, lawsuits, a wedding, buying a house, and face-down Conquista tiles worth $50k–$250k revealed at the end. Retire at the Sítio (2 Conquistas) or the Mansão (the richest there takes 4). The bank lends automatically in $50k loans ($60k to repay). Highest total wins.
+- These three use the original games' rules for now; rule changes come later.
+
 ## Unreleased — Dono do Bairro, after the second playtest
 
 ### Added

@@ -13,6 +13,7 @@ import { Lobby } from './screens/Lobby';
 import { DominionLobby } from '../games/dominion/ui/DominionLobbyOptions';
 import { BairroLobby } from '../games/bairro/ui/BairroLobby';
 import { BairroScreens } from '../games/bairro/ui/BairroScreens';
+import { NEW_GAMES } from '../games/newGames';
 import { Icon } from './components/Icon';
 import { LangToggle } from './components/LangToggle';
 import { Loader } from './components/Loader';
@@ -185,8 +186,9 @@ export function App() {
     }
 
     const screens = screensFor(state.lobby.game);
+    const newGame = screens === 'unsupported' ? undefined : NEW_GAMES[screens];
     if (!state.lobby.inGame) {
-      const LobbyScreen = screens === 'dominion' ? DominionLobby : screens === 'bairro' ? BairroLobby : Lobby;
+      const LobbyScreen = newGame?.Lobby ?? (screens === 'dominion' ? DominionLobby : screens === 'bairro' ? BairroLobby : Lobby);
       return (
         <LobbyScreen
           lobby={state.lobby}
@@ -210,6 +212,28 @@ export function App() {
           <Loader />
           <h2>{tr.t('startingGame')}</h2>
         </Centered>
+      );
+    }
+
+    if (newGame) {
+      const { Screen } = newGame;
+      return (
+        <Screen
+          view={state.view}
+          lobby={state.lobby}
+          me={state.playerId}
+          code={active.code}
+          error={state.error}
+          clock={state.clock}
+          awaiting={state.awaiting}
+          onIntent={(intent) => active.session.sendIntent(intent)}
+          onDismissError={() => active.session.dismissError()}
+          onEndGame={active.host ? () => active.host?.backToLobby() : undefined}
+          isHost={active.host !== null}
+          onPlayAgain={() => active.host?.playAgain()}
+          onBackToLobby={() => active.host?.backToLobby()}
+          onLeave={leave}
+        />
       );
     }
 

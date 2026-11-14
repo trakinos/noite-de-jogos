@@ -1524,3 +1524,175 @@ button.link:hover { color: var(--text); }
 .bcarddlg__options button { display: grid; justify-items: center; gap: 2px; padding: 6px 10px; border-radius: var(--r-md); }
 .bcarddlg__options button.is-picked { outline: 3px solid var(--accent); outline-offset: 1px; }
 .bcarddlg__options--dadoViciado .bdie { --die: 34px; }
+
+/* ---------- Newer games: shared frame ---------- */
+.front__art--chess { background: repeating-conic-gradient(#2a1e14 0 25%, #f3e8d4 0 50%) 0 0 / 26px 26px; }
+.front__art--pista { background: linear-gradient(90deg, #c0392b 0 50%, #2c4ba8 50% 100%); }
+.front__art--vida { background: linear-gradient(135deg, #f2b632, #2f7a35 60%, #17716f); }
+.gframe { gap: 14px; }
+.gframe__top { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; min-height: 56px; padding-right: 96px; }
+.gframe__top .rules-btn + .menu { margin-left: 0; }
+.gframe__toast { bottom: 32px; }
+.gframe__rules { max-width: 640px; width: calc(100vw - 32px); max-height: calc(100vh - 48px); overflow-y: auto; }
+.gframe__rules p { color: var(--text); font-weight: 500; }
+.gframe .end h1 { font-size: clamp(30px, 5vw, 52px); }
+
+/* ---------- Chess ---------- */
+.chess__table { display: grid; grid-template-columns: minmax(0, 640px) minmax(240px, 1fr); gap: 18px; align-items: start; }
+.chess__left { display: grid; gap: 8px; width: 100%; max-width: max(300px, calc(100vh - 210px)); }
+.chess__player { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 4px 10px; border-radius: var(--r-md); border: 2px solid transparent; }
+.chess__player.is-turn { border-color: var(--accent); background: var(--surface); }
+.chess__taken { margin-left: auto; display: flex; align-items: center; font-size: 18px; }
+.chess__board { position: relative; display: grid; grid-template-columns: repeat(8, 1fr); aspect-ratio: 1; border-radius: var(--r-md); overflow: hidden; box-shadow: var(--e2); border: 3px solid #5b3f22; }
+.chess__sq { position: relative; min-height: 0; padding: 0; border: 0; border-radius: 0; display: flex; align-items: center; justify-content: center; aspect-ratio: 1; }
+.chess__sq:active:not(:disabled) { transform: none; }
+.chess__sq.is-light { background: #f0d9b5; }
+.chess__sq.is-dark { background: #b58863; }
+.chess__sq.is-last.is-light { background: #f5e88f; }
+.chess__sq.is-last.is-dark { background: #d6c15a; }
+.chess__sq.is-selected { box-shadow: inset 0 0 0 4px var(--accent); }
+.chess__sq.is-check { background: radial-gradient(circle, #ff5a4a 0 35%, transparent 75%), #b58863; }
+.chess__sq.is-target::after { content: ''; width: 28%; height: 28%; border-radius: 50%; background: rgb(20 30 60 / 0.35); }
+.chess__sq.is-capture::after { content: ''; position: absolute; inset: 4%; border-radius: 50%; border: 5px solid rgb(20 30 60 / 0.35); }
+.chess__glyph { font-size: clamp(26px, 8.5vmin, 62px); line-height: 1; font-family: 'Segoe UI Symbol', 'DejaVu Sans', 'Noto Sans Symbols 2', serif; user-select: none; }
+.chess__glyph--w { color: #fffaf0; -webkit-text-stroke: 1.5px #2a1e14; text-shadow: 0 2px 2px rgb(0 0 0 / 0.25); }
+.chess__glyph--b { color: #1d1712; -webkit-text-stroke: 1px #000; text-shadow: 0 2px 2px rgb(0 0 0 / 0.2); }
+.chess__taken .chess__glyph { font-size: 18px; -webkit-text-stroke-width: 0.6px; }
+.chess__promo { position: absolute; inset: 50% auto auto 50%; transform: translate(-50%, -50%); z-index: 3; text-align: center; display: grid; gap: 10px; }
+.chess__promo > div { display: flex; gap: 8px; }
+.chess__promo button { width: 64px; height: 64px; padding: 0; background: #f0d9b5; }
+.chess__side { display: grid; gap: 12px; align-content: start; }
+.chess__side h3 { margin: 4px 0 0; font-size: 15px; }
+.chess__status { margin: 0; font-weight: 800; font-size: 18px; color: var(--text) !important; }
+.chess__status.is-mine { color: var(--accent) !important; }
+.chess__offer { flex-wrap: wrap; }
+.chess__moves { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 2px 12px; max-height: 280px; overflow-y: auto; font-variant-numeric: tabular-nums; }
+.chess__moves li.muted { grid-column: 1 / -1; }
+.chess__moves li span:not(.muted) { display: inline-block; min-width: 46px; font-weight: 700; }
+.chess__result h2 { margin: 0 0 4px; font-size: 26px; }
+@media (max-width: 860px) {
+  .chess__table { grid-template-columns: 1fr; }
+  .chess__left { max-width: min(560px, max(300px, calc(100vh - 210px))); margin: 0 auto; }
+}
+
+/* ---------- Pista Certa ---------- */
+.pista { --red: #c0392b; --blue: #2c4ba8; --neutral: #d8c7a6; --bomb: #1c1714; }
+@media (prefers-color-scheme: dark) { .pista { --red: #e0574a; --blue: #6f8ff5; --neutral: #6b5a44; --bomb: #000; } }
+.pista__cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.pista__team { border: 3px solid var(--border); border-radius: var(--r-lg); padding: 14px; display: grid; gap: 10px; align-content: start; }
+.pista__team--red { border-color: var(--red); }
+.pista__team--blue { border-color: var(--blue); }
+.pista__team h3 { margin: 0; }
+.pista__team--red h3 { color: var(--red); }
+.pista__team--blue h3 { color: var(--blue); }
+.pista__team ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; min-height: 40px; }
+.pista__team li { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.pista__team li .pill { margin-left: auto; }
+.pista__table { display: grid; gap: 12px; }
+.pista__score { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.pista__count { padding: 6px 14px; border-radius: 99px; border: 3px solid transparent; font-weight: 700; background: var(--surface); }
+.pista__count--red b { color: var(--red); }
+.pista__count--blue b { color: var(--blue); }
+.pista__count--red.is-turn { border-color: var(--red); }
+.pista__count--blue.is-turn { border-color: var(--blue); }
+.pista__status { display: grid; gap: 4px; justify-items: center; text-align: center; padding: 10px 14px; border-radius: var(--r-md); background: var(--surface); border-left: 6px solid var(--border); border-right: 6px solid var(--border); }
+.pista__status--red { border-color: var(--red); }
+.pista__status--blue { border-color: var(--blue); }
+.pista__status b { font-size: 17px; }
+.pista__clue { font-size: 20px; font-weight: 800; }
+.pista__form { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; justify-content: center; padding: 14px; }
+.pista__form input, .pista__form select { min-height: 44px; padding: 4px 10px; border-radius: var(--r-md); border: 2px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-size: 16px; }
+.pista__form input { text-transform: uppercase; }
+.pista__grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.pista__card { position: relative; display: grid; border-radius: var(--r-md); background: var(--card-body); border: 3px solid var(--border); box-shadow: var(--e1); min-height: 72px; }
+.pista__word { min-height: 72px; border: 0; background: transparent; font-weight: 900; font-size: clamp(11px, 1.9vw, 17px); letter-spacing: 0.02em; padding: 6px 4px; overflow-wrap: anywhere; color: var(--text); }
+.pista__word:disabled { opacity: 1; }
+.pista__grid.is-chief .pista__card.is-red:not(.is-revealed) { border-color: var(--red); background: color-mix(in srgb, var(--red) 16%, var(--card-body)); }
+.pista__grid.is-chief .pista__card.is-blue:not(.is-revealed) { border-color: var(--blue); background: color-mix(in srgb, var(--blue) 16%, var(--card-body)); }
+.pista__grid.is-chief .pista__card.is-bomb:not(.is-revealed) { border-color: var(--bomb); background: color-mix(in srgb, var(--bomb) 22%, var(--card-body)); }
+.pista__grid.is-chief .pista__card.is-bomb:not(.is-revealed)::after, .pista__card.is-revealed.is-bomb::after { content: '💣'; position: absolute; top: 2px; right: 4px; font-size: 14px; pointer-events: none; }
+.pista__card.is-revealed { animation: pop var(--dur-slow) var(--ease-spring); }
+.pista__card.is-revealed .pista__word { color: #fff; }
+.pista__card.is-revealed.is-red { background: var(--red); border-color: var(--red); }
+.pista__card.is-revealed.is-blue { background: var(--blue); border-color: var(--blue); }
+.pista__card.is-revealed.is-neutral { background: var(--neutral); border-color: var(--neutral); }
+.pista__card.is-revealed.is-neutral .pista__word { color: var(--text); }
+.pista__card.is-revealed.is-bomb { background: var(--bomb); border-color: var(--red); border-style: dashed; }
+.pista__card.is-marked { outline: 3px solid var(--accent); outline-offset: 2px; }
+.pista__marks { position: absolute; top: 3px; left: 3px; display: flex; gap: 2px; pointer-events: none; }
+.pista__mark { width: 18px; height: 18px; border-radius: 50%; color: #fff; font-size: 11px; font-weight: 900; display: grid; place-items: center; }
+.pista__reveal { position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); min-height: 28px; padding: 0 10px; font-size: 12px; z-index: 2; }
+.pista__bottom { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 12px; align-items: start; margin-top: 8px; }
+.pista__roster { display: grid; gap: 6px; padding: 10px; border-radius: var(--r-md); background: var(--surface); border-top: 5px solid var(--border); }
+.pista__roster--red { border-top-color: var(--red); }
+.pista__roster--blue { border-top-color: var(--blue); }
+.pista__member { display: flex; align-items: center; gap: 6px; font-weight: 700; flex-wrap: wrap; }
+.pista__log { background: var(--surface); border-radius: var(--r-md); padding: 10px; }
+.pista__log summary { font-weight: 800; cursor: pointer; }
+.pista__log ol { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; font-size: 13px; }
+.pista__logline { padding-left: 8px; border-left: 4px solid var(--border); }
+.pista__logline--red { border-color: var(--red); }
+.pista__logline--blue { border-color: var(--blue); }
+.pista__logline--bomb { border-color: var(--bomb); font-weight: 800; }
+@media (max-width: 767px) {
+  .pista__cols, .pista__bottom { grid-template-columns: 1fr; }
+  .pista__grid { gap: 5px; }
+  .pista__word, .pista__card { min-height: 56px; }
+  .pista__word { font-size: clamp(9px, 2.9vw, 14px); padding: 4px 2px; }
+}
+
+/* ---------- Vida Adulta ---------- */
+.vida__table { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+.vida__board { display: grid; gap: 5px; }
+.vida__sq { position: relative; min-height: 84px; padding: 5px 4px 4px; border-radius: var(--r-md); background: var(--surface); border: 2px solid var(--border); display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1px; overflow: hidden; }
+.vida__sq.is-campus { background: color-mix(in srgb, #6b3f9f 12%, var(--surface)); border-style: dashed; }
+.vida__sq.is-career-start { border-color: var(--accent); }
+.vida__sq--payday { background: color-mix(in srgb, #2f7a35 22%, var(--surface)); border-color: #2f7a35; }
+.vida__sq--life { background: color-mix(in srgb, #f2b632 22%, var(--surface)); }
+.vida__sq--stop { background: color-mix(in srgb, #b8321f 18%, var(--surface)); border-color: #b8321f; border-width: 3px; }
+.vida__sq--start { background: var(--surface-2); }
+.vida__icon { font-size: 20px; line-height: 1.1; }
+.vida__label { font-size: 10.5px; font-weight: 700; line-height: 1.15; color: var(--muted); overflow-wrap: anywhere; hyphens: auto; max-width: 100%; }
+.vida__amount { font-size: 11px; font-weight: 900; white-space: nowrap; }
+.vida__tokens { position: absolute; bottom: 2px; left: 0; right: 0; display: flex; justify-content: center; flex-wrap: wrap; gap: 1px; }
+.vida__token { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; color: #fff; font-weight: 900; border: 2px solid #fff; box-shadow: var(--e1); }
+.vida__token.is-current { animation: vida-pulse 1.4s ease-in-out infinite; width: 28px; height: 28px; }
+@keyframes vida-pulse { 50% { transform: scale(1.15); } }
+.vida__side { display: grid; gap: 12px; }
+.vida__side .panel { padding: 14px; }
+.vida__turn h2 { margin: 0 0 8px; font-size: 20px; }
+.vida__turn.is-mine { border-color: var(--accent); }
+.vida__spin { display: flex; align-items: center; gap: 10px; color: var(--text) !important; }
+.vida__wheel { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; font-size: 20px; background: conic-gradient(#c8372d 0 20%, #f2b632 0 40%, #2f7a35 0 60%, #2c4ba8 0 80%, #6b3f9f 0); color: #fff; text-shadow: 0 1px 2px #000; animation: pop var(--dur-slow) var(--ease-spring); }
+.vida__spinbtn { width: 100%; }
+.vida__choices { display: grid; gap: 8px; }
+.vida__choices h3 { margin: 0; font-size: 16px; }
+.vida__choice { display: grid; justify-items: start; gap: 2px; text-align: left; padding: 10px 12px; min-height: 0; white-space: normal; }
+.vida__repay { margin-top: 10px; width: 100%; }
+.vida__players { display: grid; gap: 10px; }
+.vida__player { display: flex; gap: 10px; align-items: flex-start; padding: 6px; border-radius: var(--r-md); border: 2px solid transparent; }
+.vida__player.is-turn { border-color: var(--accent); }
+.vida__cash { font-weight: 900; color: var(--online); margin-left: 4px; }
+.vida__facts { font-size: 12.5px; font-weight: 600; }
+.vida__log summary { font-weight: 800; cursor: pointer; }
+.vida__log ol { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 3px; font-size: 13px; max-height: 260px; overflow-y: auto; }
+.vida__end { display: grid; gap: 18px; justify-items: center; }
+.vida__scores { overflow-x: auto; max-width: 100%; }
+.vida__scores table { border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.vida__scores th, .vida__scores td { padding: 8px 12px; text-align: right; white-space: nowrap; }
+.vida__scores td:first-child { text-align: left; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.vida__scores tr.is-winner { background: color-mix(in srgb, var(--coin) 30%, transparent); }
+@media (max-width: 1000px) {
+  .vida__table { grid-template-columns: 1fr; }
+  /* The turn panel (spin and choices) goes above the board; players and log stay below. */
+  .vida__side { display: contents; }
+  .vida__turn { order: -1; }
+}
+@media (max-width: 600px) {
+  .vida__board { gap: 3px; }
+  .vida__sq { min-height: 62px; padding: 3px 1px; }
+  .vida__label { display: none; }
+  .vida__icon { font-size: 17px; }
+  .vida__amount { font-size: 9.5px; letter-spacing: -0.02em; }
+  .vida__token { width: 18px; height: 18px; font-size: 10px; border-width: 1px; }
+}

@@ -49,7 +49,7 @@ describe('parseHostMessage', () => {
   });
 
   it('falls back to dominion for a missing or unknown lobby game', () => {
-    for (const lobby of [{ hostId: 'p0' }, { game: 'chess', hostId: 'p0' }]) {
+    for (const lobby of [{ hostId: 'p0' }, { game: 'checkers', hostId: 'p0' }]) {
       const msg = parseHostMessage({ type: 'lobby', lobby });
       expect(msg?.type === 'lobby' && msg.lobby.game).toBe('dominion');
     }

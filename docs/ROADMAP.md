@@ -2,9 +2,12 @@
 
 Last updated: 2026-10-29
 
-Noite de Jogos (formerly Dominion Friends) is a site where one group of friends plays board games online, each person on their own device, usually while on a call. It has two games:
+Noite de Jogos (formerly Dominion Friends) is a site where one group of friends plays board games online, each person on their own device, usually while on a call. It has five games:
 - **Dominion Friends:** Dominion with the Feira theme. Playable now.
 - **Dono do Bairro:** the classic rules of Banco Imobiliário with a neighborhood theme. Playable now.
+- **Xadrez:** standard chess. Playable now.
+- **Pista Certa:** a team word-clue game (Codenames-style rules). Playable now.
+- **Vida Adulta:** a life-path board game (Game of Life-style rules). Playable now.
 
 Design: `docs/superpowers/specs/2026-10-24-noite-de-jogos-banco-imobiliario-design.md`
 
@@ -87,6 +90,15 @@ Full list and notes: `docs/playtest-26.10.29.md`.
 - [x] **Bankruptcy auction:** a bankrupt player's escrituras go up for auction (when the debt is to the Prefeitura; a player creditor still takes them).
 - [ ] Bots to fill seats.
 - [ ] Sounds (dice, buying, rent, going to the Xilindró).
+
+### D. Xadrez, Pista Certa, Vida Adulta (added 2026-11-13)
+Built on a shared frame (`src/games/shared/`): each game is an engine + module + one screen file, with its own PT/EN text.
+- [x] Engines with tests: chess (perft-checked move generation), Pista Certa, Vida Adulta (simulated games always finish).
+- [x] Screens: chess board with legal-move hints, promotion picker, draw/resign; team picker and 5×5 word grid; snaking life board with spinner and choices. Phone layouts.
+- [ ] Playtest each with friends.
+- [ ] **Rule changes** to set Pista Certa and Vida Adulta apart from the originals (brainstorm later).
+- [ ] Vida Adulta: square names on phones (labels are hidden at that width), and a check of its money values.
+- [ ] Pista Certa: more words in both pools.
 
 ## Dominion Friends
 
