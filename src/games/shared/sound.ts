@@ -3,7 +3,7 @@
  * Browsers only allow audio after a tap, so the context is created lazily and resumed on the first gesture.
  */
 
-export type SoundName = 'move' | 'click' | 'hit' | 'miss' | 'sunk' | 'alert' | 'win' | 'lose' | 'coin' | 'spin' | 'card' | 'pop' | 'wrong';
+export type SoundName = 'move' | 'click' | 'hit' | 'miss' | 'sunk' | 'alert' | 'win' | 'lose' | 'coin' | 'spin' | 'card' | 'pop' | 'wrong' | 'clue';
 
 const MUTE_KEY = 'ndj-muted';
 let ctx: AudioContext | null = null;
@@ -152,6 +152,12 @@ const SOUNDS: Record<SoundName, () => void> = {
   spin: () => tones(Array.from({ length: 14 }, (_, i) => ({ freq: 900, start: i * (0.04 + i * 0.006), dur: 0.03, type: 'square' as const, gain: 0.04 }))),
   card: () => noise(0.12, 4000, 0.15),
   wrong: () => tones([{ freq: 200, to: 120, start: 0, dur: 0.25, type: 'sawtooth', gain: 0.08 }]),
+  /** A soft rising chime: a message has arrived. */
+  clue: () => tones([
+    { freq: 659, start: 0, dur: 0.18, type: 'sine', gain: 0.16 },
+    { freq: 988, start: 0.11, dur: 0.38, type: 'sine', gain: 0.14 },
+    { freq: 1319, start: 0.11, dur: 0.3, type: 'sine', gain: 0.04 },
+  ]),
 };
 
 export function playSound(name: SoundName): void {

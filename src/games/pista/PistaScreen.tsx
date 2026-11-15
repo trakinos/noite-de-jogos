@@ -255,6 +255,14 @@ function logLine(entry: PistaLog, view: PistaView, t: TextFn): string {
 
 /** A pop for every word revealed (a boom for the bomb), then a fanfare or a sad tune at the end. */
 function usePistaSounds(view: PistaView) {
+  // The chief's clue arrives: the table goes from no clue to one.
+  const hasClue = view.clue !== null;
+  const hadClue = useRef(hasClue);
+  useEffect(() => {
+    if (hasClue && !hadClue.current && !view.winner) playSound('clue');
+    hadClue.current = hasClue;
+  }, [hasClue]);
+
   const revealed = view.revealed.filter(Boolean).length;
   const seen = useRef(revealed);
   useEffect(() => {
