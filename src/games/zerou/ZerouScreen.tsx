@@ -483,6 +483,8 @@ function useZerouSounds(view: ZerouView) {
     if (fresh.some(e => e.k === 'slow' || (e.k === 'draw' && e.forced))) return playSound('wrong');
     if (fresh.some(e => e.k === 'accuse' || e.k === 'last')) return playSound('alert');
     if (fresh.some(e => e.k === 'swap')) return playSound('spin');
+    // Playing snaps a card down; drawing (by choice) slides one off the pile.
+    if (fresh.some(e => e.k === 'draw') && !fresh.some(e => e.k === 'play')) return playSound('draw');
     playSound('card');
   }, [view.logTotal]);
 }

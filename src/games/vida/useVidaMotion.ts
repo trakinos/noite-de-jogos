@@ -13,6 +13,8 @@ export interface VidaMotion {
   event: { entry: VidaLog; key: number } | null;
   /** True while anything is still playing: choices wait for it. */
   busy: boolean;
+  /** The view whose results may be shown: the one from before the move while it plays, so cash, square and log don't give the spin away. */
+  shown: VidaView;
 }
 
 let keys = 0;
@@ -24,6 +26,7 @@ export function useVidaMotion(view: VidaView): VidaMotion {
   const [coins, setCoins] = useState<VidaMotion['coins']>([]);
   const [event, setEvent] = useState<VidaMotion['event']>(null);
   const [busy, setBusy] = useState(false);
+  const [shown, setShown] = useState(view);
   const prev = useRef(view);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -39,6 +42,7 @@ export function useVidaMotion(view: VidaView): VidaMotion {
     const quick = reducedMotion();
     const anim = found && quick ? quickAnim(found) : found;
     const settle = () => {
+      setShown(view);
       setPositions(view.players.map(p => p.pos));
       setBusy(false);
     };
@@ -89,5 +93,5 @@ export function useVidaMotion(view: VidaView): VidaMotion {
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
-  return { positions, wheel, coins, event, busy };
+  return { positions, wheel, coins, event, busy, shown };
 }

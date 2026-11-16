@@ -34,6 +34,7 @@ What changed for players, newest first. Every push to `main` deploys to https://
     - A "Last move" box shows what just happened.
     - Player cards show cash, job, family, house and debts.
     - On phones, a strip follows the current player.
+  - Cash, square and the log no longer give the spin away: they update once the pawn arrives.
 
 ## Earlier — playtest fixes, sound, three more games, install as an app
 

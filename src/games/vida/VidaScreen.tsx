@@ -153,13 +153,13 @@ function VidaTable({ view, lobby, awaiting, onIntent, t }: Inner) {
 
       <aside className="vida__side">
         <TurnPanel view={view} lobby={lobby} motion={motion} model={model} awaiting={awaiting} onIntent={onIntent} t={t} />
-        <Players view={view} lobby={lobby} model={model} t={t} />
+        <Players view={motion.shown} lobby={lobby} model={model} t={t} />
         {!wide && <Legend t={t} />}
         <details className="panel vida__log">
           <summary>{t('log')}</summary>
           <ol>
-            {view.log.slice(-20).reverse().map((entry, i) => (
-              <li key={i}>{logLine(entry, view, t)}</li>
+            {motion.shown.log.slice(-20).reverse().map((entry, i) => (
+              <li key={i}>{logLine(entry, motion.shown, t)}</li>
             ))}
           </ol>
         </details>
