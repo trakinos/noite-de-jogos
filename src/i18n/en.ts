@@ -204,6 +204,9 @@ const ui = {
   "gameForcaName": "Forca",
   "gameForcaTag": "Hangman: guess the word letter by letter",
   "gameForcaLength": "10–20 min",
+  "gameStopName": "Stop",
+  "gameStopTag": "Scattergories: one word per category with the letter",
+  "gameStopLength": "15–25 min",
 } as const;
 
 export type UiKey = keyof typeof ui;

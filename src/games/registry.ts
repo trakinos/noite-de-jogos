@@ -5,6 +5,7 @@ import { dominionModule } from './dominion/module';
 import { forcaModule } from './forca/game';
 import { navalModule } from './naval/game';
 import { pistaModule } from './pista/game';
+import { stopModule } from './stop/game';
 import { velhaModule } from './velha/game';
 import { vidaModule } from './vida/game';
 import { zerouModule } from './zerou/game';
@@ -21,6 +22,7 @@ export const MODULES: Partial<Record<GameId, GameModule>> = {
   zerou: zerouModule,
   velha: velhaModule,
   forca: forcaModule,
+  stop: stopModule,
 };
 
 export function moduleFor(id: GameId): GameModule {

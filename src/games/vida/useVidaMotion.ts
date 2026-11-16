@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { playSound } from '../shared/sound';
 import type { VidaLog, VidaView } from './game';
-import { animBetween, COIN_MS, EVENT_MS, STEP_MS, WHEEL_MS, type VidaAnim } from './motion';
+import { animBetween, COIN_MS, EVENT_MS, quickAnim, reducedMotion, STEP_MS, WHEEL_MS, type VidaAnim } from './motion';
 
 export interface VidaMotion {
   /** Each player's square as drawn right now. */
@@ -34,7 +34,10 @@ export function useVidaMotion(view: VidaView): VidaMotion {
     // Anything still playing jumps to its end; then the new change plays.
     timers.current.forEach(clearTimeout);
     timers.current = [];
-    const anim: VidaAnim | null = before.players.length === view.players.length ? animBetween(before, view) : null;
+    const found: VidaAnim | null = before.players.length === view.players.length ? animBetween(before, view) : null;
+    // Reduced motion: no wheel and no walk, the token jumps; the card for what happened still shows (it's information).
+    const quick = reducedMotion();
+    const anim = found && quick ? quickAnim(found) : found;
     const settle = () => {
       setPositions(view.players.map(p => p.pos));
       setBusy(false);
@@ -49,7 +52,7 @@ export function useVidaMotion(view: VidaView): VidaMotion {
     setPositions(before.players.map(p => p.pos));
     let t = 0;
     const at = (ms: number, fn: () => void) => timers.current.push(setTimeout(fn, ms));
-    if (anim.spin !== null) {
+    if (anim.spin !== null && !quick) {
       setWheel({ n: anim.spin, key: ++keys });
       playSound('spin');
       t += WHEEL_MS;
@@ -69,13 +72,13 @@ export function useVidaMotion(view: VidaView): VidaMotion {
       });
     });
     t += anim.steps.length * STEP_MS;
-    if (anim.steps.length === 0 && anim.spin !== null) at(t, () => setWheel(null));
+    if (anim.steps.length === 0 && anim.spin !== null && !quick) at(t, () => setWheel(null));
     at(t, () => setPositions(view.players.map(p => p.pos)));
     const main = anim.events.find(e => e.k !== 'loan') ?? anim.events[0];
     if (main) {
       at(t, () => {
         setEvent({ entry: main, key: ++keys });
-        const gain = (main.k === 'cash' && main.n > 0) || main.k === 'raise' || main.k === 'life' || main.k === 'marry' || main.k === 'baby';
+        const gain = ((main.k === 'cash' || main.k === 'invest') && main.n > 0) || main.k === 'raise' || main.k === 'life' || main.k === 'marry' || main.k === 'baby' || main.k === 'dodge';
         playSound(main.k === 'life' ? 'pop' : gain ? 'coin' : main.k === 'loan' || main.k === 'tax' || main.k === 'cash' ? 'wrong' : 'card');
       });
       t += EVENT_MS;

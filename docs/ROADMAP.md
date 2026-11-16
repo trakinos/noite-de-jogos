@@ -109,6 +109,7 @@ Built on a shared frame (`src/games/shared/`): each game is an engine + module +
 - [x] **Playtest 2026-11-14:** chess pieces drawn as SVG (phones showed both sides white), 0.6 s/square slides, A–H/1–8 labels, end modal; Pista Certa 2–3 players vs. an automatic rival; Batalha Naval miss color and landscape layout; Vida Adulta path, walk, wheel, salary coins and event cards; sound with a mute switch; Zerou!, Jogo da Velha, Forca; install as an app.
 - [ ] Check on a real iPhone: chess pieces, the install steps, sound after the first tap, safe areas in the installed app.
 - [ ] Sound in Dominion and Dono do Bairro (they don't use the shared sound module yet).
+- [ ] **Zerou!, Coringa mode** (asked 2026-11-16): a match of several rounds where everyone starts with a score (lobby setting, default 20). At the end of each round, the cards left in each loser's hand are counted and subtracted from their score. The first player to reach 0 becomes the Coringa: they keep playing but can no longer win, so their job is to create chaos and hurt the others' games. Open questions: card count or card values, how the match ends, and what happens when a second player reaches 0.
 
 ## Dominion Friends
 

@@ -2,8 +2,8 @@ import { createRng, nextInt, shuffle, type RngState } from '../../engine/rng';
 import type { ClockInput, ClockKind } from '../../net/turnClock';
 import type { ApplyResult, GameInstance, GameModule, SeatInfo } from '../module';
 import {
-  BOARD, CAREER_START, CAREERS, COLLEGE_LOANS, COUNTRY_TILES, HOUSES, KID_BONUS, LOAN, LOAN_PAYBACK, MANSION_TILES, RETIRE,
-  SPIN_MAX, START_CASH, SUE_AMOUNT, TILE_VALUES, TILES_EACH, WEDDING_GIFT,
+  boardFor, CAREERS, COLLEGE_LOANS, COUNTRY_TILES, HOUSES, INVEST, JOB_KEEP_RAISE, KID_BONUS, LOAN, LOAN_INTEREST, LOAN_PAYBACK, MANSION_TILES,
+  MIDLIFE, SPIN_MAX, START_CASH, SUE_AMOUNT, TILE_VALUES, TILES_EACH, WEDDING_GIFT, type GameLength, type InvestPick, type MidlifePick,
 } from './board';
 
 export type Retirement = 'country' | 'mansion';
@@ -28,9 +28,12 @@ export interface VidaPlayer {
 
 export type VidaPrompt =
   | { kind: 'path' }
-  | { kind: 'career'; options: string[] }
+  /** `keep`: the career crossroads, where staying in the current job (for a raise) is also an answer. */
+  | { kind: 'career'; options: string[]; keep?: boolean }
   | { kind: 'house'; options: string[] }
   | { kind: 'sue' }
+  | { kind: 'invest' }
+  | { kind: 'midlife' }
   | { kind: 'retire' };
 
 export type VidaLog =
@@ -48,6 +51,11 @@ export type VidaLog =
   | { k: 'house'; seat: number; house: string | null }
   | { k: 'loan'; seat: number; n: number }
   | { k: 'repay'; seat: number }
+  /** A bill that didn't apply (no kids, no loans). */
+  | { k: 'dodge'; seat: number; t: string }
+  /** `n` is the net result of the investment. */
+  | { k: 'invest'; seat: number; pick: InvestPick; n: number }
+  | { k: 'midlife'; seat: number; pick: MidlifePick }
   | { k: 'retire'; seat: number; where: Retirement; kids: number }
   | { k: 'mansion'; seat: number | null };
 
@@ -62,6 +70,7 @@ export interface VidaScore {
 
 export interface VidaState {
   rng: RngState;
+  length: GameLength;
   players: VidaPlayer[];
   current: number;
   turnNumber: number;
@@ -82,7 +91,9 @@ export interface VidaState {
 export type VidaIntent =
   | { type: 'spin' }
   | { type: 'path'; college: boolean }
-  | { type: 'career'; career: string }
+  | { type: 'career'; career: string | null }
+  | { type: 'invest'; pick: InvestPick }
+  | { type: 'midlife'; pick: MidlifePick }
   | { type: 'house'; house: string | null }
   | { type: 'sue'; target: number }
   | { type: 'retire'; where: Retirement }
@@ -91,11 +102,12 @@ export type VidaIntent =
 const ok = (): ApplyResult => ({ ok: true });
 const fail = (reason: string): ApplyResult => ({ ok: false, reason });
 
-export function createVida(seats: SeatInfo[], seed: number): VidaState {
+export function createVida(seats: SeatInfo[], seed: number, length: GameLength = 'normal'): VidaState {
   const rng = createRng(seed);
   const tiles = TILE_VALUES.flatMap(v => Array<number>(Math.ceil((TILES_EACH * Math.max(4, seats.length)) / TILE_VALUES.length)).fill(v));
   return {
     rng,
+    length,
     players: seats.map(s => ({
       id: s.id, name: s.name, pos: -1, cash: START_CASH, loans: 0, career: null, salary: 0, married: false, kids: 0, house: null, tiles: [], retired: null, started: false,
     })),
@@ -135,10 +147,17 @@ function draw(s: VidaState, pool: string[], n: number): string[] {
   return shuffle(s.rng, pool).slice(0, n);
 }
 
-function careerOptions(s: VidaState, degree: boolean): string[] {
+function careerOptions(s: VidaState, degree: boolean, n = 3, own: string | null = null): string[] {
   const taken = new Set(s.players.map(p => p.career));
   const pool = CAREERS.filter(c => c.degree === degree && !taken.has(c.id)).map(c => c.id);
-  return draw(s, pool.length >= 3 ? pool : CAREERS.filter(c => c.degree === degree).map(c => c.id), 3);
+  return draw(s, pool.length >= n ? pool : CAREERS.filter(c => c.degree === degree && c.id !== own).map(c => c.id), n);
+}
+
+/** Money to or from the bank, logged with its reason. */
+function bank(s: VidaState, seat: number, n: number, t: string): void {
+  if (n >= 0) s.players[seat]!.cash += n;
+  else pay(s, seat, -n);
+  s.log.push({ k: 'cash', seat, n, t });
 }
 
 function nextTurn(s: VidaState): void {
@@ -175,15 +194,38 @@ function finish(s: VidaState): void {
 function land(s: VidaState): void {
   const seat = s.current;
   const p = s.players[seat]!;
-  const sq = BOARD[p.pos]!;
+  const sq = boardFor(s.length).squares[p.pos]!;
   switch (sq.k) {
     case 'payday':
     case 'blank':
       break;
     case 'cash':
-      if (sq.n >= 0) p.cash += sq.n;
-      else pay(s, seat, -sq.n);
-      s.log.push({ k: 'cash', seat, n: sq.n, t: sq.t });
+      bank(s, seat, sq.n, sq.t);
+      break;
+    case 'bonus':
+      bank(s, seat, p.salary, sq.t);
+      break;
+    case 'collect': {
+      // Only players still on the road chip in (or get a share).
+      let total = 0;
+      s.players.forEach((o, i) => {
+        if (i === seat || o.retired) return;
+        if (sq.n >= 0) total += pay(s, i, sq.n);
+        else {
+          o.cash += -sq.n;
+          total += sq.n;
+        }
+      });
+      bank(s, seat, total, sq.t);
+      break;
+    }
+    case 'perkid':
+      if (p.kids === 0) s.log.push({ k: 'dodge', seat, t: sq.t });
+      else bank(s, seat, -sq.n * p.kids, sq.t);
+      break;
+    case 'interest':
+      if (p.loans === 0) s.log.push({ k: 'dodge', seat, t: 'interest' });
+      else bank(s, seat, -LOAN_INTEREST * p.loans, 'interest');
       break;
     case 'raise':
       p.salary += sq.n;
@@ -217,8 +259,9 @@ function land(s: VidaState): void {
       if (sq.s === 'marry') {
         p.married = true;
         let gifts = 0;
+        // Retired players have closed their accounts: no gifts from them.
         s.players.forEach((o, i) => {
-          if (i === seat) return;
+          if (i === seat || o.retired) return;
           gifts += pay(s, i, WEDDING_GIFT);
         });
         p.cash += gifts;
@@ -230,8 +273,13 @@ function land(s: VidaState): void {
         s.prompt = { kind: 'house', options: draw(s, HOUSES.map(h => h.id), 3) };
         return;
       }
-      if (sq.s === 'retire') {
-        s.prompt = { kind: 'retire' };
+      if (sq.s === 'job') {
+        const degree = CAREERS.find(c => c.id === p.career)?.degree ?? false;
+        s.prompt = { kind: 'career', options: careerOptions(s, degree, 2, p.career), keep: true };
+        return;
+      }
+      if (sq.s === 'invest' || sq.s === 'midlife' || sq.s === 'retire') {
+        s.prompt = { kind: sq.s };
         return;
       }
   }
@@ -242,14 +290,15 @@ function land(s: VidaState): void {
 function move(s: VidaState, n: number): void {
   const seat = s.current;
   const p = s.players[seat]!;
-  for (let i = 0; i < n; i++) {
+  const board = boardFor(s.length);
+  for (let i = 0; i < n && p.pos < board.retire; i++) {
     p.pos++;
-    const sq = BOARD[p.pos]!;
+    const sq = board.squares[p.pos]!;
     if (sq.k === 'payday') {
       p.cash += p.salary;
       s.log.push({ k: 'payday', seat, n: p.salary });
     }
-    if (sq.k === 'stop' || p.pos === RETIRE) break;
+    if (sq.k === 'stop') break;
   }
   land(s);
 }
@@ -298,14 +347,22 @@ export function applyVida(s: VidaState, seat: number, intent: VidaIntent): Apply
       return ok();
     case 'career': {
       if (prompt?.kind !== 'career') return fail('Not now');
-      if (!isCareer(intent.career) || !prompt.options.includes(intent.career)) return fail('Pick one of the careers offered');
+      if (intent.career === null && prompt.keep) {
+        p.salary += JOB_KEEP_RAISE;
+        s.log.push({ k: 'raise', seat, n: JOB_KEEP_RAISE, t: 'keepJob' });
+        nextTurn(s);
+        return ok();
+      }
+      if (!isCareer(intent.career) || !prompt.options.includes(intent.career!)) return fail('Pick one of the careers offered');
       const career = CAREERS.find(c => c.id === intent.career)!;
+      // Changing jobs keeps the raises earned so far.
+      const raises = p.salary - (CAREERS.find(c => c.id === p.career)?.salary ?? p.salary);
       p.career = career.id;
-      p.salary = career.salary;
+      p.salary = career.salary + raises;
       s.log.push({ k: 'career', seat, career: career.id });
       if (!p.started) {
         // A career player starts on the career path and takes this turn's spin now.
-        p.pos = CAREER_START;
+        p.pos = boardFor(s.length).careerStart;
         p.started = true;
         s.prompt = null;
       } else nextTurn(s);
@@ -335,6 +392,29 @@ export function applyVida(s: VidaState, seat: number, intent: VidaIntent): Apply
       nextTurn(s);
       return ok();
     }
+    case 'invest': {
+      if (prompt?.kind !== 'invest') return fail('Not now');
+      const deal = Object.hasOwn(INVEST, intent.pick) ? INVEST[intent.pick] : null;
+      if (!deal) return fail('Bad move');
+      if (deal.stake > 0) pay(s, seat, deal.stake);
+      const back = deal.odds <= 1 || nextInt(s.rng, deal.odds) === 0 ? deal.win : deal.lose;
+      p.cash += back;
+      s.log.push({ k: 'invest', seat, pick: intent.pick, n: back - deal.stake });
+      nextTurn(s);
+      return ok();
+    }
+    case 'midlife': {
+      if (prompt?.kind !== 'midlife') return fail('Not now');
+      const way = Object.hasOwn(MIDLIFE, intent.pick) ? MIDLIFE[intent.pick] : null;
+      if (!way) return fail('Bad move');
+      if (way.cash >= 0) p.cash += way.cash;
+      else pay(s, seat, -way.cash);
+      takeTiles(s, seat, way.tiles);
+      p.salary += way.raise;
+      s.log.push({ k: 'midlife', seat, pick: intent.pick });
+      nextTurn(s);
+      return ok();
+    }
     case 'retire': {
       if (prompt?.kind !== 'retire') return fail('Not now');
       if (intent.where !== 'country' && intent.where !== 'mansion') return fail('Bad move');
@@ -353,6 +433,8 @@ export function applyVida(s: VidaState, seat: number, intent: VidaIntent): Apply
 
 export interface VidaView {
   me: number;
+  /** Which track this game is played on. */
+  length: GameLength;
   players: (Omit<VidaPlayer, 'tiles'> & { tiles: number; tileValues: number[] | null })[];
   current: number;
   spun: boolean;
@@ -373,6 +455,7 @@ export function vidaView(s: VidaState, seat: number): VidaView {
   const over = s.winner !== null;
   return {
     me: seat,
+    length: s.length,
     players: s.players.map(p => ({ ...p, tiles: p.tiles.length, tileValues: over ? p.tiles : null })),
     current: s.current,
     spun: s.spun,
@@ -395,7 +478,11 @@ export function defaultIntent(s: VidaState): VidaIntent {
     case 'path':
       return { type: 'path', college: false };
     case 'career':
-      return { type: 'career', career: prompt.options[0]! };
+      return { type: 'career', career: prompt.keep ? null : prompt.options[0]! };
+    case 'invest':
+      return { type: 'invest', pick: 'savings' };
+    case 'midlife':
+      return { type: 'midlife', pick: 'deny' };
     case 'house':
       return { type: 'house', house: null };
     case 'sue': {
@@ -449,15 +536,30 @@ export class VidaInstance implements GameInstance {
   }
 }
 
-export type VidaOptions = Record<string, never>;
+/** `auto` plays the normal track with up to AUTO_SHORT_FROM − 1 players and the short one with more, so a full table doesn't take all night. */
+export type LengthOption = 'auto' | GameLength;
+export interface VidaOptions {
+  length: LengthOption;
+}
+export const AUTO_SHORT_FROM = 5;
+
+export function resolveLength(option: LengthOption, players: number): GameLength {
+  if (option === 'auto') return players >= AUTO_SHORT_FROM ? 'short' : 'normal';
+  return option;
+}
 
 export const vidaModule: GameModule<VidaOptions> = {
   id: 'vida',
   minPlayers: 2,
   maxPlayers: 6,
-  defaultOptions: () => ({}),
-  parseOptions: () => ({}),
-  create: (seats, _options, seed) => new VidaInstance(createVida(seats, seed)),
+  defaultOptions: () => ({ length: 'auto' }),
+  parseOptions: raw => {
+    const length = (raw as { length?: unknown } | null | undefined)?.length;
+    if (length === undefined) return { length: 'auto' };
+    if (length !== 'auto' && length !== 'short' && length !== 'normal') return { error: 'Bad options' };
+    return { length };
+  },
+  create: (seats, options, seed) => new VidaInstance(createVida(seats, seed, resolveLength(options.length, seats.length))),
 };
 
 export function asVidaView(v: unknown): VidaView {

@@ -202,6 +202,9 @@ const pt: Dictionary = {
     "gameForcaName": "Forca",
     "gameForcaTag": "Adivinhe a palavra letra por letra",
     "gameForcaLength": "10–20 min",
+    "gameStopName": "Stop",
+    "gameStopTag": "Adedonha: uma palavra por categoria com a letra",
+    "gameStopLength": "15–25 min",
   },
   prompts: {
     "discardDownTo": "Descarte {n} carta(s) até ficar com 3",

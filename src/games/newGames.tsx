@@ -4,18 +4,18 @@ import { ChessScreen } from './chess/ChessScreen';
 import { CHESS_TEXT, RULE_KEYS as CHESS_RULES } from './chess/text';
 import { NavalScreen } from './naval/NavalScreen';
 import { NAVAL_TEXT, RULE_KEYS as NAVAL_RULES } from './naval/text';
-import { forcaModule } from './forca/game';
-import { FORCA_RULES, FORCA_TEXT, ForcaScreen } from './forca/ForcaScreen';
+import { ForcaLobby, ForcaScreen } from './forca/ForcaScreen';
 import type { GameModule } from './module';
 import { pistaModule } from './pista/game';
 import { PistaScreen } from './pista/PistaScreen';
 import { PISTA_TEXT, RULE_KEYS as PISTA_RULES } from './pista/text';
 import { useGameText, type GameScreenProps, type Texts } from './shared/GameFrame';
 import { SimpleLobby, type LobbyProps } from './shared/SimpleLobby';
+import { StopLobby, StopScreen } from './stop/StopScreen';
 import { VELHA_RULES, VELHA_TEXT, VelhaScreen } from './velha/VelhaScreen';
 import { VidaScreen } from './vida/VidaScreen';
 import { ZEROU_RULES, ZEROU_TEXT, ZerouScreen } from './zerou/ZerouScreen';
-import { RULE_KEYS as VIDA_RULES, VIDA_TEXT } from './vida/text';
+import { VidaLobby } from './vida/VidaLobby';
 
 function rulesLobby(texts: Texts, keys: string[]): ComponentType<LobbyProps> {
   return function RulesLobby(props: LobbyProps) {
@@ -24,7 +24,7 @@ function rulesLobby(texts: Texts, keys: string[]): ComponentType<LobbyProps> {
   };
 }
 
-/** A lobby whose one setting is the language of the words (Pista Certa, Forca). */
+/** A lobby whose one setting is the language of the words (Pista Certa). */
 function wordsLobby(texts: Texts, keys: string[], module: GameModule<{ words: 'pt' | 'en' }>): ComponentType<LobbyProps> {
   return function WordsLobby(props: LobbyProps) {
     const t = useGameText(texts);
@@ -55,9 +55,10 @@ function wordsLobby(texts: Texts, keys: string[], module: GameModule<{ words: 'p
 export const NEW_GAMES: Partial<Record<GameId, { Lobby: ComponentType<LobbyProps>; Screen: ComponentType<GameScreenProps> }>> = {
   chess: { Lobby: rulesLobby(CHESS_TEXT, CHESS_RULES), Screen: ChessScreen },
   pista: { Lobby: wordsLobby(PISTA_TEXT, PISTA_RULES, pistaModule), Screen: PistaScreen },
-  vida: { Lobby: rulesLobby(VIDA_TEXT, VIDA_RULES), Screen: VidaScreen },
+  vida: { Lobby: VidaLobby, Screen: VidaScreen },
   naval: { Lobby: rulesLobby(NAVAL_TEXT, NAVAL_RULES), Screen: NavalScreen },
   zerou: { Lobby: rulesLobby(ZEROU_TEXT, ZEROU_RULES), Screen: ZerouScreen },
   velha: { Lobby: rulesLobby(VELHA_TEXT, VELHA_RULES), Screen: VelhaScreen },
-  forca: { Lobby: wordsLobby(FORCA_TEXT, FORCA_RULES, forcaModule), Screen: ForcaScreen },
+  forca: { Lobby: ForcaLobby, Screen: ForcaScreen },
+  stop: { Lobby: StopLobby, Screen: StopScreen },
 };

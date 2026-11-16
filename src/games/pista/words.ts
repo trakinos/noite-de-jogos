@@ -1,4 +1,4 @@
-/** Word pools for the 25-card grid: common, concrete, mostly one-word nouns with more than one meaning or angle. */
+/** Word pools for the table (25 cards, or 30 in the two-player game): common, concrete, mostly one-word nouns with more than one meaning or angle. */
 
 export const WORDS_PT: readonly string[] = [
   'ABACAXI', 'AGULHA', 'ÁGUA', 'ALMOFADA', 'ANEL', 'ANJO', 'ARANHA', 'ÁRVORE', 'ASA', 'ATOR',

@@ -2,7 +2,40 @@
 
 What changed for players, newest first. Every push to `main` deploys to https://trakinos.github.io/noite-de-jogos/.
 
-## Unreleased — playtest fixes, sound, three more games, install as an app
+## Unreleased — Stop, and playtest changes to Zerou!, Pista Certa, Forca and Vida Adulta
+
+### Added
+- **Stop (Adedonha), 2–8 players.** A letter is drawn and everyone fills one word per category at the same time. Fill every category to call STOP: the others get 3 s, or the round ends when the clock runs out. Then everyone checks the answers together and can mark one "Não vale"; an answer is struck when most of the other players agree. 10 points for an answer only you gave, 5 for one someone else also gave. The host picks the rounds, the time per round and the categories (13 to choose from).
+
+### Changed
+- **Zerou!**
+  - No more automatic penalty: accuse anyone at any time. A player on one card who didn't call Última! draws 5; a wrong accusation makes the accuser draw 2.
+  - **Cut in:** play a card identical to the top one out of turn, before the current player acts. Play continues after you.
+  - **The 9 race:** when a 9 lands, everyone taps it. The last one draws 2; after 8 s, everyone who hasn't tapped draws 2.
+  - **New card, Troca-Troca:** pick a colour and swap your whole hand with another player.
+  - **Pairs:** play cards of the same number together. Their effects add up (two +2s make +4).
+- **Pista Certa**
+  - Teams pick their own colour (7 to choose from).
+  - With 2 players: a cooperative game on 30 words, with no automatic rival. Each player has their own secret key and you take turns giving clues and guessing. Find all 18 words in 11 turns; one bomb ends it. The automatic rival is now only for 3 players.
+- **Forca**
+  - Over 700 words per language.
+  - New CEP category: countries, every Brazilian state and every capital.
+  - New "A player writes" mode: take turns writing the secret word for the others to guess.
+  - Wrong letters are shown big, red and struck through next to the gallows, with the number of misses left.
+  - The on-screen keyboard is always QWERTY. Before, the phone's own keyboard sometimes popped up over the A–Z keys.
+- **Vida Adulta**
+  - A longer life in seven chapters: about 32 spins each, roughly 15–20 min with 2 players, where games used to end in about 5 min.
+  - Dozens of new events and three new decisions: invest, career crossroads, midlife crisis.
+  - Game length (Normal or Short) is a lobby setting; tables of 5 or more play Short automatically.
+  - New board:
+    - Squares are colour-coded by type, with icons and a legend.
+    - A life line shows where everyone is.
+    - Highlights show where your spin can land and your next stop.
+    - A "Last move" box shows what just happened.
+    - Player cards show cash, job, family, house and debts.
+    - On phones, a strip follows the current player.
+
+## Earlier — playtest fixes, sound, three more games, install as an app
 
 ### Added
 - **Zerou! (2–8 players).** A card game in the shedding family: match the top card's color or symbol and empty your hand first. Pula, Inverte, +2, Coringa and Coringa +4 (only without the current color). Down to one card, call **Última!** or anyone can catch you for +2 until the next player acts.

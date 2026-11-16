@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { BOARD, CAREER_START, COLLEGE_LOANS, GRADUATE, RETIRE, START_CASH } from './board';
+import { BOARD, boardFor, CAREER_START, CAREERS, COLLEGE_LOANS, GRADUATE, INVEST, JOB_KEEP_RAISE, RETIRE, START_CASH } from './board';
 import { applyVida, createVida, defaultIntent, VidaInstance, vidaView } from './game';
+import { VIDA_TEXT } from './text';
 
 const seats = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `p${i}`, name: `P${i}` }));
 
@@ -68,5 +69,110 @@ describe('vida adulta', () => {
       expect(s.scores).toHaveLength(n);
       expect(s.winner).not.toBeNull();
     }
+  });
+});
+
+describe('vida adulta stops and squares', () => {
+  const board = boardFor('normal');
+  const at = (s: ReturnType<typeof createVida>, kind: string, from = board.careerStart) => {
+    const i = board.squares.findIndex((sq, n) => n >= from && (sq.k === kind || (sq.k === 'stop' && sq.s === kind)));
+    expect(i).toBeGreaterThan(0);
+    const p = s.players[0]!;
+    p.started = true;
+    p.career = 'teacher';
+    p.salary = 60;
+    // One square before, so a spin of anything stops there (stops) or we place directly (others).
+    p.pos = i;
+    return i;
+  };
+
+  it('every square text has Portuguese and English', () => {
+    for (const len of ['short', 'normal'] as const) {
+      for (const sq of boardFor(len).squares) {
+        if ('t' in sq) {
+          expect(VIDA_TEXT.pt[`t_${sq.t}`], sq.t).toBeTruthy();
+          expect(VIDA_TEXT.en[`t_${sq.t}`], sq.t).toBeTruthy();
+        }
+        if (sq.k === 'stop') {
+          expect(VIDA_TEXT.pt[`sq_${sq.s}`]).toBeTruthy();
+          expect(VIDA_TEXT.en[`sq_${sq.s}`]).toBeTruthy();
+        }
+      }
+    }
+    expect(Object.keys(VIDA_TEXT.en).sort()).toEqual(Object.keys(VIDA_TEXT.pt).sort());
+  });
+
+  it('a spin stops on an invest square and the choice resolves it', () => {
+    const s = createVida(seats(2), 5);
+    const i = at(s, 'invest');
+    s.players[0]!.pos = i - 1;
+    s.prompt = null;
+    applyVida(s, 0, { type: 'spin' });
+    expect(s.players[0]!.pos).toBe(i);
+    expect(s.prompt).toEqual({ kind: 'invest' });
+    const cash = s.players[0]!.cash;
+    expect(applyVida(s, 0, { type: 'invest', pick: 'savings' }).ok).toBe(true);
+    expect(s.players[0]!.cash).toBe(cash + INVEST.savings.win);
+    expect(s.current).toBe(1);
+  });
+
+  it('crossroads: staying gives a raise, switching keeps raises earned', () => {
+    const s = createVida(seats(2), 6);
+    const i = at(s, 'job');
+    s.players[0]!.pos = i - 1;
+    s.players[0]!.salary = 80; // teacher (60) + 20 in raises
+    s.prompt = null;
+    applyVida(s, 0, { type: 'spin' });
+    const prompt = s.prompt as unknown as { kind: string; options: string[]; keep?: boolean };
+    expect(prompt.kind).toBe('career');
+    expect(prompt.keep).toBe(true);
+    expect(prompt.options).not.toContain('teacher');
+    const other = CAREERS.find(c => c.id === prompt.options[0])!;
+    expect(other.degree).toBe(true);
+    const copy = structuredClone(s);
+    applyVida(copy, 0, { type: 'career', career: null });
+    expect(copy.players[0]!.salary).toBe(80 + JOB_KEEP_RAISE);
+    applyVida(s, 0, { type: 'career', career: other.id });
+    expect(s.players[0]!.salary).toBe(other.salary + 20);
+  });
+
+  it('bills per kid and bank interest only charge who has kids or loans', () => {
+    const s = createVida(seats(2), 8);
+    const kidBill = at(s, 'perkid');
+    const sq = board.squares[kidBill] as { k: 'perkid'; n: number };
+    s.players[0]!.pos = kidBill - 1;
+    s.players[0]!.kids = 2;
+    s.players[0]!.cash = 500;
+    // Walk exactly one square by forcing the rng to give 1: try seeds until the spin is 1.
+    for (let seed = 0; seed < 200; seed++) {
+      const c = structuredClone(s);
+      c.rng = createVida(seats(2), seed).rng;
+      c.prompt = null;
+      applyVida(c, 0, { type: 'spin' });
+      if (c.lastSpin!.n !== 1) continue;
+      expect(c.players[0]!.cash).toBe(500 - sq.n * 2);
+      return;
+    }
+    throw new Error('no seed spun a 1');
+  });
+
+  it('midlife and timeouts: the cautious answers always work', () => {
+    const s = createVida(seats(2), 9);
+    s.players[0]!.started = true;
+    s.prompt = { kind: 'midlife' };
+    expect(defaultIntent(s)).toEqual({ type: 'midlife', pick: 'deny' });
+    expect(applyVida(s, 0, defaultIntent(s)).ok).toBe(true);
+    s.players[1]!.started = true;
+    s.players[1]!.career = 'chef';
+    s.prompt = { kind: 'career', options: ['cashier', 'driver'], keep: true };
+    expect(defaultIntent(s)).toEqual({ type: 'career', career: null });
+    expect(applyVida(s, 1, { type: 'invest', pick: 'savings' }).ok).toBe(false);
+  });
+
+  it('views stay small', () => {
+    const inst = new VidaInstance(createVida(seats(6), 11));
+    for (let i = 0; i < 3000 && !inst.over; i++) inst.expire('turn', i);
+    const size = JSON.stringify({ ...inst.viewFor('p0'), log: inst.state.log.slice(-150) }).length;
+    expect(size).toBeLessThan(12000);
   });
 });
