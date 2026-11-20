@@ -1,11 +1,13 @@
 import type { GameId } from './catalog';
 import { bairroModule } from './bairro/module';
+import { catanModule } from './catan/game';
 import { chessModule } from './chess/game';
 import { dominionModule } from './dominion/module';
 import { forcaModule } from './forca/game';
 import { navalModule } from './naval/game';
 import { pistaModule } from './pista/game';
 import { stopModule } from './stop/game';
+import { sudokuModule } from './sudoku/game';
 import { velhaModule } from './velha/game';
 import { vidaModule } from './vida/game';
 import { zerouModule } from './zerou/game';
@@ -23,6 +25,8 @@ export const MODULES: Partial<Record<GameId, GameModule>> = {
   velha: velhaModule,
   forca: forcaModule,
   stop: stopModule,
+  sudoku: sudokuModule,
+  catan: catanModule,
 };
 
 export function moduleFor(id: GameId): GameModule {

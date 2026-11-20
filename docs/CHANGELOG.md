@@ -5,6 +5,8 @@ What changed for players, newest first. Every push to `main` deploys to https://
 ## Unreleased — Stop, and playtest changes to Zerou!, Pista Certa, Forca and Vida Adulta
 
 ### Added
+- **Sudoku, 1–8 players.** Co-op (one shared grid, digits tinted by who placed them), race (own grids, first to finish wins) or solo (same puzzle at your own pace). Easy, medium and hard; pencil notes; a wrong digit is refused and counted as a mistake.
+- **Catan, 3–4 players.** Base game on the standard 19-hex board with harbors: setup in snake order, dice, robber and discards, bank and player trades, development cards, longest road and largest army, first to 10 points. No turn timer and no bots yet.
 - **Stop (Adedonha), 2–8 players.** A letter is drawn and everyone fills one word per category at the same time. Fill every category to call STOP: the others get 3 s, or the round ends when the clock runs out. Then everyone checks the answers together and can mark one "Não vale"; an answer is struck when most of the other players agree. 10 points for an answer only you gave, 5 for one someone else also gave. The host picks the rounds, the time per round and the categories (13 to choose from).
 
 ### Changed

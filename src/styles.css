@@ -2196,3 +2196,84 @@ body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-are
   body { overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
   input, textarea { -webkit-user-select: text; user-select: text; }
 }
+
+/* Sudoku */
+.front__art--sudoku { background: linear-gradient(var(--text), var(--text)) 33% 0 / 3px 100% no-repeat, linear-gradient(var(--text), var(--text)) 66% 0 / 3px 100% no-repeat, linear-gradient(var(--text), var(--text)) 0 33% / 100% 3px no-repeat, linear-gradient(var(--text), var(--text)) 0 66% / 100% 3px no-repeat, repeating-linear-gradient(90deg, transparent 0 10.5%, var(--surface-2) 10.5% 11.5%), repeating-linear-gradient(0deg, transparent 0 10.5%, var(--surface-2) 10.5% 11.5%), var(--surface); }
+.sudoku__table { display: grid; gap: 10px; justify-items: center; width: 100%; }
+.sudoku__meta { margin: 0; }
+.sudoku__status { margin: 0; font-weight: 800; min-height: 1.4em; }
+.sudoku__status.is-done { color: var(--accent); font-size: 1.15rem; }
+.sudoku__players { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.sudoku__player { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: var(--r-md); background: var(--surface); border: 2px solid var(--border); }
+.sudoku__player.is-me { border-color: var(--accent); }
+.sudoku__player progress { width: 64px; height: 8px; }
+.sudoku__board { display: grid; grid-template-columns: repeat(9, 1fr); width: min(94vw, 460px); aspect-ratio: 1; border: 3px solid var(--text); border-radius: 6px; background: var(--surface); overflow: hidden; }
+.sudoku__board[data-shake] { animation: sudoku-shake 0.3s; }
+@keyframes sudoku-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.sudoku__cell { all: unset; box-sizing: border-box; display: grid; place-items: center; font-size: clamp(1rem, 5.2vw, 1.7rem); font-weight: 600; color: var(--accent); border: 1px solid var(--border); cursor: pointer; min-width: 0; }
+.sudoku__cell.is-given { color: var(--text); font-weight: 800; background: color-mix(in srgb, var(--surface-2) 45%, transparent); }
+.sudoku__cell.row-end { border-bottom: 3px solid var(--text); }
+.sudoku__cell.col-end { border-right: 3px solid var(--text); }
+.sudoku__cell.is-near { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.sudoku__cell.is-same { background: color-mix(in srgb, var(--accent) 28%, transparent); }
+.sudoku__cell.is-sel { background: color-mix(in srgb, var(--accent) 40%, transparent); outline: 2px solid var(--accent); outline-offset: -2px; }
+.sudoku__notes { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; height: 100%; font-size: clamp(0.5rem, 2.2vw, 0.75rem); font-weight: 600; color: var(--text); opacity: 0.7; }
+.sudoku__notes i { font-style: normal; display: grid; place-items: center; }
+.sudoku__pad { display: grid; grid-template-columns: repeat(9, 1fr); gap: 6px; width: min(94vw, 460px); }
+.sudoku__pad button { position: relative; min-height: 48px; padding: 0; font-size: 1.3rem; font-weight: 800; }
+.sudoku__pad small { position: absolute; right: 3px; bottom: 1px; font-size: 0.6rem; opacity: 0.6; }
+
+/* Catan */
+.front__art--catan { background: conic-gradient(from 30deg, #3f7d3a 0 60deg, #e3c04a 60deg 120deg, #b5523b 120deg 180deg, #9bcf5f 180deg 240deg, #8a8f98 240deg 300deg, #d9c79a 300deg 360deg); }
+.catan__layout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr); gap: 16px; align-items: start; width: 100%; }
+@media (max-width: 860px) { .catan__layout { grid-template-columns: 1fr; } }
+.catan__main { display: grid; gap: 8px; justify-items: center; }
+.catan__status { margin: 0; font-weight: 800; text-align: center; }
+.catan__status.is-mine { color: var(--accent); }
+.catan__board { width: 100%; max-width: 760px; height: auto; touch-action: manipulation; }
+.catan__sea { fill: #2f6f9f; }
+.catan__tile { stroke: #f3e8d4; stroke-width: 0.05; }
+.catan__token { fill: #f6efd9; stroke: #7a6a4a; stroke-width: 0.02; }
+.catan__board text { fill: #2a1e14; pointer-events: none; user-select: none; }
+.catan__board text.is-hot { fill: #b3261e; }
+.catan__port line { stroke: #f3e8d4; stroke-width: 0.04; stroke-dasharray: 0.1 0.08; }
+.catan__port circle { fill: #f6efd9; stroke: #7a6a4a; stroke-width: 0.02; }
+.catan__robber * { fill: #1a1a1a; stroke: #fff; stroke-width: 0.02; pointer-events: none; }
+.catan__road { stroke-width: 0.17; stroke-linecap: round; paint-order: stroke; filter: drop-shadow(0 0 0.02px #000); }
+.catan__piece { stroke: #1a1a1a; stroke-width: 0.04; }
+.catan__ghost { stroke: #fff; stroke-opacity: 0.7; stroke-width: 0.15; stroke-linecap: round; stroke-dasharray: 0.12 0.1; }
+.catan__ghostdot { fill: #fff; fill-opacity: 0.8; stroke: #1a1a1a; stroke-width: 0.03; }
+.catan__hit { stroke: transparent; fill: transparent; stroke-width: 0.4; stroke-linecap: round; }
+.catan__spot { cursor: pointer; }
+.catan__spot:hover .catan__ghostdot { fill: var(--accent); }
+.catan__hex.is-target { cursor: pointer; }
+.catan__hex.is-target .catan__tile { stroke: #fff; stroke-width: 0.1; }
+.catan__side { display: grid; gap: 10px; }
+.catan__players { display: grid; gap: 8px; }
+.catan__player { display: flex; gap: 10px; align-items: center; padding: 8px 12px; border-radius: var(--r-md); background: var(--surface); border: 2px solid var(--border); }
+.catan__player.is-turn { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.catan__stats { display: flex; gap: 10px; flex-wrap: wrap; font-size: 0.85rem; }
+.catan__badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.catan__badge { font-size: 0.72rem; font-weight: 700; padding: 1px 8px; border-radius: 99px; background: var(--surface-2); }
+.catan__dice { margin: 0; text-align: center; font-size: 1.05rem; }
+.catan__hand { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.catan__res { display: grid; justify-items: center; padding: 6px 2px; border-radius: var(--r-md); background: var(--surface); border: 2px solid var(--border); }
+.catan__res span { font-size: 1.3rem; }
+.catan__res b { font-size: 1.2rem; }
+.catan__res small { font-size: 0.65rem; opacity: 0.7; }
+.catan__actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.catan__actions button { min-height: 44px; }
+.catan__devs { display: grid; gap: 4px; }
+.catan__dev { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 4px 10px; border-radius: var(--r-md); background: var(--surface); border: 2px solid var(--border); }
+.catan__picker { display: grid; gap: 6px; text-align: center; }
+.catan__bank { text-align: center; }
+.catan__log { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: 0.85rem; opacity: 0.85; max-height: 180px; overflow: auto; }
+.catan__offer { padding: 10px 14px; border-radius: var(--r-md); background: var(--surface); border: 2px solid var(--accent); text-align: center; max-width: 100%; }
+.catan__handtext { display: inline-flex; gap: 6px; font-weight: 700; }
+.catan__dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.catan__stepper { display: grid; gap: 6px; }
+.catan__step { display: flex; align-items: center; gap: 10px; justify-content: center; }
+.catan__step button { width: 40px; min-height: 40px; padding: 0; font-size: 1.2rem; }
+.catan__step b { min-width: 1.5em; text-align: center; }
+.catan__pickrow { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.catan__trade { max-width: 440px; }

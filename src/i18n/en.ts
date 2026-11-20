@@ -207,6 +207,12 @@ const ui = {
   "gameStopName": "Stop",
   "gameStopTag": "Scattergories: one word per category with the letter",
   "gameStopLength": "15–25 min",
+  "gameSudokuName": "Sudoku",
+  "gameSudokuTag": "Co-op, race or solo",
+  "gameSudokuLength": "10–30 min",
+  "gameCatanName": "Catan",
+  "gameCatanTag": "Settle the island: build, trade, reach 10 points",
+  "gameCatanLength": "60–90 min",
 } as const;
 
 export type UiKey = keyof typeof ui;

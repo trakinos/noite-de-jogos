@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import type { GameId } from './catalog';
+import { CatanLobby, CatanScreen } from './catan/CatanScreen';
 import { ChessScreen } from './chess/ChessScreen';
 import { CHESS_TEXT, RULE_KEYS as CHESS_RULES } from './chess/text';
 import { NavalScreen } from './naval/NavalScreen';
@@ -12,6 +13,7 @@ import { PISTA_TEXT, RULE_KEYS as PISTA_RULES } from './pista/text';
 import { useGameText, type GameScreenProps, type Texts } from './shared/GameFrame';
 import { SimpleLobby, type LobbyProps } from './shared/SimpleLobby';
 import { StopLobby, StopScreen } from './stop/StopScreen';
+import { SudokuLobby, SudokuScreen } from './sudoku/SudokuScreen';
 import { VELHA_RULES, VELHA_TEXT, VelhaScreen } from './velha/VelhaScreen';
 import { VidaScreen } from './vida/VidaScreen';
 import { ZEROU_RULES, ZEROU_TEXT, ZerouScreen } from './zerou/ZerouScreen';
@@ -61,4 +63,6 @@ export const NEW_GAMES: Partial<Record<GameId, { Lobby: ComponentType<LobbyProps
   velha: { Lobby: rulesLobby(VELHA_TEXT, VELHA_RULES), Screen: VelhaScreen },
   forca: { Lobby: ForcaLobby, Screen: ForcaScreen },
   stop: { Lobby: StopLobby, Screen: StopScreen },
+  sudoku: { Lobby: SudokuLobby, Screen: SudokuScreen },
+  catan: { Lobby: CatanLobby, Screen: CatanScreen },
 };

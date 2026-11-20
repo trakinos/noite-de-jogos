@@ -205,6 +205,12 @@ const pt: Dictionary = {
     "gameStopName": "Stop",
     "gameStopTag": "Adedonha: uma palavra por categoria com a letra",
     "gameStopLength": "15–25 min",
+    "gameSudokuName": "Sudoku",
+    "gameSudokuTag": "Em dupla, em corrida ou sozinho",
+    "gameSudokuLength": "10–30 min",
+    "gameCatanName": "Catan",
+    "gameCatanTag": "Colonize a ilha: construa, negocie e chegue a 10 pontos",
+    "gameCatanLength": "60–90 min",
   },
   prompts: {
     "discardDownTo": "Descarte {n} carta(s) até ficar com 3",

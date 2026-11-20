@@ -1,16 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { CAREERS, HOUSES, BOARD } from '../vida/board';
+import { CATAN_TEXT } from '../catan/CatanScreen';
 import { CHESS_TEXT } from '../chess/text';
 import { FORCA_TEXT } from '../forca/ForcaScreen';
 import { STOP_TEXT } from '../stop/StopScreen';
 import { NAVAL_TEXT } from '../naval/text';
+import { SUDOKU_TEXT } from '../sudoku/SudokuScreen';
 import { VELHA_TEXT } from '../velha/VelhaScreen';
 import { ZEROU_TEXT } from '../zerou/ZerouScreen';
 import { PISTA_TEXT } from '../pista/text';
 import { VIDA_TEXT } from '../vida/text';
 
 describe('newer games text', () => {
-  it.each([['chess', CHESS_TEXT], ['pista', PISTA_TEXT], ['vida', VIDA_TEXT], ['naval', NAVAL_TEXT], ['zerou', ZEROU_TEXT], ['velha', VELHA_TEXT], ['forca', FORCA_TEXT], ['stop', STOP_TEXT]] as const)('%s has the same keys in pt and en', (_, texts) => {
+  it.each([['chess', CHESS_TEXT], ['pista', PISTA_TEXT], ['vida', VIDA_TEXT], ['naval', NAVAL_TEXT], ['zerou', ZEROU_TEXT], ['velha', VELHA_TEXT], ['forca', FORCA_TEXT], ['stop', STOP_TEXT], ['sudoku', SUDOKU_TEXT], ['catan', CATAN_TEXT]] as const)('%s has the same keys in pt and en', (_, texts) => {
     expect(Object.keys(texts.en).sort()).toEqual(Object.keys(texts.pt).sort());
   });
 

@@ -11,6 +11,6 @@ describe('screensFor', () => {
   });
 
   it('has screens for chess, pista, vida and naval', () => {
-    expect(['chess', 'pista', 'vida', 'naval', 'zerou', 'velha', 'forca', 'stop'].map((g) => screensFor(g as 'chess'))).toEqual(['chess', 'pista', 'vida', 'naval', 'zerou', 'velha', 'forca', 'stop']);
+    expect(['chess', 'pista', 'vida', 'naval', 'zerou', 'velha', 'forca', 'stop', 'sudoku', 'catan'].map((g) => screensFor(g as 'chess'))).toEqual(['chess', 'pista', 'vida', 'naval', 'zerou', 'velha', 'forca', 'stop', 'sudoku', 'catan']);
   });
 });

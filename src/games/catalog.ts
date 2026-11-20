@@ -1,6 +1,6 @@
 import type { UiKey } from '../i18n';
 
-export type GameId = 'dominion' | 'bairro' | 'chess' | 'pista' | 'vida' | 'naval' | 'zerou' | 'velha' | 'forca' | 'stop';
+export type GameId = 'dominion' | 'bairro' | 'chess' | 'pista' | 'vida' | 'naval' | 'zerou' | 'velha' | 'forca' | 'stop' | 'sudoku' | 'catan';
 
 export interface GameInfo {
   id: GameId;
@@ -24,6 +24,8 @@ export const GAMES: readonly GameInfo[] = [
   { id: 'velha', nameKey: 'gameVelhaName', tagKey: 'gameVelhaTag', minPlayers: 2, maxPlayers: 2, lengthKey: 'gameVelhaLength', available: true },
   { id: 'forca', nameKey: 'gameForcaName', tagKey: 'gameForcaTag', minPlayers: 2, maxPlayers: 8, lengthKey: 'gameForcaLength', available: true },
   { id: 'stop', nameKey: 'gameStopName', tagKey: 'gameStopTag', minPlayers: 2, maxPlayers: 8, lengthKey: 'gameStopLength', available: true },
+  { id: 'sudoku', nameKey: 'gameSudokuName', tagKey: 'gameSudokuTag', minPlayers: 1, maxPlayers: 8, lengthKey: 'gameSudokuLength', available: true },
+  { id: 'catan', nameKey: 'gameCatanName', tagKey: 'gameCatanTag', minPlayers: 3, maxPlayers: 4, lengthKey: 'gameCatanLength', available: true },
 ];
 
 export function isGameId(x: unknown): x is GameId {

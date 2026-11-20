@@ -15,6 +15,8 @@ describe('game catalog', () => {
       ['velha', true, 2, 2],
       ['forca', true, 2, 8],
       ['stop', true, 2, 8],
+      ['sudoku', true, 1, 8],
+      ['catan', true, 3, 4],
     ]);
   });
 
