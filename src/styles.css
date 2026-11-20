@@ -2220,15 +2220,16 @@ body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-are
 .sudoku__board { display: grid; grid-template-columns: repeat(9, 1fr); width: min(94vw, 460px); aspect-ratio: 1; border: 3px solid var(--text); border-radius: 6px; background: var(--surface); overflow: hidden; }
 .sudoku__board[data-shake] { animation: sudoku-shake 0.3s; }
 @keyframes sudoku-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
-.sudoku__cell { all: unset; box-sizing: border-box; display: grid; place-items: center; font-size: clamp(1rem, 5.2vw, 1.7rem); font-weight: 600; color: var(--accent); border: 1px solid var(--border); cursor: pointer; min-width: 0; }
+.sudoku__cell { all: unset; position: relative; box-sizing: border-box; display: grid; place-items: center; font-size: clamp(1rem, 5.2vw, 1.7rem); font-weight: 600; color: var(--accent); border: 1px solid var(--border); cursor: pointer; min-width: 0; }
 .sudoku__cell.is-given { color: var(--text); font-weight: 800; background: color-mix(in srgb, var(--surface-2) 45%, transparent); }
 .sudoku__cell.row-end { border-bottom: 3px solid var(--text); }
 .sudoku__cell.col-end { border-right: 3px solid var(--text); }
 .sudoku__cell.is-near { background: color-mix(in srgb, var(--accent) 12%, transparent); }
 .sudoku__cell.is-same { background: color-mix(in srgb, var(--accent) 28%, transparent); }
 .sudoku__cell.is-sel { background: color-mix(in srgb, var(--accent) 40%, transparent); outline: 2px solid var(--accent); outline-offset: -2px; }
-.sudoku__notes { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; height: 100%; font-size: clamp(0.5rem, 2.2vw, 0.75rem); font-weight: 600; color: var(--text); opacity: 0.7; }
+.sudoku__notes { position: absolute; inset: 1px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); font-size: clamp(0.58rem, 2.5vw, 0.82rem); font-weight: 700; line-height: 1; color: var(--text); opacity: 0.75; pointer-events: none; }
 .sudoku__notes i { font-style: normal; display: grid; place-items: center; }
+.sudoku__notes i.is-focus { color: var(--accent); font-weight: 900; opacity: 1; background: color-mix(in srgb, var(--accent) 25%, transparent); border-radius: 50%; }
 .sudoku__pad { display: grid; grid-template-columns: repeat(9, 1fr); gap: 6px; width: min(94vw, 460px); }
 .sudoku__pad button { position: relative; min-height: 48px; padding: 0; font-size: 1.3rem; font-weight: 800; }
 .sudoku__pad small { position: absolute; right: 3px; bottom: 1px; font-size: 0.6rem; opacity: 0.6; }
@@ -2287,3 +2288,4 @@ body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-are
 .catan__step b { min-width: 1.5em; text-align: center; }
 .catan__pickrow { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
 .catan__trade { max-width: 440px; }
+.sudoku__cell.is-marked { background: color-mix(in srgb, var(--accent) 18%, transparent); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent); }

@@ -132,6 +132,8 @@ export function SudokuScreen(props: GameScreenProps) {
   const [pencil, setPencil] = useState(false);
   const [notes, setNotes] = useState<Record<number, number[]>>({});
   const [shake, setShake] = useState(0);
+  /** The digit whose placed copies and pencil marks are highlighted: the last one tapped on the pad or on the grid. */
+  const [focus, setFocus] = useState(0);
   const { lobby, awaiting, onIntent } = props;
   const mine = view.finished.includes(view.me);
   const locked = view.done || mine;
@@ -161,6 +163,7 @@ export function SudokuScreen(props: GameScreenProps) {
   }, [view.grid, view.mistakes, view.done]);
 
   const place = (digit: number) => {
+    setFocus(digit);
     if (sel === null || locked || awaiting) return;
     if (view.grid[sel] !== 0) return;
     if (pencil) {
@@ -199,7 +202,7 @@ export function SudokuScreen(props: GameScreenProps) {
 
   const counts = Array(10).fill(0) as number[];
   for (const v of view.grid) counts[v]!++;
-  const selDigit = sel !== null ? view.grid[sel]! : 0;
+  const selDigit = focus;
   const near = sel !== null ? new Set(peers(sel)) : new Set<number>();
 
   let status = '';
@@ -236,6 +239,7 @@ export function SudokuScreen(props: GameScreenProps) {
             if (i === sel) cls.push('is-sel');
             else if (near.has(i)) cls.push('is-near');
             if (selDigit && v === selDigit) cls.push('is-same');
+            else if (selDigit && v === 0 && notes[i]?.includes(selDigit)) cls.push('is-marked');
             if (Math.floor(i / 9) % 3 === 2 && i < 72) cls.push('row-end');
             if (i % 9 % 3 === 2 && i % 9 < 8) cls.push('col-end');
             return (
@@ -243,11 +247,14 @@ export function SudokuScreen(props: GameScreenProps) {
                 key={i}
                 type="button"
                 className={cls.join(' ')}
-                onClick={() => setSel(i)}
+                onClick={() => {
+                  setSel(i);
+                  if (v) setFocus(v);
+                }}
                 aria-label={`${Math.floor(i / 9) + 1},${(i % 9) + 1} ${v || ''}`}
                 style={owner >= 0 ? { color: playerColor(lobby, view.players[owner]!.id) } : undefined}
               >
-                {v !== 0 ? v : (notes[i]?.length ? <span className="sudoku__notes">{[1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => <i key={d}>{notes[i]!.includes(d) ? d : ''}</i>)}</span> : null)}
+                {v !== 0 ? v : (notes[i]?.length ? <span className="sudoku__notes" aria-hidden="true">{[1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => <i key={d} className={d === focus ? 'is-focus' : undefined}>{notes[i]!.includes(d) ? d : ''}</i>)}</span> : null)}
               </button>
             );
           })}
