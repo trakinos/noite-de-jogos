@@ -24,6 +24,8 @@ export const TIME_OPTIONS = [60, 90, 120, 180] as const;
 export const MAX_ANSWER = 30;
 /** After STOP, everyone has this long to finish the word they were typing. */
 export const GRACE_MS = 3000;
+/** The letter takes this long to be drawn on screen; the writing time only starts after it. */
+export const INTRO_MS = 2400;
 /** The review closes by itself after this long, so a player who walked away cannot hold the room. */
 export const REVIEW_MS = 90_000;
 export const POINTS_UNIQUE = 10;
@@ -64,6 +66,8 @@ export interface StopState {
   phase: StopPhase;
   /** Host wall-clock time (ms) when the current phase ends by itself; null while the scores are shown. */
   deadline: number | null;
+  /** Host wall-clock time (ms) when the letter has been drawn and writing may begin. */
+  writeFrom: number;
   stopBy: number | null;
   /** [seat][category] */
   answers: string[][];
@@ -132,6 +136,7 @@ export function createStop(seats: SeatInfo[], options: StopOptions, seed: number
     round: -1,
     phase: 'writing',
     deadline: null,
+    writeFrom: 0,
     stopBy: null,
     answers: [],
     rejects: [],
@@ -149,7 +154,8 @@ export function createStop(seats: SeatInfo[], options: StopOptions, seed: number
 function startRound(s: StopState, now: number): void {
   s.round++;
   s.phase = 'writing';
-  s.deadline = now + s.options.seconds * 1000;
+  s.writeFrom = now + INTRO_MS;
+  s.deadline = s.writeFrom + s.options.seconds * 1000;
   s.stopBy = null;
   s.answers = s.players.map(() => s.options.categories.map(() => ''));
   s.rejects = s.players.map(() => s.options.categories.map(() => []));
@@ -312,6 +318,8 @@ export interface StopView {
   phase: StopPhase;
   /** Time left in this phase when the view was made; null when nothing is counting down. */
   endsInMs: number | null;
+  /** How long the letter is still being drawn, with the countdown held until then. */
+  introMs: number;
   /** The full length of the running countdown, for the timer bar. */
   totalMs: number;
   stopBy: number | null;
@@ -349,6 +357,7 @@ export function stopView(s: StopState, seat: number, now: number): StopView {
     categories: s.options.categories,
     phase: s.phase,
     endsInMs: s.deadline === null ? null : Math.max(0, s.deadline - now),
+    introMs: s.phase === 'writing' && s.stopBy === null ? Math.max(0, s.writeFrom - now) : 0,
     totalMs: s.phase === 'review' ? REVIEW_MS : s.stopBy !== null ? GRACE_MS : s.options.seconds * 1000,
     stopBy: s.stopBy,
     filled: s.answers.map(row => row.filter(a => a !== '').length),

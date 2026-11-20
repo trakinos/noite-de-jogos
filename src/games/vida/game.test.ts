@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BIKE_UPKEEP, BOARD, boardFor, HOUSES, KID_UPKEEP, CAREER_START, CAREERS, COLLEGE_LOANS, GRADUATE, INVEST, JOB_KEEP_RAISE, RETIRE, START_CASH } from './board';
+import { BIKE_UPKEEP, BOARD, INTEREST_EVERY, LOAN_PAYBACK, PAYDAY_INTEREST, RETIRE_EARLY, WEDDING, WEDDING_GIFT, boardFor, HOUSES, KID_UPKEEP, CAREER_START, CAREERS, COLLEGE_LOANS, GRADUATE, INVEST, JOB_KEEP_RAISE, RETIRE, START_CASH } from './board';
 import { applyVida, createVida, defaultIntent, VidaInstance, vidaView } from './game';
 import { VIDA_TEXT } from './text';
 
@@ -234,5 +234,83 @@ describe('vida adulta stops and squares', () => {
     for (let i = 0; i < 3000 && !inst.over; i++) inst.expire('turn', i);
     const size = JSON.stringify({ ...inst.viewFor('p0'), log: inst.state.log.slice(-150) }).length;
     expect(size).toBeLessThan(12000);
+  });
+});
+
+describe('choices added after playtests', () => {
+  const started = (seed: number, n = 2) => {
+    const s = createVida(seats(n), seed);
+    s.players.forEach(p => {
+      p.started = true;
+      p.career = 'chef';
+      p.salary = 50;
+    });
+    s.prompt = null;
+    return s;
+  };
+
+  it('marriage is a choice: gifts only come with the party, and cost something', () => {
+    const s = started(21, 3);
+    s.prompt = { kind: 'marry' };
+    const cash = s.players.map(p => p.cash = 500);
+    applyVida(s, 0, { type: 'marry', pick: 'party' });
+    expect(s.players[0]!.cash).toBe(500 + 2 * WEDDING_GIFT - WEDDING.party.cost);
+    expect(s.players[1]!.cash).toBe(cash[1]! - WEDDING_GIFT);
+    const t = started(22, 3);
+    t.prompt = { kind: 'marry' };
+    t.players.forEach(p => p.cash = 500);
+    applyVida(t, 0, { type: 'marry', pick: 'honeymoon' });
+    expect(t.players[0]!.cash).toBe(500 - WEDDING.honeymoon.cost);
+    expect(t.players[0]!.tiles).toHaveLength(WEDDING.honeymoon.tiles);
+    expect(t.players[1]!.cash).toBe(500);
+  });
+
+  it('a second house replaces the first, or is sold without a new one', () => {
+    const s = started(23);
+    s.players[0]!.house = 'kitnet';
+    s.players[0]!.cash = 1000;
+    s.prompt = { kind: 'house', options: ['villa', 'flat', 'beach'] };
+    const copy = structuredClone(s);
+    expect(applyVida(s, 0, { type: 'house', house: 'villa' }).ok).toBe(true);
+    expect(s.players[0]!.house).toBe('villa');
+    expect(s.players[0]!.cash).toBe(1000 + 210 - 400);
+    expect(s.log).toContainEqual({ k: 'house', seat: 0, house: 'villa', from: 'kitnet' });
+    expect(applyVida(copy, 0, { type: 'house', house: null, sell: true }).ok).toBe(true);
+    expect(copy.players[0]!.house).toBeNull();
+    expect(copy.players[0]!.cash).toBe(1000 + 210);
+    const none = started(24);
+    none.prompt = { kind: 'house', options: ['villa'] };
+    expect(applyVida(none, 0, { type: 'house', house: null, sell: true }).ok).toBe(false);
+  });
+
+  it('every other payday charges interest on open loans', () => {
+    const s = started(25);
+    const p = s.players[0]!;
+    p.loans = 2;
+    p.cash = 1000;
+    const board = boardFor('normal');
+    const firstPayday = board.squares.findIndex((sq, i) => i >= board.careerStart && sq.k === 'payday');
+    p.pos = firstPayday - 1;
+    p.paydays = INTEREST_EVERY - 1;
+    for (let i = 0; i < 30 && !s.log.some(e => e.k === 'payday'); i++) {
+      if (s.current === 0 && !s.prompt) applyVida(s, 0, { type: 'spin' });
+      else break;
+    }
+    expect(s.log).toContainEqual({ k: 'cash', seat: 0, n: -PAYDAY_INTEREST * 2, t: 'interest' });
+    expect(LOAN_PAYBACK).toBe(120);
+  });
+
+  it('retirement: the world trip has one place, and the first to arrive is paid', () => {
+    const s = started(26);
+    s.players.forEach(p => p.cash = 600);
+    s.prompt = { kind: 'retire' };
+    expect(applyVida(s, 0, { type: 'retire', where: 'world' }).ok).toBe(true);
+    expect(s.players[0]!.tiles).toHaveLength(4);
+    expect(s.players[0]!.cash).toBe(600 - 250 + RETIRE_EARLY[0]!);
+    s.current = 1;
+    s.prompt = { kind: 'retire' };
+    expect(applyVida(s, 1, { type: 'retire', where: 'world' })).toEqual({ ok: false, reason: 'That place is already taken' });
+    expect(applyVida(s, 1, { type: 'retire', where: 'business' }).ok).toBe(true);
+    expect(s.players[1]!.cash).toBe(600 + 5 * 50 + RETIRE_EARLY[1]!);
   });
 });

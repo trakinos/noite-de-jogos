@@ -248,10 +248,37 @@ export const TILES_EACH = 14;
 
 export const START_CASH = 20;
 export const LOAN = 100;
-export const LOAN_PAYBACK = 125;
+export const LOAN_PAYBACK = 120;
+/** Charged by the interest squares, per loan. */
 export const LOAN_INTEREST = 15;
+/** Every this many paydays, each loan also costs PAYDAY_INTEREST, so debt keeps growing until it is repaid. */
+export const INTEREST_EVERY = 2;
+export const PAYDAY_INTEREST = 10;
 export const COLLEGE_LOANS = 1;
 export const WEDDING_GIFT = 40;
+
+/** How to marry: the party is paid for by the guests' gifts, the other two buy Achievements instead. */
+export type WeddingPick = 'party' | 'civil' | 'honeymoon';
+export const WEDDING: Record<WeddingPick, { cost: number; tiles: number; gifts: boolean }> = {
+  party: { cost: 80, tiles: 1, gifts: true },
+  civil: { cost: 20, tiles: 1, gifts: false },
+  honeymoon: { cost: 150, tiles: 2, gifts: false },
+};
+
+/**
+ * Where to retire. `slots` is how many players can take the place (null: any number); `salaries` is a payout of that many salaries;
+ * the mansion pays nothing now, but its richest guest wins MANSION_TILES at the end.
+ */
+export type Retirement = 'country' | 'beach' | 'world' | 'business' | 'mansion';
+export const RETIREMENTS: Record<Retirement, { cost: number; tiles: number; salaries: number; slots: number | null }> = {
+  country: { cost: 0, tiles: 2, salaries: 0, slots: null },
+  beach: { cost: 150, tiles: 3, salaries: 0, slots: null },
+  world: { cost: 250, tiles: 4, salaries: 0, slots: 1 },
+  business: { cost: 0, tiles: 0, salaries: 5, slots: null },
+  mansion: { cost: 0, tiles: 0, salaries: 0, slots: null },
+};
+/** Reaching the end first is paid: the 1st, 2nd and 3rd to retire get these, since the others keep earning meanwhile. */
+export const RETIRE_EARLY: readonly number[] = [200, 120, 60];
 export const SUE_AMOUNT = 100;
 export const KID_BONUS = 100;
 /** Each child costs this at every payday. */

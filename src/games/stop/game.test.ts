@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  applyStop, CATEGORIES, cleanAnswer, createStop, DEFAULT_CATEGORIES, defaultStopOptions, GRACE_MS, LETTERS, markRound, MAX_ANSWER, normalize,
+  applyStop, CATEGORIES, cleanAnswer, createStop, DEFAULT_CATEGORIES, defaultStopOptions, GRACE_MS, INTRO_MS, LETTERS, markRound, MAX_ANSWER, normalize,
   REVIEW_MS, StopInstance, stopModule, stopView, votesNeeded, type StopOptions, type StopState,
 } from './game';
 
@@ -58,7 +58,8 @@ describe('stop', () => {
     expect(JSON.stringify(other).toLowerCase()).not.toContain('zzhidden');
     const own = stopView(s, 0, 1000);
     expect(own.mine).toEqual(secret);
-    expect(own.endsInMs).toBe(59_000);
+    expect(own.endsInMs).toBe(59_000 + INTRO_MS);
+    expect(own.introMs).toBe(INTRO_MS - 1000);
   });
 
   it('refuses STOP until every category has a word with the letter', () => {
@@ -96,16 +97,16 @@ describe('stop', () => {
   it('ends the round when the time runs out even if nobody stops', () => {
     const s = game();
     applyStop(s, 0, { type: 'answers', answers: sheet(s, ['a', '', '']) }, 100);
-    applyStop(s, 1, { type: 'tick' }, 59_999);
+    applyStop(s, 1, { type: 'tick' }, 59_999 + INTRO_MS);
     expect(s.phase).toBe('writing');
     // The last words typed reach the host with the intent that finds the time over, and still count.
-    applyStop(s, 1, { type: 'answers', answers: sheet(s, ['b', '', '']) }, 60_000);
+    applyStop(s, 1, { type: 'answers', answers: sheet(s, ['b', '', '']) }, 60_000 + INTRO_MS);
     expect(s.phase).toBe('review');
     expect(s.answers[1]![0]).toBe(`${s.letters[0]}b`);
     expect(s.log.at(-1)).toEqual({ k: 'lock', timeout: true });
     // STOP after the time is up is too late.
     const again = game();
-    expect(applyStop(again, 0, { type: 'stop', answers: sheet(again, ['a', 'b', 'c']) }, 60_000)).toEqual({ ok: true });
+    expect(applyStop(again, 0, { type: 'stop', answers: sheet(again, ['a', 'b', 'c']) }, 60_000 + INTRO_MS)).toEqual({ ok: true });
     expect(again.phase).toBe('review');
     expect(again.stopBy).toBeNull();
     expect(again.answers[0]).toEqual(['', '', '']);
@@ -204,7 +205,7 @@ describe('stop', () => {
     expect(applyStop(s, 1, { type: 'next', round: 0 }, 100_001)).toEqual({ ok: true });
     expect(s.round).toBe(1);
     expect(s.phase).toBe('writing');
-    expect(s.deadline).toBe(160_000);
+    expect(s.deadline).toBe(160_000 + INTRO_MS);
     expect(s.answers).toEqual([['', '', ''], ['', '', ''], ['', '', '']]);
     expect(s.ready).toEqual([false, false, false]);
     expect(stopView(s, 0, 100_000).letter).toBe(s.letters[1]);

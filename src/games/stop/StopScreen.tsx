@@ -8,7 +8,7 @@ import { EndActions, GameFrame, RulesSheet, useGameText, useReason, type GameScr
 import { SimpleLobby, type LobbyProps } from '../shared/SimpleLobby';
 import { playSound } from '../shared/sound';
 import {
-  asStopView, CATEGORIES, cleanAnswer, defaultStopOptions, GRACE_MS, MAX_ANSWER, MIN_CATEGORIES, pointsFor, POINTS_SHARED, POINTS_UNIQUE, REVIEW_MS,
+  asStopView, CATEGORIES, cleanAnswer, defaultStopOptions, GRACE_MS, LETTERS, MAX_ANSWER, MIN_CATEGORIES, pointsFor, POINTS_SHARED, POINTS_UNIQUE, REVIEW_MS,
   ROUND_OPTIONS, startsWithLetter, stopModule, TIME_OPTIONS, type StopOptions, type StopView,
 } from './game';
 
@@ -236,7 +236,10 @@ export function StopScreen(props: GameScreenProps) {
   // The host says how long is left; the countdown runs on this device's clock from the moment the view arrived.
   const deadline = useMemo(() => (view.endsInMs === null ? null : Date.now() + view.endsInMs), [props.view]);
   const now = useNow(deadline !== null);
-  const secs = deadline === null ? 0 : Math.max(0, Math.ceil((deadline - now) / 1000));
+  // The letter is drawn first; the writing time only runs once it has landed.
+  const introEnd = useMemo(() => Date.now() + view.introMs, [props.view]);
+  const drawing = writing && now < introEnd;
+  const secs = deadline === null ? 0 : Math.max(0, Math.ceil((deadline - Math.max(now, introEnd)) / 1000));
   const timeUp = deadline !== null && now >= deadline;
   const clock: LocalClock | null = deadline === null ? null : { kind: 'turn', totalMs: view.totalMs, deadline };
 
@@ -246,7 +249,7 @@ export function StopScreen(props: GameScreenProps) {
   const cleaned = local.map(cleanAnswer);
   const dirty = writing && cleaned.some((a, i) => a !== (view.mine[i] ?? ''));
   const complete = cleaned.every(a => startsWithLetter(a, view.letter));
-  const locked = !writing || timeUp;
+  const locked = !writing || timeUp || drawing;
   const [wantStop, setWantStop] = useState(false);
   /** An answer whose twin is being picked in the review. */
   const [pick, setPick] = useState<{ cat: number; seat: number } | null>(null);
@@ -296,7 +299,7 @@ export function StopScreen(props: GameScreenProps) {
         <div className="stop__main">
           <section className="panel stop__head">
             <div className="stop__letter" key={view.round} aria-label={t('letter', { letter: view.letter })}>
-              {view.letter}
+              <RollingLetter letter={view.letter} rolling={drawing} />
             </div>
             <div className="stop__headtext">
               <p className="muted">{t('round', { n: view.round + 1, total: view.rounds })}</p>
@@ -533,6 +536,17 @@ function winnerLine(view: StopView, t: TextFn): string {
 }
 
 /** The current time, refreshed a few times a second while something is counting down. */
+/** The letter spins through the alphabet while it is being drawn, then settles on the real one. */
+function RollingLetter({ letter, rolling }: { letter: string; rolling: boolean }) {
+  const [shown, setShown] = useState(rolling ? '?' : letter);
+  useEffect(() => {
+    if (!rolling) return setShown(letter);
+    const timer = setInterval(() => setShown(LETTERS[Math.floor(Math.random() * LETTERS.length)]!), 70);
+    return () => clearInterval(timer);
+  }, [rolling, letter]);
+  return <span className={rolling ? 'stop__rolling' : 'stop__landed'}>{shown}</span>;
+}
+
 function useNow(active: boolean): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {

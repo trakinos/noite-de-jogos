@@ -5,7 +5,7 @@ import { pieceEmoji } from '../../theme/playerPieces';
 import { Avatar } from '../../ui/components/Avatar';
 import { playerColor } from '../../ui/playerColor';
 import { EndActions, GameFrame, RulesSheet, useGameText, useReason, type GameScreenProps, type TextFn } from '../shared/GameFrame';
-import { boardFor, CAREERS, chapterAt, HOUSES, LOAN_INTEREST, LOAN_PAYBACK, nextStop, SPIN_MAX, type Square, type VidaBoard } from './board';
+import { boardFor, CAREERS, chapterAt, HOUSES, LOAN_INTEREST, LOAN_PAYBACK, nextStop, RETIREMENTS, SPIN_MAX, SUE_AMOUNT, WEDDING, type Retirement, type Square, type VidaBoard } from './board';
 import { asVidaView, type VidaLog, type VidaView } from './game';
 import { reducedMotion } from './motion';
 import { CHAPTER_ICON, KIND_ICON, LEGEND, reach, spinsLabel, squareIcon, squareKind, STOP_ICON } from './track';
@@ -58,6 +58,9 @@ function useMedia(query: string): boolean {
   return matches;
 }
 
+const PERK_ICON = { thrift: '🛍️', noTax: '🧾', joy: '😄', tiles: '⭐' } as const;
+const RETIRE_ICON: Record<Retirement, string> = { country: '🌳', beach: '🏖️', world: '✈️', business: '🏪', mansion: '🏰' };
+
 function squareText(sq: Square, t: TextFn): { label: string; amount?: string } {
   switch (sq.k) {
     case 'payday': return { label: t('sq_payday'), amount: t('oneSalary') };
@@ -70,7 +73,7 @@ function squareText(sq: Square, t: TextFn): { label: string; amount?: string } {
     case 'life': return { label: t(`t_${sq.t}`), amount: `⭐ ${t('life')}` };
     case 'baby': return { label: t(sq.n === 2 ? 'sq_twins' : 'sq_baby') };
     case 'tax': return { label: t('sq_tax'), amount: '¼' };
-    case 'sue': return { label: t('sq_sue'), amount: `+${money(50)}` };
+    case 'sue': return { label: t('sq_sue'), amount: `+${money(SUE_AMOUNT)}` };
     case 'blank': return { label: t(`t_${sq.t}`) };
     case 'stop': return { label: t(`sq_${sq.s}`) };
   }
@@ -428,12 +431,17 @@ function Players({ view, lobby, model, t }: { view: VidaView; lobby: LobbyState;
                 <span className="vida__chip">
                   💼 {p.career ? `${career?.degree ? '🎓 ' : ''}${t(`c_${p.career}`)} · ${t('salary', { n: money(p.salary) })}` : t('noCareer')}
                 </span>
+                {career?.perks.map(k => (
+                  <span key={k} className="vida__chip is-perk" title={t(`perk_${k}`)}>
+                    {PERK_ICON[k]} {t(`perkShort_${k}`)}
+                  </span>
+                ))}
                 {p.married && <span className="vida__chip">💍 {t('married')}</span>}
                 {p.kids > 0 && <span className="vida__chip">👶 {t('kidsShort', { n: p.kids })}</span>}
                 {p.house && <span className="vida__chip">🏠 {t(`h_${p.house}`)}</span>}
                 {p.tiles > 0 && <span className="vida__chip">⭐ {t('tilesShort', { n: p.tiles })}</span>}
                 {p.loans > 0 && <span className="vida__chip is-debt">🏦 {t('debt', { n: p.loans })}</span>}
-                {p.retired && <span className="vida__chip">{p.retired === 'country' ? '🌳' : '🏰'} {t(`retired_${p.retired}`)}</span>}
+                {p.retired && <span className="vida__chip">{RETIRE_ICON[p.retired]} {t(`retired_${p.retired}`)}</span>}
               </div>
               <div className="vida__where">
                 {chapter ? t('where', { n: p.pos + 1, chapter: `${CHAPTER_ICON[chapter.id]} ${t(`ch_${chapter.id}`)}` }) : t('notStarted')}
@@ -482,17 +490,32 @@ function Actions({ view, awaiting, onIntent, t }: { view: VidaView; awaiting: bo
           })}
         </div>
       );
-    case 'house':
+    case 'house': {
+      const mine = HOUSES.find(x => x.id === view.players[view.me]!.house);
       return (
         <div className="vida__choices">
-          <h3>{t('chooseHouse')}</h3>
+          <h3>{mine ? t('chooseHouseSwap', { house: t(`h_${mine.id}`), n: money(mine.value) }) : t('chooseHouse')}</h3>
           {prompt.options.map(id => {
             const h = HOUSES.find(x => x.id === id)!;
-            return choice(id, `🏠 ${t(`h_${id}`)}`, `${t('price', { n: money(h.price) })} · ${t('resale', { n: money(h.value) })} · ${t('upkeepHint', { n: money(h.upkeep) })}`, { type: 'house', house: id });
+            const facts = `${t('price', { n: money(h.price) })} · ${t('resale', { n: money(h.value) })} · ${t('upkeepHint', { n: money(h.upkeep) })}`;
+            // Moving house: the old one is sold first, so what changes hands is the difference.
+            const move = mine ? (h.price > mine.price ? t('houseUp', { n: money(h.price - mine.value) }) : t('houseDown', { n: money(mine.value - h.price) })) : '';
+            return choice(id, `🏠 ${t(`h_${id}`)}`, [move, facts].filter(Boolean).join(' · '), { type: 'house', house: id });
           })}
+          {mine && choice('sell', `💸 ${t('sellHouse', { n: money(mine.value) })}`, t('sellHint'), { type: 'house', house: null, sell: true })}
           <button type="button" disabled={awaiting} onClick={() => onIntent({ type: 'house', house: null })}>
-            {t('noHouse')}
+            {mine ? t('keepHouse') : t('noHouse')}
           </button>
+        </div>
+      );
+    }
+    case 'marry':
+      return (
+        <div className="vida__choices">
+          <h3>{t('chooseMarry')}</h3>
+          {(Object.keys(WEDDING) as (keyof typeof WEDDING)[]).map(k =>
+            choice(k, `💍 ${t(`mar_${k}`)}`, t(`mar_${k}Hint`), { type: 'marry', pick: k }),
+          )}
         </div>
       );
     case 'sue':
@@ -526,8 +549,19 @@ function Actions({ view, awaiting, onIntent, t }: { view: VidaView; awaiting: bo
       return (
         <div className="vida__choices">
           <h3>{t('chooseRetire')}</h3>
-          {choice('country', `🌳 ${t('country')}`, t('countryHint'), { type: 'retire', where: 'country' })}
-          {choice('mansion', `🏰 ${t('mansion')}`, t('mansionHint'), { type: 'retire', where: 'mansion' })}
+          {(Object.keys(RETIREMENTS) as Retirement[]).map(where => {
+            const slots = RETIREMENTS[where].slots;
+            const taken = slots !== null && view.players.filter(o => o.retired === where).length >= slots;
+            return (
+              <button key={where} type="button" className="vida__choice" disabled={awaiting || taken} onClick={() => onIntent({ type: 'retire', where })}>
+                <b>
+                  {RETIRE_ICON[where]} {t(where)}
+                  {taken && ` (${t('taken')})`}
+                </b>
+                <span className="muted">{t(`${where}Hint`)}</span>
+              </button>
+            );
+          })}
         </div>
       );
   }
@@ -547,8 +581,12 @@ function logLine(e: VidaLog, view: VidaView, t: TextFn): string {
     case 'tax': return t('log_tax', { name, n: money(e.n) });
     case 'upkeep': return t('log_upkeep', { name, n: money(e.n) });
     case 'sue': return t('log_sue', { name, target: view.players[e.target]?.name ?? '—', n: money(e.n) });
-    case 'marry': return t('log_marry', { name, n: money(e.n) });
-    case 'house': return e.house ? t('log_house', { name, house: t(`h_${e.house}`) }) : t('log_noHouse', { name });
+    case 'marry': return t(`log_marry_${e.pick}`, { name, n: money(e.n) });
+    case 'house':
+      if (!e.house) return t('log_noHouse', { name });
+      if (!e.from) return t('log_house', { name, house: t(`h_${e.house}`) });
+      return t(HOUSES.find(h => h.id === e.house)!.price > HOUSES.find(h => h.id === e.from)!.price ? 'log_upgrade' : 'log_downgrade', { name, from: t(`h_${e.from}`), house: t(`h_${e.house}`) });
+    case 'sellhouse': return t('log_sellHouse', { name, from: t(`h_${e.from}`) });
     case 'loan': return t('log_loan', { name, n: e.n });
     case 'repay': return t('log_repay', { name });
     case 'dodge': return t('log_dodge', { name, what: t(`t_${e.t}`) });
@@ -571,6 +609,7 @@ function eventIcon(e: VidaLog): string {
     case 'sue': return '⚖️';
     case 'marry': return '💍';
     case 'house': return '🏠';
+    case 'sellhouse': return '💸';
     case 'retire': return '🌅';
     case 'loan': return '🏦';
     case 'repay': return '🏦';

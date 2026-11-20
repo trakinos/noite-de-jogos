@@ -276,7 +276,12 @@ export function ZerouScreen(props: GameScreenProps) {
             <div key={p.id} className={`zerou__opp${view.current === i && !over && !race ? ' is-turn' : ''}${view.winner === i ? ' is-winner' : ''}`}>
               {fx.draws[i] !== undefined && (
                 <span key={fx.drawKey} className="zerou__drewfx" aria-hidden="true">
-                  +{fx.draws[i]}
+                  <span className="zerou__drewcards">
+                    {Array.from({ length: Math.min(fx.draws[i]!, 8) }, (_, k) => (
+                      <i key={k} className="zerou__drewcard" style={{ ['--i' as string]: k }} />
+                    ))}
+                  </span>
+                  <b>+{fx.draws[i]}</b>
                 </span>
               )}
               <Avatar name={p.name} color={playerColor(lobby, p.id)} />
@@ -330,8 +335,14 @@ export function ZerouScreen(props: GameScreenProps) {
             </button>
           ) : (
             <div className="zerou__discard" key={view.top.id}>
-              <CardFace card={view.top} color={view.color} />
-              {fx.flight && (
+              {fx.flight && fx.flight.cards.length === 1 ? (
+                <span className={`zerou__top ${fx.flight.cards[0]!.seat === view.me ? 'is-mine' : 'is-theirs'}`}>
+                  <CardFace card={view.top} color={view.color} />
+                </span>
+              ) : (
+                <CardFace card={view.top} color={view.color} />
+              )}
+              {fx.flight && fx.flight.cards.length > 1 && (
                 <div className="zerou__flight" key={fx.flight.key} aria-hidden="true">
                   {fx.flight.cards.map((f, i) => (
                     <span
@@ -542,7 +553,7 @@ function useZerouFx(view: ZerouView) {
     if (Object.keys(drew).length > 0) {
       setDraws(drew);
       setDrawKey(k => k + 1);
-      timer2 = setTimeout(() => setDraws({}), 1300);
+      timer2 = setTimeout(() => setDraws({}), 900 + Math.min(Math.max(...Object.values(drew)), 8) * 260);
     }
     return () => {
       clearTimeout(timer);
@@ -556,7 +567,7 @@ function useZerouFx(view: ZerouView) {
     prevHand.current = now;
     if (added.length === 0 || added.length === now.size) return;
     setFresh(new Set(added));
-    const timer = setTimeout(() => setFresh(new Set()), 300 + added.length * 160 + 500);
+    const timer = setTimeout(() => setFresh(new Set()), 600 + added.length * 260);
     return () => clearTimeout(timer);
   }, [view.hand.map(c => c.id).join(',')]);
 

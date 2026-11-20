@@ -23,8 +23,12 @@ function randomIntent(s: VidaState, pick: (n: number) => number): VidaIntent {
       const i = pick(prompt.options.length + 1);
       return { type: 'house', house: prompt.options[i] ?? null };
     }
-    case 'retire':
-      return { type: 'retire', where: pick(2) === 0 ? 'country' : 'mansion' };
+    case 'marry':
+      return { type: 'marry', pick: (['party', 'civil', 'honeymoon'] as const)[pick(3)]! };
+    case 'retire': {
+      const places = (['country', 'beach', 'business', 'mansion', 'world'] as const).filter(w => w !== 'world' || !s.players.some(o => o.retired === 'world'));
+      return { type: 'retire', where: places[pick(places.length)]! };
+    }
     default:
       return defaultIntent(s);
   }

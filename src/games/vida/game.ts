@@ -2,11 +2,12 @@ import { createRng, nextInt, shuffle, type RngState } from '../../engine/rng';
 import type { ClockInput, ClockKind } from '../../net/turnClock';
 import type { ApplyResult, GameInstance, GameModule, SeatInfo } from '../module';
 import {
-  BIKE_UPKEEP, boardFor, CAREERS, COLLEGE_LOANS, COUNTRY_TILES, HOUSES, INVEST, JOB_KEEP_RAISE, JOY_CASH, KID_BONUS, KID_UPKEEP, LOAN, LOAN_INTEREST, LOAN_PAYBACK, MANSION_TILES,
-  MIDLIFE, SPIN_MAX, START_CASH, SUE_AMOUNT, THRIFT_DISCOUNT, TILE_VALUES, TILES_EACH, WEDDING_GIFT, type GameLength, type Perk, type InvestPick, type MidlifePick,
+  BIKE_UPKEEP, boardFor, CAREERS, COLLEGE_LOANS, HOUSES, INTEREST_EVERY, INVEST, JOB_KEEP_RAISE, JOY_CASH, KID_BONUS, KID_UPKEEP, LOAN, LOAN_INTEREST, LOAN_PAYBACK, MANSION_TILES,
+  MIDLIFE, PAYDAY_INTEREST, RETIRE_EARLY, RETIREMENTS, SPIN_MAX, START_CASH, SUE_AMOUNT, THRIFT_DISCOUNT, TILE_VALUES, TILES_EACH, WEDDING, WEDDING_GIFT,
+  type GameLength, type InvestPick, type MidlifePick, type Perk, type Retirement, type WeddingPick,
 } from './board';
 
-export type Retirement = 'country' | 'mansion';
+export type { Retirement };
 
 export interface VidaPlayer {
   id: string;
@@ -22,6 +23,8 @@ export interface VidaPlayer {
   house: string | null;
   /** Bought the midlife motorbike. */
   bike: boolean;
+  /** Paydays passed, to know when the bank's interest falls due. */
+  paydays: number;
   tiles: number[];
   retired: Retirement | null;
   /** Chose college or a career and is on the board. */
@@ -33,6 +36,7 @@ export type VidaPrompt =
   /** `keep`: the career crossroads, where staying in the current job (for a raise) is also an answer. */
   | { kind: 'career'; options: string[]; keep?: boolean }
   | { kind: 'house'; options: string[] }
+  | { kind: 'marry' }
   | { kind: 'sue' }
   | { kind: 'invest' }
   | { kind: 'midlife' }
@@ -51,8 +55,10 @@ export type VidaLog =
   | { k: 'baby'; seat: number; n: number }
   | { k: 'tax'; seat: number; n: number }
   | { k: 'sue'; seat: number; target: number; n: number }
-  | { k: 'marry'; seat: number; n: number }
-  | { k: 'house'; seat: number; house: string | null }
+  | { k: 'marry'; seat: number; n: number; pick: WeddingPick }
+  /** Bought a house; `from` is the one it replaced, if any. */
+  | { k: 'house'; seat: number; house: string | null; from?: string }
+  | { k: 'sellhouse'; seat: number; from: string }
   | { k: 'loan'; seat: number; n: number }
   | { k: 'repay'; seat: number }
   /** A bill that didn't apply (no kids, no loans). */
@@ -98,7 +104,8 @@ export type VidaIntent =
   | { type: 'career'; career: string | null }
   | { type: 'invest'; pick: InvestPick }
   | { type: 'midlife'; pick: MidlifePick }
-  | { type: 'house'; house: string | null }
+  | { type: 'house'; house: string | null; sell?: boolean }
+  | { type: 'marry'; pick: WeddingPick }
   | { type: 'sue'; target: number }
   | { type: 'retire'; where: Retirement }
   | { type: 'repay' };
@@ -113,7 +120,7 @@ export function createVida(seats: SeatInfo[], seed: number, length: GameLength =
     rng,
     length,
     players: seats.map(s => ({
-      id: s.id, name: s.name, pos: -1, cash: START_CASH, loans: 0, career: null, salary: 0, married: false, kids: 0, house: null, bike: false, tiles: [], retired: null, started: false,
+      id: s.id, name: s.name, pos: -1, cash: START_CASH, loans: 0, career: null, salary: 0, married: false, kids: 0, house: null, bike: false, paydays: 0, tiles: [], retired: null, started: false,
     })),
     current: 0,
     turnNumber: 1,
@@ -271,20 +278,11 @@ function land(s: VidaState): void {
         return;
       }
       if (sq.s === 'marry') {
-        p.married = true;
-        let gifts = 0;
-        // Retired players have closed their accounts: no gifts from them.
-        s.players.forEach((o, i) => {
-          if (i === seat || o.retired) return;
-          gifts += pay(s, i, WEDDING_GIFT);
-        });
-        p.cash += gifts;
-        takeTiles(s, seat, hasPerk(s, seat, 'tiles') ? 2 : 1);
-        s.log.push({ k: 'marry', seat, n: gifts });
-        break;
+        s.prompt = { kind: 'marry' };
+        return;
       }
       if (sq.s === 'house') {
-        s.prompt = { kind: 'house', options: draw(s, HOUSES.map(h => h.id), 3) };
+        s.prompt = { kind: 'house', options: draw(s, HOUSES.filter(h => h.id !== p.house).map(h => h.id), 3) };
         return;
       }
       if (sq.s === 'job') {
@@ -317,6 +315,9 @@ function move(s: VidaState, n: number): void {
         pay(s, seat, upkeep);
         s.log.push({ k: 'upkeep', seat, n: upkeep });
       }
+      // The bank's interest falls due every other payday, for as long as a loan is open.
+      p.paydays++;
+      if (p.loans > 0 && p.paydays % INTEREST_EVERY === 0) bank(s, seat, -Math.round(PAYDAY_INTEREST * p.loans * (hasPerk(s, seat, 'noTax') ? 0.5 : 1)), 'interest');
     }
     if (sq.k === 'stop') break;
   }
@@ -390,16 +391,45 @@ export function applyVida(s: VidaState, seat: number, intent: VidaIntent): Apply
     }
     case 'house': {
       if (prompt?.kind !== 'house') return fail('Not now');
+      const old = HOUSES.find(h => h.id === p.house);
+      if (intent.sell === true) {
+        // Selling up without buying another: the house's value comes back as cash.
+        if (!old) return fail('You have no house to sell');
+        p.cash += old.value;
+        p.house = null;
+        s.log.push({ k: 'sellhouse', seat, from: old.id });
+        nextTurn(s);
+        return ok();
+      }
       if (intent.house !== null && !prompt.options.includes(intent.house)) return fail('Pick one of the houses offered');
       if (intent.house !== null) {
         const house = HOUSES.find(h => h.id === intent.house)!;
-        // A player who already owns a house sells it at its value when buying another.
-        const old = HOUSES.find(h => h.id === p.house);
+        // Moving house: the old one is sold at its value when buying the new one.
         if (old) p.cash += old.value;
         pay(s, seat, house.price);
         p.house = house.id;
       }
-      s.log.push({ k: 'house', seat, house: intent.house });
+      s.log.push({ k: 'house', seat, house: intent.house, ...(old && intent.house !== null ? { from: old.id } : {}) });
+      nextTurn(s);
+      return ok();
+    }
+    case 'marry': {
+      if (prompt?.kind !== 'marry') return fail('Not now');
+      const way = Object.hasOwn(WEDDING, intent.pick) ? WEDDING[intent.pick] : null;
+      if (!way) return fail('Bad move');
+      p.married = true;
+      let gifts = 0;
+      if (way.gifts) {
+        // Retired players have closed their accounts: no gifts from them.
+        s.players.forEach((o, i) => {
+          if (i === seat || o.retired) return;
+          gifts += pay(s, i, WEDDING_GIFT);
+        });
+        p.cash += gifts;
+      }
+      pay(s, seat, way.cost);
+      takeTiles(s, seat, way.tiles + (hasPerk(s, seat, 'tiles') ? 1 : 0));
+      s.log.push({ k: 'marry', seat, n: gifts, pick: intent.pick });
       nextTurn(s);
       return ok();
     }
@@ -438,13 +468,19 @@ export function applyVida(s: VidaState, seat: number, intent: VidaIntent): Apply
     }
     case 'retire': {
       if (prompt?.kind !== 'retire') return fail('Not now');
-      if (intent.where !== 'country' && intent.where !== 'mansion') return fail('Bad move');
+      const place = Object.hasOwn(RETIREMENTS, intent.where) ? RETIREMENTS[intent.where] : null;
+      if (!place) return fail('Bad move');
+      if (place.slots !== null && s.players.filter(o => o.retired === intent.where).length >= place.slots) return fail('That place is already taken');
+      if (place.cost > 0) pay(s, seat, place.cost);
       p.retired = intent.where;
-      p.cash += p.kids * KID_BONUS;
-      if (intent.where === 'country') takeTiles(s, seat, COUNTRY_TILES);
-      if (hasPerk(s, seat, 'tiles')) takeTiles(s, seat, 1);
+      p.cash += p.kids * KID_BONUS + place.salaries * p.salary;
+      takeTiles(s, seat, place.tiles + (hasPerk(s, seat, 'tiles') ? 1 : 0));
+      // The first ones to arrive are paid for it; with a single player there is nobody to wait for.
+      const early = s.players.length > 1 ? RETIRE_EARLY[s.retiredOrder.length] ?? 0 : 0;
+      if (early > 0) p.cash += early;
       s.retiredOrder.push(seat);
       s.log.push({ k: 'retire', seat, where: intent.where, kids: p.kids });
+      if (early > 0) s.log.push({ k: 'cash', seat, n: early, t: 'early' });
       nextTurn(s);
       return ok();
     }
@@ -507,6 +543,8 @@ export function defaultIntent(s: VidaState): VidaIntent {
       return { type: 'midlife', pick: 'deny' };
     case 'house':
       return { type: 'house', house: null };
+    case 'marry':
+      return { type: 'marry', pick: 'civil' };
     case 'sue': {
       const others = s.players.map((p, i) => ({ p, i })).filter(x => x.i !== s.current && !x.p.retired);
       return { type: 'sue', target: others.sort((a, b) => b.p.cash - a.p.cash)[0]!.i };
