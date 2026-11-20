@@ -2,8 +2,8 @@ import { createRng, nextInt, shuffle, type RngState } from '../../engine/rng';
 import type { ClockInput, ClockKind } from '../../net/turnClock';
 import type { ApplyResult, GameInstance, GameModule, SeatInfo } from '../module';
 import {
-  boardFor, CAREERS, COLLEGE_LOANS, COUNTRY_TILES, HOUSES, INVEST, JOB_KEEP_RAISE, KID_BONUS, LOAN, LOAN_INTEREST, LOAN_PAYBACK, MANSION_TILES,
-  MIDLIFE, SPIN_MAX, START_CASH, SUE_AMOUNT, TILE_VALUES, TILES_EACH, WEDDING_GIFT, type GameLength, type InvestPick, type MidlifePick,
+  BIKE_UPKEEP, boardFor, CAREERS, COLLEGE_LOANS, COUNTRY_TILES, HOUSES, INVEST, JOB_KEEP_RAISE, JOY_CASH, KID_BONUS, KID_UPKEEP, LOAN, LOAN_INTEREST, LOAN_PAYBACK, MANSION_TILES,
+  MIDLIFE, SPIN_MAX, START_CASH, SUE_AMOUNT, THRIFT_DISCOUNT, TILE_VALUES, TILES_EACH, WEDDING_GIFT, type GameLength, type Perk, type InvestPick, type MidlifePick,
 } from './board';
 
 export type Retirement = 'country' | 'mansion';
@@ -20,6 +20,8 @@ export interface VidaPlayer {
   married: boolean;
   kids: number;
   house: string | null;
+  /** Bought the midlife motorbike. */
+  bike: boolean;
   tiles: number[];
   retired: Retirement | null;
   /** Chose college or a career and is on the board. */
@@ -41,6 +43,8 @@ export type VidaLog =
   | { k: 'path'; seat: number; college: boolean }
   | { k: 'career'; seat: number; career: string }
   | { k: 'payday'; seat: number; n: number }
+  /** Fixed costs paid at a payday: children, the house, the motorbike. */
+  | { k: 'upkeep'; seat: number; n: number }
   | { k: 'cash'; seat: number; n: number; t: string }
   | { k: 'raise'; seat: number; n: number; t: string }
   | { k: 'life'; seat: number; t: string }
@@ -109,7 +113,7 @@ export function createVida(seats: SeatInfo[], seed: number, length: GameLength =
     rng,
     length,
     players: seats.map(s => ({
-      id: s.id, name: s.name, pos: -1, cash: START_CASH, loans: 0, career: null, salary: 0, married: false, kids: 0, house: null, tiles: [], retired: null, started: false,
+      id: s.id, name: s.name, pos: -1, cash: START_CASH, loans: 0, career: null, salary: 0, married: false, kids: 0, house: null, bike: false, tiles: [], retired: null, started: false,
     })),
     current: 0,
     turnNumber: 1,
@@ -151,6 +155,10 @@ function careerOptions(s: VidaState, degree: boolean, n = 3, own: string | null 
   const taken = new Set(s.players.map(p => p.career));
   const pool = CAREERS.filter(c => c.degree === degree && !taken.has(c.id)).map(c => c.id);
   return draw(s, pool.length >= n ? pool : CAREERS.filter(c => c.degree === degree && c.id !== own).map(c => c.id), n);
+}
+
+function hasPerk(s: VidaState, seat: number, perk: Perk): boolean {
+  return CAREERS.find(c => c.id === s.players[seat]!.career)?.perks.includes(perk) ?? false;
 }
 
 /** Money to or from the bank, logged with its reason. */
@@ -200,7 +208,8 @@ function land(s: VidaState): void {
     case 'blank':
       break;
     case 'cash':
-      bank(s, seat, sq.n, sq.t);
+      // Thrifty careers spend 30% less (to the nearest $5k).
+      bank(s, seat, sq.n < 0 && hasPerk(s, seat, 'thrift') ? -Math.round((-sq.n * (1 - THRIFT_DISCOUNT)) / 5) * 5 : sq.n, sq.t);
       break;
     case 'bonus':
       bank(s, seat, p.salary, sq.t);
@@ -225,7 +234,7 @@ function land(s: VidaState): void {
       break;
     case 'interest':
       if (p.loans === 0) s.log.push({ k: 'dodge', seat, t: 'interest' });
-      else bank(s, seat, -LOAN_INTEREST * p.loans, 'interest');
+      else bank(s, seat, -(hasPerk(s, seat, 'noTax') ? LOAN_INTEREST / 2 : LOAN_INTEREST) * p.loans, 'interest');
       break;
     case 'raise':
       p.salary += sq.n;
@@ -234,12 +243,17 @@ function land(s: VidaState): void {
     case 'life':
       takeTiles(s, seat, 1);
       s.log.push({ k: 'life', seat, t: sq.t });
+      if (hasPerk(s, seat, 'joy')) bank(s, seat, JOY_CASH, 'joy');
       break;
     case 'baby':
       p.kids += sq.n;
       s.log.push({ k: 'baby', seat, n: sq.n });
       break;
     case 'tax': {
+      if (hasPerk(s, seat, 'noTax')) {
+        s.log.push({ k: 'dodge', seat, t: 'tax' });
+        break;
+      }
       const n = Math.max(5, Math.round(p.salary / 4 / 5) * 5);
       pay(s, seat, n);
       s.log.push({ k: 'tax', seat, n });
@@ -265,7 +279,7 @@ function land(s: VidaState): void {
           gifts += pay(s, i, WEDDING_GIFT);
         });
         p.cash += gifts;
-        takeTiles(s, seat, 1);
+        takeTiles(s, seat, hasPerk(s, seat, 'tiles') ? 2 : 1);
         s.log.push({ k: 'marry', seat, n: gifts });
         break;
       }
@@ -297,6 +311,12 @@ function move(s: VidaState, n: number): void {
     if (sq.k === 'payday') {
       p.cash += p.salary;
       s.log.push({ k: 'payday', seat, n: p.salary });
+      const house = HOUSES.find(h => h.id === p.house)?.upkeep ?? 0;
+      const upkeep = p.kids * KID_UPKEEP + house + (p.bike ? BIKE_UPKEEP : 0);
+      if (upkeep > 0) {
+        pay(s, seat, upkeep);
+        s.log.push({ k: 'upkeep', seat, n: upkeep });
+      }
     }
     if (sq.k === 'stop') break;
   }
@@ -410,6 +430,7 @@ export function applyVida(s: VidaState, seat: number, intent: VidaIntent): Apply
       if (way.cash >= 0) p.cash += way.cash;
       else pay(s, seat, -way.cash);
       takeTiles(s, seat, way.tiles);
+      if (intent.pick === 'bike') p.bike = true;
       p.salary += way.raise;
       s.log.push({ k: 'midlife', seat, pick: intent.pick });
       nextTurn(s);
@@ -421,6 +442,7 @@ export function applyVida(s: VidaState, seat: number, intent: VidaIntent): Apply
       p.retired = intent.where;
       p.cash += p.kids * KID_BONUS;
       if (intent.where === 'country') takeTiles(s, seat, COUNTRY_TILES);
+      if (hasPerk(s, seat, 'tiles')) takeTiles(s, seat, 1);
       s.retiredOrder.push(seat);
       s.log.push({ k: 'retire', seat, where: intent.where, kids: p.kids });
       nextTurn(s);

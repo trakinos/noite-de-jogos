@@ -19,7 +19,7 @@ export const STOP_TEXT: Texts = {
     rulesTitle: 'Regras do Stop',
     rules1: 'Cada rodada sorteia uma letra. Todo mundo escreve, ao mesmo tempo e em segredo, uma palavra por categoria começando com essa letra. Acentos e maiúsculas não importam.',
     rules2: `Quem preencher todas as categorias pode gritar STOP: os outros têm ${GRACE_MS / 1000} segundos para terminar a palavra e as folhas travam. Se ninguém gritar, a rodada acaba quando o tempo termina.`,
-    rules3: `Depois as respostas aparecem e o grupo confere: toque em "Não vale" na resposta de outro jogador para votar contra ela. A resposta é anulada quando mais da metade dos outros jogadores vota contra (com 2 jogadores, o outro decide). Resposta que não começa com a letra já não vale. A conferência fecha quando todos marcam "Pronto" ou depois de ${REVIEW_MS / 1000} segundos.`,
+    rules3: `Depois as respostas aparecem e o grupo confere: toque em "Não vale" na resposta de outro jogador para votar contra ela. A resposta é anulada quando mais da metade dos outros jogadores vota contra (com 2 jogadores, o outro decide). Resposta que não começa com a letra já não vale. Se duas respostas são a mesma palavra, mas escritas diferente, toque em "Igual a outra?": quando mais da metade dos jogadores concorda, as duas valem como repetidas. A conferência fecha quando todos marcam "Pronto" ou depois de ${REVIEW_MS / 1000} segundos.`,
     rules4: `Resposta válida que só você deu vale ${POINTS_UNIQUE} pontos; igual à de outra pessoa vale ${POINTS_SHARED}; vazia ou anulada vale 0. Depois da última rodada, vence quem tiver mais pontos.`,
     lobbyRounds: 'Rodadas',
     lobbyTime: 'Tempo por rodada',
@@ -53,6 +53,12 @@ export const STOP_TEXT: Texts = {
     reviewTitle: 'Conferência',
     reviewHint: 'Toque em "Não vale" para votar contra uma resposta. Ela é anulada com {n} voto(s).',
     veto: 'Não vale',
+    same: 'Igual a outra?',
+    sameCancel: 'Cancelar',
+    samePick: 'É igual à de {name}',
+    sameLinked: '≈ {name} {n}/{need}',
+    sameHint: 'Palavras iguais ou quase iguais (gato/gata, sinônimos)? Toque em "Igual a outra?" e escolha com qual. Vale quando mais da metade dos jogadores concorda: as duas valem {n} pontos.',
+    'reason:Pick two different answers': 'Escolha duas respostas diferentes.',
     votes: '{n}/{need}',
     mark_empty: 'em branco',
     mark_letter: 'letra errada',
@@ -82,7 +88,7 @@ export const STOP_TEXT: Texts = {
     rulesTitle: 'Stop rules',
     rules1: "Each round draws a letter. Everyone writes, at the same time and in secret, one word per category starting with that letter. Accents and capitals don't matter.",
     rules2: `Whoever fills every category can shout STOP: the others get ${GRACE_MS / 1000} seconds to finish their word and the sheets lock. If nobody shouts, the round ends when the time runs out.`,
-    rules3: `Then the answers are shown and the group checks them: tap "Doesn't count" on another player's answer to vote against it. The answer is struck when more than half of the other players vote against it (with 2 players, the other one decides). An answer that doesn't start with the letter never counts. The check closes when everyone taps "Ready" or after ${REVIEW_MS / 1000} seconds.`,
+    rules3: `Then the answers are shown and the group checks them: tap "Doesn't count" on another player's answer to vote against it. The answer is struck when more than half of the other players vote against it (with 2 players, the other one decides). An answer that doesn't start with the letter never counts. If two answers are the same word written differently, tap "Same as another?": when more than half of the players agree, both count as repeated. The check closes when everyone taps "Ready" or after ${REVIEW_MS / 1000} seconds.`,
     rules4: `A valid answer only you gave scores ${POINTS_UNIQUE} points; the same as someone else's scores ${POINTS_SHARED}; empty or struck scores 0. After the last round, the most points wins.`,
     lobbyRounds: 'Rounds',
     lobbyTime: 'Time per round',
@@ -116,6 +122,12 @@ export const STOP_TEXT: Texts = {
     reviewTitle: 'Checking the answers',
     reviewHint: 'Tap "Doesn\'t count" to vote against an answer. It is struck with {n} vote(s).',
     veto: "Doesn't count",
+    same: 'Same as another?',
+    sameCancel: 'Cancel',
+    samePick: "Same as {name}'s",
+    sameLinked: '≈ {name} {n}/{need}',
+    sameHint: 'Same or near-same words (cat/cats, synonyms)? Tap "Same as another?" and pick which one. It counts when more than half of the players agree: both score {n} points.',
+    'reason:Pick two different answers': 'Pick two different answers.',
     votes: '{n}/{need}',
     mark_empty: 'blank',
     mark_letter: 'wrong letter',
@@ -236,6 +248,9 @@ export function StopScreen(props: GameScreenProps) {
   const complete = cleaned.every(a => startsWithLetter(a, view.letter));
   const locked = !writing || timeUp;
   const [wantStop, setWantStop] = useState(false);
+  /** An answer whose twin is being picked in the review. */
+  const [pick, setPick] = useState<{ cat: number; seat: number } | null>(null);
+  useEffect(() => setPick(null), [view.round, view.phase]);
   const fields = useRef<(HTMLInputElement | null)[]>([]);
 
   // Only one move can be on its way to the host at a time: STOP first, then whatever was typed since the last send.
@@ -381,7 +396,11 @@ export function StopScreen(props: GameScreenProps) {
 
           {view.answers && view.marks && view.rejects && (
             <section className="panel stop__review">
-              {view.phase === 'review' ? <p className="muted stop__hint">{t('reviewHint', { n: view.votesNeeded })}</p> : <h3 className="stop__answers">{t('answersTitle')}</h3>}
+              {view.phase === 'review' ? (
+                <p className="muted stop__hint">
+                  {t('reviewHint', { n: view.votesNeeded })} {t('sameHint', { n: POINTS_SHARED })}
+                </p>
+              ) : <h3 className="stop__answers">{t('answersTitle')}</h3>}
               {view.categories.map((c, ci) => (
                 <div key={c} className="stop__group">
                   <h3>{t(`cat_${c}`)}</h3>
@@ -392,6 +411,9 @@ export function StopScreen(props: GameScreenProps) {
                       const votes = view.rejects![seat]![ci]!;
                       const canVote = view.phase === 'review' && seat !== view.me && mark !== 'empty' && mark !== 'letter';
                       const mine = votes.includes(view.me);
+                      const counts = mark === 'unique' || mark === 'shared';
+                      const twins = view.phase === 'review' ? view.players.filter((_, o) => o !== seat && ['unique', 'shared'].includes(view.marks![o]![ci]!)).length : 0;
+                      const links = (view.sames ?? []).filter(x => x.cat === ci && (x.a === seat || x.b === seat));
                       return (
                         <li key={p.id} className={`stop__ans is-${mark}`}>
                           <Avatar name={p.name} color={playerColor(lobby, p.id)} />
@@ -399,6 +421,46 @@ export function StopScreen(props: GameScreenProps) {
                           <b className="stop__word">{answer || '—'}</b>
                           <span className="stop__mark">{t(`mark_${mark}`)}</span>
                           <span className="stop__plus">{t('plus', { n: pointsFor(mark) })}</span>
+                          {links.map(x => {
+                            const other = x.a === seat ? x.b : x.a;
+                            return (
+                              <button
+                                key={other}
+                                type="button"
+                                className={`stop__same is-link${x.voters.includes(view.me) ? ' is-on' : ''}`}
+                                aria-pressed={x.voters.includes(view.me)}
+                                disabled={awaiting}
+                                onClick={() => onIntent({ type: 'same', a: x.a, b: x.b, cat: ci })}
+                              >
+                                {t('sameLinked', { name: view.players[other]!.name, n: x.voters.length, need: view.sameNeeded })}
+                              </button>
+                            );
+                          })}
+                          {view.phase === 'review' && counts && twins > 0 && (
+                            pick && pick.cat === ci ? (
+                              pick.seat === seat ? (
+                                <button type="button" className="stop__same is-on" onClick={() => setPick(null)}>
+                                  {t('sameCancel')}
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="stop__same is-pick"
+                                  disabled={awaiting}
+                                  onClick={() => {
+                                    onIntent({ type: 'same', a: pick.seat, b: seat, cat: ci });
+                                    setPick(null);
+                                  }}
+                                >
+                                  {t('samePick', { name: view.players[pick.seat]!.name })}
+                                </button>
+                              )
+                            ) : (
+                              <button type="button" className="stop__same" onClick={() => setPick({ cat: ci, seat })}>
+                                {t('same')}
+                              </button>
+                            )
+                          )}
                           {canVote ? (
                             <button
                               type="button"

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BOARD, boardFor, CAREER_START, CAREERS, COLLEGE_LOANS, GRADUATE, INVEST, JOB_KEEP_RAISE, RETIRE, START_CASH } from './board';
+import { BIKE_UPKEEP, BOARD, boardFor, HOUSES, KID_UPKEEP, CAREER_START, CAREERS, COLLEGE_LOANS, GRADUATE, INVEST, JOB_KEEP_RAISE, RETIRE, START_CASH } from './board';
 import { applyVida, createVida, defaultIntent, VidaInstance, vidaView } from './game';
 import { VIDA_TEXT } from './text';
 
@@ -11,6 +11,66 @@ describe('vida adulta board', () => {
     expect(CAREER_START).toBe(GRADUATE + 1);
     expect(BOARD[RETIRE]).toEqual({ k: 'stop', s: 'retire' });
     expect(BOARD.filter(sq => sq.k === 'stop' && sq.s === 'graduate')).toHaveLength(1);
+  });
+});
+
+describe('careers and perks', () => {
+  it('every career has a perk unless it is among the top earners, and lower pay never beats higher pay without one', () => {
+    for (const c of CAREERS) if (c.salary < 75) expect(c.perks.length).toBeGreaterThan(0);
+    for (const c of CAREERS) expect(VIDA_TEXT.pt[`c_${c.id}`]).toBeTruthy();
+    for (const c of CAREERS) for (const k of c.perks) expect(VIDA_TEXT.pt[`perk_${k}`]).toBeTruthy();
+  });
+
+  it('thrift softens spending, noTax skips the tax square', () => {
+    const s = createVida(seats(2), 3);
+    const p = s.players[0]!;
+    p.started = true;
+    p.career = 'cashier';
+    p.salary = 35;
+    s.prompt = null;
+    const board = boardFor('normal');
+    const tax = board.squares.findIndex(sq => sq.k === 'tax');
+    p.pos = tax - 1;
+    const cash = p.cash;
+    applyVida(s, 0, { type: 'spin' });
+    // Whatever was spun, the tax square is never charged to a cashier when landed on.
+    expect(s.log.some(e => e.k === 'tax')).toBe(false);
+    expect(p.cash).toBeGreaterThanOrEqual(cash - 100);
+  });
+
+  it('the midlife bike gives three Achievements and costs upkeep', () => {
+    const s = createVida(seats(2), 9);
+    s.players[0]!.started = true;
+    s.players[0]!.cash = 400;
+    s.prompt = { kind: 'midlife' };
+    applyVida(s, 0, { type: 'midlife', pick: 'bike' });
+    expect(s.players[0]!.tiles).toHaveLength(3);
+    expect(s.players[0]!.bike).toBe(true);
+  });
+});
+
+describe('fixed costs', () => {
+  it('a payday pays the salary, then charges kids, the house and the bike', () => {
+    const s = createVida(seats(2), 4);
+    const p = s.players[0]!;
+    p.started = true;
+    p.career = 'chef';
+    p.salary = 50;
+    p.kids = 2;
+    p.house = 'penthouse';
+    p.bike = true;
+    p.cash = 1000;
+    s.prompt = null;
+    const board = boardFor('normal');
+    p.pos = board.squares.findIndex((sq, i) => i >= board.careerStart && sq.k === 'payday') - 1;
+    s.lastSpin = null;
+    // Spin until the walk crosses the payday (position is rigged to the square before it).
+    for (let i = 0; i < 20 && !s.log.some(e => e.k === 'payday'); i++) {
+      if (s.current !== 0 || s.prompt) break;
+      applyVida(s, 0, { type: 'spin' });
+    }
+    const upkeep = 2 * KID_UPKEEP + HOUSES.find(h => h.id === 'penthouse')!.upkeep + BIKE_UPKEEP;
+    expect(s.log).toContainEqual({ k: 'upkeep', seat: 0, n: upkeep });
   });
 });
 
@@ -120,7 +180,7 @@ describe('vida adulta stops and squares', () => {
     const s = createVida(seats(2), 6);
     const i = at(s, 'job');
     s.players[0]!.pos = i - 1;
-    s.players[0]!.salary = 80; // teacher (60) + 20 in raises
+    s.players[0]!.salary = 75; // teacher (55) + 20 in raises
     s.prompt = null;
     applyVida(s, 0, { type: 'spin' });
     const prompt = s.prompt as unknown as { kind: string; options: string[]; keep?: boolean };
@@ -131,7 +191,7 @@ describe('vida adulta stops and squares', () => {
     expect(other.degree).toBe(true);
     const copy = structuredClone(s);
     applyVida(copy, 0, { type: 'career', career: null });
-    expect(copy.players[0]!.salary).toBe(80 + JOB_KEEP_RAISE);
+    expect(copy.players[0]!.salary).toBe(75 + JOB_KEEP_RAISE);
     applyVida(s, 0, { type: 'career', career: other.id });
     expect(s.players[0]!.salary).toBe(other.salary + 20);
   });

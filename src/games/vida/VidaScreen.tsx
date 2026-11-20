@@ -477,7 +477,8 @@ function Actions({ view, awaiting, onIntent, t }: { view: VidaView; awaiting: bo
           {prompt.keep && choice('keep', `🪑 ${t('keepJob')}`, t('keepJobHint'), { type: 'career', career: null })}
           {prompt.options.map(id => {
             const c = CAREERS.find(x => x.id === id)!;
-            return choice(id, `${c.degree ? '🎓 ' : ''}${t(`c_${id}`)}`, prompt.keep ? t('switchHint', { n: money(c.salary) }) : t('salary', { n: money(c.salary) }), { type: 'career', career: id });
+            const pay = prompt.keep ? t('switchHint', { n: money(c.salary) }) : t('salary', { n: money(c.salary) });
+            return choice(id, `${c.degree ? '🎓 ' : ''}${t(`c_${id}`)}`, [pay, ...c.perks.map(k => `✦ ${t(`perk_${k}`)}`)].join(' · '), { type: 'career', career: id });
           })}
         </div>
       );
@@ -487,7 +488,7 @@ function Actions({ view, awaiting, onIntent, t }: { view: VidaView; awaiting: bo
           <h3>{t('chooseHouse')}</h3>
           {prompt.options.map(id => {
             const h = HOUSES.find(x => x.id === id)!;
-            return choice(id, `🏠 ${t(`h_${id}`)}`, `${t('price', { n: money(h.price) })} · ${t('resale', { n: money(h.value) })}`, { type: 'house', house: id });
+            return choice(id, `🏠 ${t(`h_${id}`)}`, `${t('price', { n: money(h.price) })} · ${t('resale', { n: money(h.value) })} · ${t('upkeepHint', { n: money(h.upkeep) })}`, { type: 'house', house: id });
           })}
           <button type="button" disabled={awaiting} onClick={() => onIntent({ type: 'house', house: null })}>
             {t('noHouse')}
@@ -544,6 +545,7 @@ function logLine(e: VidaLog, view: VidaView, t: TextFn): string {
     case 'life': return t('log_life', { name, what: t(`t_${e.t}`) });
     case 'baby': return t('log_baby', { name, n: e.n });
     case 'tax': return t('log_tax', { name, n: money(e.n) });
+    case 'upkeep': return t('log_upkeep', { name, n: money(e.n) });
     case 'sue': return t('log_sue', { name, target: view.players[e.target]?.name ?? '—', n: money(e.n) });
     case 'marry': return t('log_marry', { name, n: money(e.n) });
     case 'house': return e.house ? t('log_house', { name, house: t(`h_${e.house}`) }) : t('log_noHouse', { name });
@@ -565,6 +567,7 @@ function eventIcon(e: VidaLog): string {
     case 'life': return '⭐';
     case 'baby': return '👶';
     case 'tax': return '🧾';
+    case 'upkeep': return '🧾';
     case 'sue': return '⚖️';
     case 'marry': return '💍';
     case 'house': return '🏠';
@@ -582,7 +585,7 @@ function eventIcon(e: VidaLog): string {
 
 function isGood(e: VidaLog): boolean {
   if (e.k === 'cash' || e.k === 'invest') return e.n >= 0;
-  return !['tax', 'loan'].includes(e.k);
+  return !['tax', 'loan', 'upkeep'].includes(e.k);
 }
 
 function VidaEnd({ view, lobby, isHost, onPlayAgain, onBackToLobby, onLeave, t }: Inner) {

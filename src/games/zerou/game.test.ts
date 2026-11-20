@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createRng, nextInt } from '../../engine/rng';
 import {
-  ACCUSE_PENALTY, applyZerou, canPlay, createZerou, DECK_SIZE, FALSE_ACCUSE_PENALTY, fullDeck, HAND, RACE_MS, RACE_PENALTY, SWAP_COPIES,
+  ACCUSE_PENALTY, applyZerou, BAD_LAST_PENALTY, canPlay, createZerou, DECK_SIZE, FALSE_ACCUSE_PENALTY, fullDeck, HAND, RACE_MS, RACE_PENALTY, SWAP_COPIES,
   ZerouInstance, zerouView, type Card, type ZerouState,
 } from './game';
 
@@ -48,6 +48,8 @@ describe('zerou!', () => {
     rig(s, [card(900, 'r', 'draw2'), card(901, 'r', 'rev'), card(902, 'r', '5')], card(950, 'r', '2'));
     const before = s.hands[1 - p]!.length;
     applyZerou(s, p, { type: 'play', card: 900 });
+    expect(s.current).toBe(1 - p);
+    applyZerou(s, 1 - p, { type: 'draw' });
     expect(s.hands[1 - p]!.length).toBe(before + 2);
     expect(s.current).toBe(p);
     applyZerou(s, p, { type: 'play', card: 901 });
@@ -68,6 +70,51 @@ describe('zerou!', () => {
     rig(s, [card(900, 'r', '5')], card(950, 'r', '2'));
     applyZerou(s, 0, { type: 'play', card: 900 });
     expect(s.winner).toBe(0);
+  });
+
+  describe('stacking and drawing', () => {
+    it('a +2 can be answered with another +2, and the penalty adds up and moves on', () => {
+      const s = game(3);
+      rig(s, [card(900, 'r', 'draw2'), card(901, 'r', '1')], card(950, 'r', '2'));
+      s.hands[1] = [card(910, 'b', 'draw2'), card(911, 'b', '3')];
+      applyZerou(s, 0, { type: 'play', card: 900 });
+      expect(zerouView(s, 1).playable).toEqual([910]);
+      expect(applyZerou(s, 1, { type: 'play', card: 911 }).ok).toBe(false);
+      expect(applyZerou(s, 1, { type: 'play', card: 910 })).toEqual({ ok: true });
+      expect(s.pending).toEqual({ kind: 'draw2', n: 4 });
+      expect(s.current).toBe(2);
+      applyZerou(s, 2, { type: 'draw' });
+      expect(s.hands[2]).toHaveLength(HAND + 4);
+      expect(s.pending).toBeNull();
+      expect(s.current).toBe(0);
+    });
+
+    it('a +4 can be answered with a +4 even holding the color', () => {
+      const s = game(3);
+      rig(s, [card(900, null, 'wild4'), card(901, 'g', '1')], card(950, 'r', '2'));
+      s.hands[1] = [card(910, null, 'wild4'), card(911, 'g', '3')];
+      applyZerou(s, 0, { type: 'play', card: 900, color: 'g' });
+      expect(applyZerou(s, 1, { type: 'play', card: 910, color: 'b' })).toEqual({ ok: true });
+      expect(s.pending?.n).toBe(8);
+    });
+
+    it('drawing goes on until a card can be played', () => {
+      const s = game(2);
+      rig(s, [card(900, 'g', '1')], card(950, 'r', '5'));
+      s.draw.push(card(960, 'r', '8'), card(961, 'g', '2'), card(962, 'b', '3'));
+      const before = s.hands[0]!.length;
+      applyZerou(s, 0, { type: 'draw' });
+      expect(s.hands[0]).toHaveLength(before + 3);
+      expect(s.drawn).toBe(960);
+    });
+
+    it('pressing Última! and not being left with one card costs 2', () => {
+      const s = game(2);
+      rig(s, [card(900, 'r', '5'), card(901, 'r', '6'), card(902, 'r', '7')], card(950, 'r', '2'));
+      applyZerou(s, 0, { type: 'play', card: 900, last: true });
+      expect(s.hands[0]).toHaveLength(2 + BAD_LAST_PENALTY);
+      expect(s.log.at(-1)).toMatchObject({ k: 'badlast', seat: 0 });
+    });
   });
 
   describe('accusing', () => {
@@ -141,6 +188,8 @@ describe('zerou!', () => {
       rig(s, [card(900, 'g', '1')], card(950, 'r', 'draw2'));
       s.hands[2] = [card(910, 'r', 'draw2'), card(912, 'g', '3')];
       applyZerou(s, 2, { type: 'play', card: 910 });
+      expect(s.current).toBe(3);
+      applyZerou(s, 3, { type: 'draw' });
       expect(s.hands[3]).toHaveLength(HAND + 2);
       expect(s.current).toBe(0);
 
@@ -298,6 +347,8 @@ describe('zerou!', () => {
       let s = game(4);
       rig(s, [card(900, 'r', 'draw2'), card(901, 'b', 'draw2'), card(902, 'g', '1')], card(950, 'r', '2'));
       applyZerou(s, 0, { type: 'play', cards: [900, 901] });
+      expect(s.pending).toEqual({ kind: 'draw2', n: 4 });
+      applyZerou(s, 1, { type: 'draw' });
       expect(s.hands[1]).toHaveLength(HAND + 4);
       expect(s.current).toBe(2);
 
@@ -381,7 +432,7 @@ describe('zerou!', () => {
           const id = v.playable[nextInt(rng, v.playable.length)]!;
           const first = v.hand.find(c => c.id === id)!;
           const mates = v.drawn === null && first.color !== null ? v.hand.filter(c => c.id !== id && c.color !== null && c.value === first.value).map(c => c.id) : [];
-          const res = applyZerou(s, s.current, { type: 'play', cards: [id, ...mates], color: 'b', target: (s.current + 1) % n, last: nextInt(rng, 2) === 0 }, now);
+          const res = applyZerou(s, s.current, { type: 'play', cards: [id, ...mates], color: 'b', target: (s.current + 1) % n, last: v.hand.length - 1 - mates.length === 1 && nextInt(rng, 2) === 0 }, now);
           expect(res).toEqual({ ok: true });
         } else inst.expire('turn', i);
       }

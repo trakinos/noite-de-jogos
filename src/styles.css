@@ -1958,6 +1958,7 @@ button.link:hover { color: var(--text); }
 .zerou__cuthint { color: var(--accent); }
 .zerou__card { position: relative; }
 .zerou__hand .zerou__card.is-picked, .zerou__hand .zerou__card.is-picked:hover { transform: translateY(-22px); }
+.zerou__hand .zerou__card.is-picked { z-index: 2; }
 .zerou__card.is-picked .zcard, .zerou__card.is-cut .zcard { box-shadow: 0 0 0 3px var(--accent), var(--e2); }
 .zerou__card.is-cut .zcard { animation: zerou-race 0.9s ease-in-out infinite; }
 .zerou__order { position: absolute; top: -10px; right: -4px; z-index: 1; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 900; font-size: 13px; }
@@ -1978,11 +1979,29 @@ button.link:hover { color: var(--text); }
 .zerou__colordot.is-r, .zerou__pick.is-r { background: var(--zr); } .zerou__colordot.is-y, .zerou__pick.is-y { background: var(--zy); }
 .zerou__colordot.is-g, .zerou__pick.is-g { background: var(--zg); } .zerou__colordot.is-b, .zerou__pick.is-b { background: var(--zb); }
 .zerou__status { margin: 0; text-align: center; font-weight: 800; font-size: 17px; }
-.zerou__status.is-mine { color: var(--accent); }
+.zerou__status.is-mine { color: #fff; background: var(--accent); padding: 8px 14px; border-radius: 999px; justify-self: center; animation: zerou-turn 1.4s ease-in-out infinite; }
+.zerou__status.is-mine .muted { color: rgb(255 255 255 / 0.85); }
+@keyframes zerou-turn { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 30%, transparent); } }
+.zerou__table.is-myturn .zerou__hand { box-shadow: inset 0 0 0 3px var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.zerou__next { font-size: 13px; font-weight: 800; color: var(--accent); }
+.zerou__opp { position: relative; }
+.zerou__drewfx { position: absolute; top: -12px; right: 8px; z-index: 2; padding: 2px 10px; border-radius: 999px; background: var(--coin); color: #2a1e14; font-weight: 900; animation: zerou-drew 1.2s var(--ease-out) forwards; }
+@keyframes zerou-drew { from { transform: translateY(40px) scale(0.5); opacity: 0; } 20% { transform: none; opacity: 1; } to { transform: translateY(-14px); opacity: 0; } }
+.zerou__pile.is-drawing .zcard--back { animation: zerou-pile 0.45s var(--ease-out); }
+@keyframes zerou-pile { 40% { transform: translateX(14px) rotate(8deg); } }
+.zerou__card.is-new { animation: zerou-deal 0.5s var(--ease-out) backwards; animation-delay: calc(var(--k, 0) * 120ms); }
+@keyframes zerou-deal { from { transform: translate(-90px, -170px) rotate(-25deg) scale(0.6); opacity: 0; } }
+.zerou__discard { position: relative; }
+.zerou__flight { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.zerou__flying { position: absolute; inset: 0; animation: zerou-fly 0.55s var(--ease-out) backwards; animation-delay: calc(var(--i) * 350ms); transform: translate(calc((var(--i) - var(--of) / 2) * 18px), calc((var(--i) - var(--of) / 2) * -4px)) rotate(calc((var(--i) - var(--of) / 2) * 7deg)); }
+@keyframes zerou-fly { from { transform: translateY(-200px) rotate(-30deg) scale(0.7); opacity: 0; } }
+.zerou__flying.is-mine { animation-name: zerou-fly-up; }
+@keyframes zerou-fly-up { from { transform: translateY(220px) rotate(25deg) scale(0.9); opacity: 0; } }
+.zerou__flightname { position: absolute; left: 50%; bottom: -22px; transform: translateX(-50%); font-size: 12px; white-space: nowrap; background: var(--surface); padding: 1px 8px; border-radius: 999px; box-shadow: var(--e1); }
 .zerou__actions { min-height: 44px; }
 .zerou__last { font-weight: 900; }
 .zerou__last.is-armed { background: var(--coin); border-color: var(--coin-edge); color: #2a1e14; }
-.zerou__hand { display: flex; justify-content: safe center; overflow-x: auto; padding: 18px 12px 8px; }
+.zerou__hand { display: flex; justify-content: safe center; overflow-x: auto; padding: 44px 12px 8px; margin-top: -26px; border-radius: var(--r-md); }
 .zerou__card { padding: 0; border: 0; background: transparent; min-height: 0; margin-left: calc(-1 * clamp(0px, (var(--n) - 7) * 4px, 34px)); transition: transform var(--dur-fast) var(--ease-out); }
 .zerou__card:first-child { margin-left: 0; }
 .zerou__card:disabled { opacity: 1; filter: saturate(0.55) brightness(0.8); }
@@ -2132,6 +2151,9 @@ button.link:hover { color: var(--text); }
 .stop__ans.is-unique .stop__plus { color: var(--online); }
 .stop__ans.is-struck .stop__word, .stop__ans.is-letter .stop__word { text-decoration: line-through; color: var(--muted); }
 .stop__veto { display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 0 10px; font-size: 13px; }
+.stop__same { min-height: 40px; padding: 0 10px; font-size: 13px; }
+.stop__same.is-on, .stop__same.is-pick { background: var(--accent); border-color: var(--accent); color: #fff; }
+.stop__same.is-link { background: var(--coin); border-color: var(--coin-edge); color: #2a1e14; }
 .stop__veto.is-on { background: var(--danger); border-color: var(--danger); color: var(--danger-text); }
 .stop__veto .ico, .stop__count .ico, .stop__isready .ico { width: 14px; height: 14px; }
 .stop__count { display: inline-flex; align-items: center; gap: 2px; font-size: 12px; font-weight: 800; }

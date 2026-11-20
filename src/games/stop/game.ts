@@ -47,6 +47,14 @@ export type StopLog =
   | { k: 'lock'; timeout: boolean }
   | { k: 'round'; round: number; points: number[] };
 
+export interface SamePair {
+  /** a < b */
+  a: number;
+  b: number;
+  cat: number;
+  voters: number[];
+}
+
 export interface StopState {
   players: SeatInfo[];
   options: StopOptions;
@@ -61,6 +69,8 @@ export interface StopState {
   answers: string[][];
   /** [seat][category]: the seats that voted this answer out. */
   rejects: number[][][];
+  /** Answers the players say are the same word, with who said so; a pair counts once more than half agree. */
+  sames: SamePair[];
   ready: boolean[];
   /** Totals of the rounds already scored. */
   scores: number[];
@@ -76,6 +86,8 @@ export type StopIntent =
   | { type: 'stop'; answers?: string[] }
   | { type: 'tick' }
   | { type: 'vote'; seat: number; cat: number }
+  /** Toggles my vote that the answers of seats `a` and `b` in category `cat` are the same word. */
+  | { type: 'same'; a: number; b: number; cat: number }
   | { type: 'ready' }
   | { type: 'next'; round: number };
 
@@ -102,6 +114,11 @@ export function votesNeeded(players: number): number {
   return Math.floor((players - 1) / 2) + 1;
 }
 
+/** Votes that link two answers as the same word ("gato" and "gata", synonyms): more than half of all the players. */
+export function sameVotesNeeded(players: number): number {
+  return Math.floor(players / 2) + 1;
+}
+
 export function pointsFor(mark: Mark): number {
   return mark === 'unique' ? POINTS_UNIQUE : mark === 'shared' ? POINTS_SHARED : 0;
 }
@@ -119,6 +136,7 @@ export function createStop(seats: SeatInfo[], options: StopOptions, seed: number
     answers: [],
     rejects: [],
     ready: [],
+    sames: [],
     scores: seats.map(() => 0),
     roundPoints: null,
     winners: null,
@@ -136,6 +154,7 @@ function startRound(s: StopState, now: number): void {
   s.answers = s.players.map(() => s.options.categories.map(() => ''));
   s.rejects = s.players.map(() => s.options.categories.map(() => []));
   s.ready = s.players.map(() => false);
+  s.sames = [];
   s.roundPoints = null;
   s.log.push({ k: 'letter', round: s.round, letter: s.letters[s.round]! });
 }
@@ -148,11 +167,19 @@ export function markRound(s: StopState): Mark[][] {
   s.options.categories.forEach((_, c) => {
     const keys = s.answers.map(a => normalize(a[c] ?? ''));
     const valid = keys.map((key, seat) => key !== '' && key.startsWith(letter) && s.rejects[seat]![c]!.length < need);
+    // Answers that are written alike, or that the players agreed are the same word, share a group.
+    const group = keys.map((_, i) => i);
+    const root = (i: number): number => (group[i] === i ? i : (group[i] = root(group[i]!)));
+    const link = (a: number, b: number) => void (group[root(a)] = root(b));
+    keys.forEach((key, a) => keys.forEach((other, b) => b > a && valid[a] && valid[b] && other === key && link(a, b)));
+    for (const pair of s.sames) {
+      if (pair.cat === c && pair.voters.length >= sameVotesNeeded(s.players.length) && valid[pair.a] && valid[pair.b]) link(pair.a, pair.b);
+    }
     keys.forEach((key, seat) => {
       if (key === '') marks[seat]![c] = 'empty';
       else if (!key.startsWith(letter)) marks[seat]![c] = 'letter';
       else if (!valid[seat]) marks[seat]![c] = 'struck';
-      else marks[seat]![c] = keys.some((other, i) => i !== seat && valid[i] && other === key) ? 'shared' : 'unique';
+      else marks[seat]![c] = keys.some((_, i) => i !== seat && valid[i] && root(i) === root(seat)) ? 'shared' : 'unique';
     });
   });
   return marks;
@@ -239,6 +266,25 @@ export function applyStop(s: StopState, seat: number, intent: StopIntent, now: n
       else votes.push(seat);
       return ok();
     }
+    case 'same': {
+      settle(s, now);
+      if (s.phase !== 'review') return ok();
+      const { a, b, cat } = intent;
+      if (![a, b, cat].every(Number.isInteger) || !s.rejects[a]?.[cat] || !s.rejects[b]?.[cat]) return fail('Bad move');
+      if (a === b) return fail('Pick two different answers');
+      const lo = Math.min(a, b);
+      const hi = Math.max(a, b);
+      const marks = markRound(s);
+      const counts = (m: Mark) => m === 'unique' || m === 'shared';
+      if (!counts(marks[lo]![cat]!) || !counts(marks[hi]![cat]!)) return fail('That answer is already invalid');
+      let pair = s.sames.find(x => x.a === lo && x.b === hi && x.cat === cat);
+      if (!pair) s.sames.push((pair = { a: lo, b: hi, cat, voters: [] }));
+      const at = pair.voters.indexOf(seat);
+      if (at >= 0) pair.voters.splice(at, 1);
+      else pair.voters.push(seat);
+      if (pair.voters.length === 0) s.sames = s.sames.filter(x => x !== pair);
+      return ok();
+    }
     case 'ready':
       settle(s, now);
       if (s.phase !== 'review') return ok();
@@ -279,6 +325,9 @@ export interface StopView {
   /** [seat][category]: who voted the answer out; null while writing. */
   rejects: number[][][] | null;
   votesNeeded: number;
+  /** Answers voted to be the same word, and how many votes link them. */
+  sames: SamePair[] | null;
+  sameNeeded: number;
   ready: boolean[];
   /** Totals of the rounds already scored. */
   scores: number[];
@@ -308,6 +357,8 @@ export function stopView(s: StopState, seat: number, now: number): StopView {
     marks: open ? markRound(s) : null,
     rejects: open ? s.rejects : null,
     votesNeeded: votesNeeded(s.players.length),
+    sames: open ? s.sames : null,
+    sameNeeded: sameVotesNeeded(s.players.length),
     ready: s.ready,
     scores: s.scores,
     roundPoints: s.phase === 'scores' ? s.roundPoints : open ? roundPoints(s) : null,

@@ -28,13 +28,15 @@ const payday: Square = { k: 'payday' };
 const tax: Square = { k: 'tax' };
 const sue: Square = { k: 'sue' };
 const interest: Square = { k: 'interest' };
-const cash = (n: number, t: string): Square => ({ k: 'cash', n, t });
+/** Every amount on the track is written in the original small numbers and scaled here, so the whole economy moves together. */
+export const MONEY_SCALE = 2;
+const cash = (n: number, t: string): Square => ({ k: 'cash', n: n * MONEY_SCALE, t });
 const raise = (n: number, t: string): Square => ({ k: 'raise', n, t });
 const life = (t: string): Square => ({ k: 'life', t });
 const baby = (n: 1 | 2): Square => ({ k: 'baby', n });
 const bonus = (t: string): Square => ({ k: 'bonus', t });
-const collect = (n: number, t: string): Square => ({ k: 'collect', n, t });
-const perkid = (n: number, t: string): Square => ({ k: 'perkid', n, t });
+const collect = (n: number, t: string): Square => ({ k: 'collect', n: n * MONEY_SCALE, t });
+const perkid = (n: number, t: string): Square => ({ k: 'perkid', n: n * MONEY_SCALE, t });
 const stop = (s: StopKind): Square => ({ k: 'stop', s });
 
 interface ChapterDef {
@@ -168,27 +170,40 @@ export const GRADUATE = BOARDS.normal.graduate;
 export const CAREER_START = BOARDS.normal.careerStart;
 export const RETIRE = BOARDS.normal.retire;
 
+/**
+ * What a career gives besides its salary, so the lower-paid ones are a real choice:
+ * - thrift: spending squares cost 30% less;
+ * - noTax: no income tax, and half the bank interest;
+ * - joy: every Achievement square also pays JOY_CASH;
+ * - tiles: one extra Achievement at the wedding and one at retirement.
+ */
+export type Perk = 'thrift' | 'noTax' | 'joy' | 'tiles';
+
 export interface Career {
   id: string;
   degree: boolean;
   salary: number;
+  perks: readonly Perk[];
 }
 
+export const THRIFT_DISCOUNT = 0.3;
+export const JOY_CASH = 10;
+
 export const CAREERS: readonly Career[] = [
-  { id: 'cashier', degree: false, salary: 30 },
-  { id: 'driver', degree: false, salary: 40 },
-  { id: 'hairdresser', degree: false, salary: 40 },
-  { id: 'mechanic', degree: false, salary: 50 },
-  { id: 'artist', degree: false, salary: 50 },
-  { id: 'police', degree: false, salary: 60 },
-  { id: 'chef', degree: false, salary: 60 },
-  { id: 'teacher', degree: true, salary: 60 },
-  { id: 'accountant', degree: true, salary: 70 },
-  { id: 'vet', degree: true, salary: 80 },
-  { id: 'programmer', degree: true, salary: 90 },
-  { id: 'engineer', degree: true, salary: 90 },
-  { id: 'lawyer', degree: true, salary: 100 },
-  { id: 'doctor', degree: true, salary: 110 },
+  { id: 'cashier', degree: false, salary: 35, perks: ['tiles', 'noTax', 'thrift'] },
+  { id: 'driver', degree: false, salary: 40, perks: ['tiles', 'thrift'] },
+  { id: 'hairdresser', degree: false, salary: 40, perks: ['joy', 'thrift'] },
+  { id: 'mechanic', degree: false, salary: 45, perks: ['thrift', 'noTax'] },
+  { id: 'artist', degree: false, salary: 45, perks: ['joy', 'tiles'] },
+  { id: 'police', degree: false, salary: 50, perks: ['noTax'] },
+  { id: 'chef', degree: false, salary: 50, perks: ['joy'] },
+  { id: 'teacher', degree: true, salary: 55, perks: ['joy', 'noTax', 'tiles'] },
+  { id: 'accountant', degree: true, salary: 60, perks: ['noTax', 'thrift'] },
+  { id: 'vet', degree: true, salary: 65, perks: ['joy', 'tiles'] },
+  { id: 'programmer', degree: true, salary: 70, perks: ['thrift'] },
+  { id: 'engineer', degree: true, salary: 70, perks: ['noTax'] },
+  { id: 'lawyer', degree: true, salary: 75, perks: [] },
+  { id: 'doctor', degree: true, salary: 80, perks: [] },
 ];
 
 export interface House {
@@ -196,16 +211,18 @@ export interface House {
   price: number;
   /** What it sells for at retirement. */
   value: number;
+  /** Paid at every payday while you live there: condo fees, property tax, repairs. */
+  upkeep: number;
 }
 
 export const HOUSES: readonly House[] = [
-  { id: 'kitnet', price: 40, value: 60 },
-  { id: 'flat', price: 80, value: 110 },
-  { id: 'villa', price: 100, value: 140 },
-  { id: 'townhouse', price: 150, value: 200 },
-  { id: 'farmhouse', price: 180, value: 230 },
-  { id: 'beach', price: 220, value: 300 },
-  { id: 'penthouse', price: 300, value: 420 },
+  { id: 'kitnet', price: 150, value: 210, upkeep: 3 },
+  { id: 'flat', price: 300, value: 420, upkeep: 6 },
+  { id: 'villa', price: 400, value: 560, upkeep: 8 },
+  { id: 'townhouse', price: 550, value: 770, upkeep: 11 },
+  { id: 'farmhouse', price: 650, value: 910, upkeep: 13 },
+  { id: 'beach', price: 800, value: 1120, upkeep: 16 },
+  { id: 'penthouse', price: 1000, value: 1400, upkeep: 20 },
 ];
 
 export type InvestPick = 'savings' | 'stocks' | 'crypto';
@@ -213,30 +230,34 @@ export type MidlifePick = 'bike' | 'therapy' | 'deny';
 
 /** Investments: the stake, the odds of it working out (1 in `odds`), and what comes back either way. */
 export const INVEST: Record<InvestPick, { stake: number; odds: number; win: number; lose: number }> = {
-  savings: { stake: 0, odds: 1, win: 15, lose: 15 },
-  stocks: { stake: 50, odds: 2, win: 120, lose: 10 },
-  crypto: { stake: 50, odds: 5, win: 300, lose: 0 },
+  savings: { stake: 0, odds: 1, win: 60, lose: 60 },
+  stocks: { stake: 200, odds: 2, win: 480, lose: 40 },
+  crypto: { stake: 200, odds: 5, win: 1200, lose: 0 },
 };
 
 /** The midlife crisis: what each way out costs and gives. */
 export const MIDLIFE: Record<MidlifePick, { cash: number; tiles: number; raise: number }> = {
-  bike: { cash: -80, tiles: 1, raise: 0 },
-  therapy: { cash: -20, tiles: 0, raise: 10 },
-  deny: { cash: 20, tiles: 0, raise: 0 },
+  bike: { cash: -250, tiles: 3, raise: 0 },
+  therapy: { cash: -60, tiles: 0, raise: 15 },
+  deny: { cash: 60, tiles: 0, raise: 0 },
 };
 
 /** Values of the Conquista tiles, face down until the end. */
 export const TILE_VALUES: readonly number[] = [50, 100, 150, 200, 250];
 export const TILES_EACH = 14;
 
-export const START_CASH = 10;
-export const LOAN = 50;
-export const LOAN_PAYBACK = 60;
-export const LOAN_INTEREST = 10;
-export const COLLEGE_LOANS = 2;
-export const WEDDING_GIFT = 20;
-export const SUE_AMOUNT = 50;
-export const KID_BONUS = 50;
+export const START_CASH = 20;
+export const LOAN = 100;
+export const LOAN_PAYBACK = 125;
+export const LOAN_INTEREST = 15;
+export const COLLEGE_LOANS = 1;
+export const WEDDING_GIFT = 40;
+export const SUE_AMOUNT = 100;
+export const KID_BONUS = 100;
+/** Each child costs this at every payday. */
+export const KID_UPKEEP = 5;
+/** The motorbike's insurance, fuel and repairs at every payday. */
+export const BIKE_UPKEEP = 6;
 export const COUNTRY_TILES = 2;
 export const MANSION_TILES = 4;
 /** Staying in your job at the career crossroads is worth this raise. */

@@ -167,6 +167,23 @@ describe('stop', () => {
     expect(s.scores).toEqual([10, 30]);
   });
 
+  it('answers voted to be the same word score as repeated, for both players', () => {
+    const s = game();
+    toReview(s, [sheet(s, ['ato', 'ata', 'a1']), sheet(s, ['bo', 'ato', 'a2']), sheet(s, ['co', 'x', 'a3'])], 1000);
+    // Category 1: A wrote "..ata", B wrote "..ato": different words, so both are unique for now.
+    expect(markRound(s)[0]![1]).toBe('unique');
+    expect(applyStop(s, 2, { type: 'same', a: 1, b: 0, cat: 1 }, 2000)).toEqual({ ok: true });
+    expect(markRound(s)[0]![1]).toBe('unique');
+    applyStop(s, 0, { type: 'same', a: 0, b: 1, cat: 1 }, 2000);
+    expect(s.sames).toHaveLength(1);
+    expect(markRound(s)[0]![1]).toBe('shared');
+    expect(markRound(s)[1]![1]).toBe('shared');
+    // Taking a vote back unlinks them again.
+    applyStop(s, 0, { type: 'same', a: 0, b: 1, cat: 1 }, 2000);
+    expect(markRound(s)[0]![1]).toBe('unique');
+    expect(applyStop(s, 0, { type: 'same', a: 0, b: 0, cat: 1 }, 2000).ok).toBe(false);
+  });
+
   it('closes a stalled review by itself', () => {
     const s = game();
     toReview(s, [sheet(s, ['a', 'b', 'c']), sheet(s, ['d', 'e', 'f']), sheet(s, ['g', 'h', 'i'])], 10);

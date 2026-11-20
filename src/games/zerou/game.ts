@@ -16,6 +16,10 @@ import type { ApplyResult, GameInstance, GameModule, SeatInfo } from '../module'
  *   current player has not drawn yet. Its effect applies as usual and play continues after the player who cut in.
  * - The 9 race: a 9 pauses the game until everyone taps the pile. The last one draws 2 (per 9 played); when time runs
  *   out, everyone who has not tapped draws.
+ * - Stacking: a +2 (or +4) can be answered with another +2 (or +4) instead of drawing; the penalty adds up and moves on.
+ *   Whoever cannot (or will not) answer draws it all and loses the turn.
+ * - Drawing: Comprar keeps drawing until a playable card shows up.
+ * - Última! can be pressed any time; playing after pressing it without being left with exactly one card costs 2 cards.
  * - Pairs: colored cards of the same number/symbol go down together if the first is legal; the last one stays on top
  *   and the effects add up.
  */
@@ -34,6 +38,8 @@ export interface Card {
 export const HAND = 7;
 /** Cards drawn by a player rightly accused of holding one card without calling Última!. */
 export const ACCUSE_PENALTY = 5;
+/** Cards drawn by whoever presses Última! and then does not end up with exactly one card. */
+export const BAD_LAST_PENALTY = 2;
 /** Cards drawn by whoever accuses wrongly. */
 export const FALSE_ACCUSE_PENALTY = 2;
 /** Cards the slowest player of a 9 race draws, per 9 played. */
@@ -55,7 +61,9 @@ export type ZerouLog =
   | { k: 'race'; seat: number }
   /** `seat` was the slowest of the 9 race and drew `n`. */
   | { k: 'slow'; seat: number; n: number }
-  | { k: 'win'; seat: number };
+  | { k: 'win'; seat: number }
+  /** `seat` pressed Última! and played, but was left with more (or fewer) than one card, and drew `n`. */
+  | { k: 'badlast'; seat: number; n: number };
 
 export interface Race {
   id: number;
@@ -79,6 +87,8 @@ export interface ZerouState {
   dir: 1 | -1;
   /** The current player drew this turn and may only play that card or pass. */
   drawn: number | null;
+  /** A +2 or +4 is waiting for the current player: answer with the same card to pass it on, or draw `n`. */
+  pending: { kind: 'draw2' | 'wild4'; n: number } | null;
   /** Players who called Última! with one card. */
   called: boolean[];
   /** A 9 was played: the game waits for everyone to tap the pile. */
@@ -128,7 +138,7 @@ export function createZerou(seats: SeatInfo[], seed: number): ZerouState {
   const first = deck.splice(firstIdx, 1)[0]!;
   return {
     rng, players: seats, hands, draw: deck, discard: [first], color: first.color!, current: nextInt(rng, seats.length), dir: 1,
-    drawn: null, called: seats.map(() => false), race: null, races: 0, winner: null, turns: 0, log: [],
+    drawn: null, pending: null, called: seats.map(() => false), race: null, races: 0, winner: null, turns: 0, log: [],
   };
 }
 
@@ -137,6 +147,8 @@ export function top(s: ZerouState): Card {
 }
 
 export function canPlay(s: ZerouState, hand: Card[], card: Card): boolean {
+  // Under a +2 / +4 only the same kind of card answers, whatever its color.
+  if (s.pending) return card.value === s.pending.kind;
   if (card.value === 'wild' || card.value === 'swap') return true;
   if (card.value === 'wild4') return !hand.some(c => c.color === s.color);
   return card.color === s.color || card.value === top(s).value;
@@ -212,7 +224,7 @@ export function playCards(s: ZerouState, seat: number, intent: PlayIntent, now: 
     }
   } else {
     if (s.drawn !== null && (cards.length > 1 || first.id !== s.drawn)) return fail('You can only play the card you drew');
-    if (!canPlay(s, hand, first)) return fail(first.value === 'wild4' ? 'Coringa +4 only without the current color' : 'That card does not match');
+    if (!canPlay(s, hand, first)) return fail(s.pending ? 'Answer with the same kind of card, or draw' : first.value === 'wild4' ? 'Coringa +4 only without the current color' : 'That card does not match');
     if (cards.length > 1 && cards.some(c => c.color === null || c.value !== first.value)) return fail('Only cards of the same number go together');
   }
   const wild = lastCard.color === null;
@@ -254,12 +266,12 @@ export function playCards(s: ZerouState, seat: number, intent: PlayIntent, now: 
       endTurn(s, n === 2 ? seat : next(s, seat));
       break;
     case 'draw2':
-      forcedDraw(s, next(s, seat), 2 * k);
-      endTurn(s, next(s, seat, 2));
+      s.pending = { kind: 'draw2', n: (s.pending?.n ?? 0) + 2 * k };
+      endTurn(s, next(s, seat));
       break;
     case 'wild4':
-      forcedDraw(s, next(s, seat), 4);
-      endTurn(s, next(s, seat, 2));
+      s.pending = { kind: 'wild4', n: (s.pending?.n ?? 0) + 4 };
+      endTurn(s, next(s, seat));
       break;
     case 'swap': {
       const other = target!;
@@ -278,6 +290,11 @@ export function playCards(s: ZerouState, seat: number, intent: PlayIntent, now: 
       break;
     default:
       endTurn(s, next(s, seat));
+  }
+  // Última! pressed, but not left with exactly one card: two more.
+  if (intent.last === true && s.hands[seat]!.length !== 1) {
+    drawCards(s, seat, BAD_LAST_PENALTY);
+    s.log.push({ k: 'badlast', seat, n: BAD_LAST_PENALTY });
   }
   return ok();
 }
@@ -345,9 +362,24 @@ export function applyZerou(s: ZerouState, seat: number, intent: ZerouIntent, now
       if (s.race) return fail('Tap the 9 first');
       if (seat !== s.current) return fail('Not your turn');
       if (s.drawn !== null) return fail('You already drew');
-      const [card] = drawCards(s, seat, 1);
-      s.log.push({ k: 'draw', seat, n: 1, forced: false });
-      if (card && canPlay(s, s.hands[seat]!, card)) s.drawn = card.id;
+      if (s.pending) {
+        // Nothing to stack with: take the whole penalty and lose the turn.
+        forcedDraw(s, seat, s.pending.n);
+        s.pending = null;
+        endTurn(s, next(s, seat));
+        return ok();
+      }
+      // Keep drawing until something can be played.
+      let n = 0;
+      let playable: Card | undefined;
+      while (!playable) {
+        const [card] = drawCards(s, seat, 1);
+        if (!card) break;
+        n++;
+        if (canPlay(s, s.hands[seat]!, card)) playable = card;
+      }
+      if (n > 0) s.log.push({ k: 'draw', seat, n, forced: false });
+      if (playable) s.drawn = playable.id;
       else endTurn(s, next(s, seat));
       return ok();
     }
@@ -376,6 +408,8 @@ export interface ZerouView {
   current: number;
   dir: 1 | -1;
   drawn: number | null;
+  /** The +2 / +4 waiting for whoever's turn it is. */
+  pending: { kind: 'draw2' | 'wild4'; n: number } | null;
   drawPile: number;
   /** The running 9 race: who tapped, and how long is left when this view was made. */
   race: { id: number; by: number; tapped: boolean[]; left: number; total: number } | null;
@@ -398,6 +432,7 @@ export function zerouView(s: ZerouState, seat: number, now: number = Date.now())
     current: s.current,
     dir: s.dir,
     drawn: mine ? s.drawn : null,
+    pending: s.pending,
     drawPile: s.draw.length,
     race: s.race ? { id: s.race.id, by: s.race.by, tapped: s.race.tapped, left: Math.max(0, s.race.deadline - now), total: RACE_MS } : null,
     winner: s.winner,
