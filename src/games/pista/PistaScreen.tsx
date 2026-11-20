@@ -38,7 +38,7 @@ export function PistaScreen(props: GameScreenProps) {
       className="pista"
     >
       {view.phase === 'teams' ? <Teams {...props} view={view} t={t} /> : <Table {...props} view={view} t={t} />}
-      {rules && <RulesSheet title={t('rulesTitle')} paragraphs={RULE_KEYS.map(k => t(k))} onClose={() => setRules(false)} />}
+      {rules && <RulesSheet game="pista" title={t('rulesTitle')} paragraphs={RULE_KEYS.map(k => t(k))} onClose={() => setRules(false)} />}
     </GameFrame>
   );
 }

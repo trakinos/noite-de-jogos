@@ -34,7 +34,7 @@ export function ChessScreen(props: GameScreenProps) {
       className="chess"
     >
       <ChessTable {...props} view={view} />
-      {rules && <RulesSheet title={t('rulesTitle')} paragraphs={RULE_KEYS.map(k => t(k))} onClose={() => setRules(false)} />}
+      {rules && <RulesSheet game="chess" title={t('rulesTitle')} paragraphs={RULE_KEYS.map(k => t(k))} onClose={() => setRules(false)} />}
     </GameFrame>
   );
 }

@@ -6,6 +6,7 @@ import { MAX_COUNTERS, MAX_TRADES_PER_TURN } from '../trades';
 import { BairroDialog } from './BairroDialog';
 import { RULES_LAYOUT } from './rulesLayout';
 import { money } from './text';
+import { ruleArt } from '../../shared/RuleArt';
 import { useBairroText } from './useBairroText';
 
 /** The numbers the rules text quotes, straight from the game's constants. */
@@ -30,7 +31,7 @@ export function BairroRules({ onClose }: { onClose(): void }) {
   const say = (key: string) => text.rule(key, params);
   return (
     <BairroDialog title={tr.t('rules')} onClose={onClose} className="brules">
-      {RULES_LAYOUT.map(section => (
+      {RULES_LAYOUT.map((section, si) => (
         <section key={section.title} className="rules__section">
           <h3>{say(section.title)}</h3>
           <ul>
@@ -38,6 +39,7 @@ export function BairroRules({ onClose }: { onClose(): void }) {
               <li key={item}>{say(item)}</li>
             ))}
           </ul>
+          {ruleArt('bairro', si)}
         </section>
       ))}
     </BairroDialog>

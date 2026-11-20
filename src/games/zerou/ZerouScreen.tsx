@@ -487,7 +487,7 @@ export function ZerouScreen(props: GameScreenProps) {
           </div>
         </div>
       )}
-      {rules && <RulesSheet title={t('rulesTitle')} paragraphs={ZEROU_RULES.map(k => t(k))} onClose={() => setRules(false)} />}
+      {rules && <RulesSheet game="zerou" title={t('rulesTitle')} paragraphs={ZEROU_RULES.map(k => t(k))} onClose={() => setRules(false)} />}
     </GameFrame>
   );
 }

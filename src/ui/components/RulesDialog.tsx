@@ -5,6 +5,7 @@ import { RULES, RULES_CARDS } from '../../i18n/rules';
 import { Chips } from './Card';
 import { splitRuleText } from '../../theme';
 import { Icon } from './Icon';
+import { ruleArt } from '../../games/shared/RuleArt';
 
 interface Props {
   /** The game's Kingdom cards, listed with their rule text. Omitted outside a game. */
@@ -36,7 +37,7 @@ export function RulesDialog({ kingdom, onClose }: Props) {
             <Icon name="x" />
           </button>
         </header>
-        {RULES[lang].map((section) => (
+        {RULES[lang].map((section, si) => (
           <section key={section.title} className="rules__section">
             <h3>{fill(section.title)}</h3>
             <ul>
@@ -44,6 +45,7 @@ export function RulesDialog({ kingdom, onClose }: Props) {
                 <li key={item}>{fill(item)}</li>
               ))}
             </ul>
+            {ruleArt('dominion', si)}
           </section>
         ))}
         {kingdom && kingdom.length > 0 && (

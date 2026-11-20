@@ -37,7 +37,7 @@ export function VidaScreen(props: GameScreenProps) {
       className="vida"
     >
       {over ? <VidaEnd {...props} view={view} t={t} /> : <VidaTable {...props} view={view} t={t} />}
-      {rules && <RulesSheet title={t('rulesTitle')} paragraphs={RULE_KEYS.map(k => t(k))} onClose={() => setRules(false)} />}
+      {rules && <RulesSheet game="vida" title={t('rulesTitle')} paragraphs={RULE_KEYS.map(k => t(k))} onClose={() => setRules(false)} />}
     </GameFrame>
   );
 }

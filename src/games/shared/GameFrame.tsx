@@ -6,6 +6,7 @@ import type { LobbyState } from '../../net/protocol';
 import { ConfirmDialog } from '../../ui/components/ConfirmDialog';
 import { Icon } from '../../ui/components/Icon';
 import { TimerBar } from '../../ui/components/TimerBar';
+import { ruleArt } from './RuleArt';
 import { isMuted, onMuteChange, setMuted } from './sound';
 
 /** What App hands every newer game's screens. */
@@ -165,14 +166,17 @@ export function EndActions({ isHost, onPlayAgain, onBackToLobby, onLeave, playAg
 }
 
 /** A rules sheet over the game: a title and paragraphs, each paragraph a text key. */
-export function RulesSheet({ title, paragraphs, onClose }: { title: string; paragraphs: string[]; onClose(): void }) {
+export function RulesSheet({ title, paragraphs, game, onClose }: { title: string; paragraphs: string[]; game?: string; onClose(): void }) {
   const { tr } = useLang();
   return (
     <div className="overlay" role="dialog" aria-modal="true" aria-label={title} onClick={onClose}>
       <div className="panel gframe__rules" onClick={e => e.stopPropagation()}>
         <h2>{title}</h2>
         {paragraphs.map((p, i) => (
-          <p key={i}>{p}</p>
+          <div key={i}>
+            <p>{p}</p>
+            {ruleArt(game, i)}
+          </div>
         ))}
         <div className="actions actions--center">
           <button type="button" className="primary" autoFocus onClick={onClose}>

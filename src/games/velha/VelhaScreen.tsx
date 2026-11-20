@@ -141,7 +141,7 @@ export function VelhaScreen(props: GameScreenProps) {
         )}
         {over && <EndActions isHost={props.isHost} onPlayAgain={props.onPlayAgain} onBackToLobby={props.onBackToLobby} onLeave={props.onLeave} playAgain={t('playAgain')} />}
       </div>
-      {rules && <RulesSheet title={t('rulesTitle')} paragraphs={VELHA_RULES.map(k => t(k))} onClose={() => setRules(false)} />}
+      {rules && <RulesSheet game="velha" title={t('rulesTitle')} paragraphs={VELHA_RULES.map(k => t(k))} onClose={() => setRules(false)} />}
     </GameFrame>
   );
 }

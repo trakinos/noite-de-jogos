@@ -19,15 +19,15 @@ import { VidaScreen } from './vida/VidaScreen';
 import { ZEROU_RULES, ZEROU_TEXT, ZerouScreen } from './zerou/ZerouScreen';
 import { VidaLobby } from './vida/VidaLobby';
 
-function rulesLobby(texts: Texts, keys: string[]): ComponentType<LobbyProps> {
+function rulesLobby(game: GameId, texts: Texts, keys: string[]): ComponentType<LobbyProps> {
   return function RulesLobby(props: LobbyProps) {
     const t = useGameText(texts);
-    return <SimpleLobby {...props} rules={{ title: t('rulesTitle'), paragraphs: keys.map(k => t(k)) }} />;
+    return <SimpleLobby {...props} rules={{ game, title: t('rulesTitle'), paragraphs: keys.map(k => t(k)) }} />;
   };
 }
 
 /** A lobby whose one setting is the language of the words (Pista Certa). */
-function wordsLobby(texts: Texts, keys: string[], module: GameModule<{ words: 'pt' | 'en' }>): ComponentType<LobbyProps> {
+function wordsLobby(game: GameId, texts: Texts, keys: string[], module: GameModule<{ words: 'pt' | 'en' }>): ComponentType<LobbyProps> {
   return function WordsLobby(props: LobbyProps) {
     const t = useGameText(texts);
     const parsed = module.parseOptions(props.lobby.options);
@@ -49,18 +49,18 @@ function wordsLobby(texts: Texts, keys: string[], module: GameModule<{ words: 'p
         )}
       </div>
     );
-    return <SimpleLobby {...props} options={options} rules={{ title: t('rulesTitle'), paragraphs: keys.map(k => t(k)) }} />;
+    return <SimpleLobby {...props} options={options} rules={{ game, title: t('rulesTitle'), paragraphs: keys.map(k => t(k)) }} />;
   };
 }
 
 /** Lobby and game screens of the games built on the shared frame. */
 export const NEW_GAMES: Partial<Record<GameId, { Lobby: ComponentType<LobbyProps>; Screen: ComponentType<GameScreenProps> }>> = {
-  chess: { Lobby: rulesLobby(CHESS_TEXT, CHESS_RULES), Screen: ChessScreen },
-  pista: { Lobby: wordsLobby(PISTA_TEXT, PISTA_RULES, pistaModule), Screen: PistaScreen },
+  chess: { Lobby: rulesLobby('chess', CHESS_TEXT, CHESS_RULES), Screen: ChessScreen },
+  pista: { Lobby: wordsLobby('pista', PISTA_TEXT, PISTA_RULES, pistaModule), Screen: PistaScreen },
   vida: { Lobby: VidaLobby, Screen: VidaScreen },
-  naval: { Lobby: rulesLobby(NAVAL_TEXT, NAVAL_RULES), Screen: NavalScreen },
-  zerou: { Lobby: rulesLobby(ZEROU_TEXT, ZEROU_RULES), Screen: ZerouScreen },
-  velha: { Lobby: rulesLobby(VELHA_TEXT, VELHA_RULES), Screen: VelhaScreen },
+  naval: { Lobby: rulesLobby('naval', NAVAL_TEXT, NAVAL_RULES), Screen: NavalScreen },
+  zerou: { Lobby: rulesLobby('zerou', ZEROU_TEXT, ZEROU_RULES), Screen: ZerouScreen },
+  velha: { Lobby: rulesLobby('velha', VELHA_TEXT, VELHA_RULES), Screen: VelhaScreen },
   forca: { Lobby: ForcaLobby, Screen: ForcaScreen },
   stop: { Lobby: StopLobby, Screen: StopScreen },
   sudoku: { Lobby: SudokuLobby, Screen: SudokuScreen },

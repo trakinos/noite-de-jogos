@@ -18,7 +18,7 @@ export interface LobbyProps {
 }
 
 /** The shared Lobby with a game's own settings and its rules sheet behind the Rules button. */
-export function SimpleLobby({ rules, options, ...props }: LobbyProps & { rules: { title: string; paragraphs: string[] }; options?: ReactNode }) {
+export function SimpleLobby({ rules, options, ...props }: LobbyProps & { rules: { title: string; paragraphs: string[]; game?: string }; options?: ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
     <>

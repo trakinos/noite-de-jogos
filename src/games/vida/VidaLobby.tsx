@@ -30,5 +30,5 @@ export function VidaLobby(props: LobbyProps) {
       )}
     </div>
   );
-  return <SimpleLobby {...props} options={options} rules={{ title: t('rulesTitle'), paragraphs: RULE_KEYS.map(k => t(k)) }} />;
+  return <SimpleLobby {...props} options={options} rules={{ game: 'vida', title: t('rulesTitle'), paragraphs: RULE_KEYS.map(k => t(k)) }} />;
 }

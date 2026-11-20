@@ -185,7 +185,7 @@ export function ForcaLobby(props: LobbyProps) {
       </div>
     </>
   );
-  return <SimpleLobby {...props} options={options} rules={{ title: t('rulesTitle'), paragraphs: FORCA_RULES.map(k => t(k)) }} />;
+  return <SimpleLobby {...props} options={options} rules={{ game: 'forca', title: t('rulesTitle'), paragraphs: FORCA_RULES.map(k => t(k)) }} />;
 }
 
 export function ForcaScreen(props: GameScreenProps) {
@@ -346,7 +346,7 @@ export function ForcaScreen(props: GameScreenProps) {
           </section>
         </aside>
       </div>
-      {rules && <RulesSheet title={t('rulesTitle')} paragraphs={FORCA_RULES.map(k => t(k))} onClose={() => setRules(false)} />}
+      {rules && <RulesSheet game="forca" title={t('rulesTitle')} paragraphs={FORCA_RULES.map(k => t(k))} onClose={() => setRules(false)} />}
     </GameFrame>
   );
 }

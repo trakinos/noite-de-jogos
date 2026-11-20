@@ -24,7 +24,7 @@ export function NavalScreen(props: GameScreenProps) {
       className="naval"
     >
       {view.phase === 'placing' ? <Placing {...props} view={view} t={t} /> : <Battle {...props} view={view} t={t} />}
-      {rules && <RulesSheet title={t('rulesTitle')} paragraphs={RULE_KEYS.map(k => t(k))} onClose={() => setRules(false)} />}
+      {rules && <RulesSheet game="naval" title={t('rulesTitle')} paragraphs={RULE_KEYS.map(k => t(k))} onClose={() => setRules(false)} />}
     </GameFrame>
   );
 }

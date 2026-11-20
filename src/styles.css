@@ -2197,6 +2197,16 @@ body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-are
   input, textarea { -webkit-user-select: text; user-select: text; }
 }
 
+/* Rulebook pictures */
+.ruleart { margin: 10px 0 4px; display: flex; justify-content: center; }
+.ruleart svg { max-width: 100%; height: auto; }
+.ruleart__pieces { display: grid; gap: 4px; }
+.ruleart__prow { display: flex; gap: 4px; justify-content: center; }
+.ruleart__piece { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: var(--r-md); }
+.ruleart__piece--w { background: #ecd9b0; }
+.ruleart__piece--b { background: #b58863; }
+.ruleart__piece .chessman { width: 100%; height: 100%; }
+
 /* Sudoku */
 .front__art--sudoku { background: linear-gradient(var(--text), var(--text)) 33% 0 / 3px 100% no-repeat, linear-gradient(var(--text), var(--text)) 66% 0 / 3px 100% no-repeat, linear-gradient(var(--text), var(--text)) 0 33% / 100% 3px no-repeat, linear-gradient(var(--text), var(--text)) 0 66% / 100% 3px no-repeat, repeating-linear-gradient(90deg, transparent 0 10.5%, var(--surface-2) 10.5% 11.5%), repeating-linear-gradient(0deg, transparent 0 10.5%, var(--surface-2) 10.5% 11.5%), var(--surface); }
 .sudoku__table { display: grid; gap: 10px; justify-items: center; width: 100%; }

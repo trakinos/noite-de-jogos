@@ -212,7 +212,7 @@ export function StopLobby(props: LobbyProps) {
       </span>
     </div>
   );
-  return <SimpleLobby {...props} options={options} rules={{ title: t('rulesTitle'), paragraphs: STOP_RULES.map(k => t(k)) }} />;
+  return <SimpleLobby {...props} options={options} rules={{ game: 'stop', title: t('rulesTitle'), paragraphs: STOP_RULES.map(k => t(k)) }} />;
 }
 
 /** How long after its own countdown ends a screen asks the host to close the phase: time for the last words to arrive first. */
@@ -525,7 +525,7 @@ export function StopScreen(props: GameScreenProps) {
           ))}
         </aside>
       </div>
-      {rules && <RulesSheet title={t('rulesTitle')} paragraphs={STOP_RULES.map(k => t(k))} onClose={() => setRules(false)} />}
+      {rules && <RulesSheet game="stop" title={t('rulesTitle')} paragraphs={STOP_RULES.map(k => t(k))} onClose={() => setRules(false)} />}
     </GameFrame>
   );
 }
