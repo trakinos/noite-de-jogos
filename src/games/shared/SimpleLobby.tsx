@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import type { GameId } from '../catalog';
 import type { HostSession } from '../../net/host';
 import type { LobbyState } from '../../net/protocol';
 import type { PlayerColorId } from '../../theme/playerColors';
@@ -14,6 +15,8 @@ export interface LobbyProps {
   host: HostSession | null;
   onSetColor(color: PlayerColorId): void;
   onSetPiece(piece: PlayerPieceId): void;
+  /** Casts or clears this player's vote for the next game. */
+  onVote?(game: GameId | null): void;
   onLeave(): void;
 }
 

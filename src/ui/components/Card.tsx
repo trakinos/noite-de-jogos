@@ -4,6 +4,7 @@ import { useLang } from '../../i18n/LangProvider';
 import { splitRuleText, type RuleChip } from '../../theme';
 import { primaryType } from '../format';
 import { Icon } from './Icon';
+import { emphasize } from './RuleText';
 
 interface Props {
   id: CardId;
@@ -15,6 +16,8 @@ interface Props {
   count?: number;
   /** Position in an "order these cards" prompt. */
   order?: number;
+  /** A small bonus flag on the card, such as the +$1 a Regular gives the next Coin. */
+  badge?: string;
   onClick?: () => void;
 }
 
@@ -39,7 +42,7 @@ export function Chips({ chips }: { chips: RuleChip[] }) {
   );
 }
 
-export function Card({ id, size = 'normal', highlight, selected, dimmed, count, order, onClick }: Props) {
+export function Card({ id, size = 'normal', highlight, selected, dimmed, count, order, badge, onClick }: Props) {
   const { tr } = useLang();
   const def = getCard(id);
   const name = tr.card(id);
@@ -70,6 +73,7 @@ export function Card({ id, size = 'normal', highlight, selected, dimmed, count, 
     >
       <span className="card__cost" aria-hidden="true">{def.cost}</span>
       {count !== undefined && <span className="card__count">{count}</span>}
+      {badge && <span className="card__badge">{badge}</span>}
       {selected && order === undefined && (
         <span className="card__check">
           <Icon name="check" />
@@ -88,7 +92,7 @@ export function Card({ id, size = 'normal', highlight, selected, dimmed, count, 
           ) : (
             <>
               <Chips chips={chips} />
-              {rest && <span className="card__text">{rest}</span>}
+              {rest && <span className="card__text">{emphasize(rest)}</span>}
             </>
           )}
         </span>

@@ -83,6 +83,8 @@ export interface CatanState {
   army: number | null;
   winner: number | null;
   log: CatanLog[];
+  /** Turns ended so far: with the setup step, it tells the turn clock that a new turn began. */
+  turns: number;
 }
 
 export type CatanIntent =
@@ -160,6 +162,7 @@ export function createCatan(seats: SeatInfo[], seed: number): CatanState {
     army: null,
     winner: null,
     log: [],
+    turns: 0,
   };
 }
 
@@ -492,6 +495,7 @@ export function applyCatan(s: CatanState, seat: number, intent: CatanIntent): Ap
       s.devNew[seat] = [];
       s.devPlayed = false;
       s.dice = null;
+      s.turns++;
       s.current = (s.current + 1) % s.players.length;
       s.phase = 'roll';
       return ok();
@@ -627,6 +631,41 @@ function confirm(s: CatanState, seat: number, other: number): ApplyResult {
   return ok();
 }
 
+/**
+ * The cautious play for a player who ran out of time: finish the setup placement, roll, discard what is owed,
+ * move the robber, place any free roads, then end the turn. Nothing is bought or traded for them.
+ */
+export function autoTurn(s: CatanState): void {
+  const key = () => `${s.setupStep}:${s.turns}`;
+  const start = key();
+  const pickOne = <T,>(list: T[]): T => list[nextInt(s.rng, list.length)]!;
+  for (let guard = 0; guard < 60 && s.phase !== 'over' && key() === start; guard++) {
+    const seat = s.current;
+    if (s.phase === 'discard') {
+      s.owe.forEach((n, who) => {
+        if (n <= 0) return;
+        const pool = RES.flatMap(r => Array<Res>(s.hands[who]![r]).fill(r));
+        const cards = emptyHand();
+        for (let i = 0; i < n; i++) cards[pool.splice(nextInt(s.rng, pool.length), 1)[0]!]++;
+        applyCatan(s, who, { type: 'discard', cards });
+      });
+    } else if (s.phase === 'setup') {
+      if (s.setupCorner === null) applyCatan(s, seat, { type: 'settlement', vertex: pickOne(legalSettlementSpots(s, seat, false)) });
+      else applyCatan(s, seat, { type: 'road', edge: pickOne(VERTEX_EDGES[s.setupCorner]!.filter(e => s.roads[e] === -1)) });
+    } else if (s.phase === 'robber') {
+      applyCatan(s, seat, { type: 'robber', hex: pickOne(s.hexes.map((_, i) => i).filter(i => i !== s.robber)) });
+    } else if (s.phase === 'steal') {
+      applyCatan(s, seat, { type: 'steal', from: pickOne(victims(s, s.robber)) });
+    } else if (s.freeRoads > 0) {
+      const spots = legalRoadSpots(s, seat);
+      if (spots.length === 0) s.freeRoads = 0;
+      else applyCatan(s, seat, { type: 'road', edge: pickOne(spots) });
+    } else if (s.phase === 'roll') applyCatan(s, seat, { type: 'roll' });
+    else if (s.phase === 'main') applyCatan(s, seat, { type: 'end' });
+    else break;
+  }
+}
+
 // ---- views ----
 
 export interface CatanView {
@@ -718,7 +757,8 @@ export function catanView(s: CatanState, seat: number): CatanView {
 }
 
 export class CatanInstance implements GameInstance {
-  private readonly obj = {};
+  private obj: object = {};
+  private key = '';
   constructor(readonly state: CatanState) {}
 
   private seat(id: string): number {
@@ -735,16 +775,25 @@ export class CatanInstance implements GameInstance {
     return catanView(this.state, seat);
   }
 
-  /** No turn clock yet: a stalled player stalls the table, and the host can end the game. */
+  /** One clock per turn: a new setup step or an ended turn is a new turn. */
   clockInput(): ClockInput {
-    return { turn: this.obj, currentPlayer: this.state.current, pending: null, over: true };
+    const s = this.state;
+    const key = `${s.setupStep}:${s.turns}`;
+    if (key !== this.key) {
+      this.key = key;
+      this.obj = {};
+    }
+    return { turn: this.obj, currentPlayer: s.current, pending: null, over: s.phase === 'over' };
   }
 
   get over(): boolean {
     return this.state.phase === 'over';
   }
 
-  expire(_kind: ClockKind, _seed: number): void {}
+  /** Time ran out: whatever the turn still needs is done for the player, and it passes. */
+  expire(_kind: ClockKind, _seed: number): void {
+    autoTurn(this.state);
+  }
 }
 
 export const catanModule: GameModule<Record<string, never>> = {

@@ -1,3 +1,4 @@
+import { CardFace } from './CardFace';
 import { useEffect, useRef, useState } from 'react';
 import { useLang } from '../../i18n/LangProvider';
 import { Avatar } from '../../ui/components/Avatar';
@@ -167,23 +168,9 @@ export const ZEROU_TEXT: Texts = {
   },
 };
 
-const SYMBOL: Partial<Record<Card['value'], string>> = { skip: '⊘', rev: '⇄', draw2: '+2', wild: '★', wild4: '+4', swap: '🤝' };
-
 function cardName(c: Card, t: TextFn): string {
   const value = /^\d$/.test(c.value) ? c.value : t(`v_${c.value}`);
   return c.color ? `${value} ${t(`color_${c.color}`).toLowerCase()}` : value;
-}
-
-export function CardFace({ card, small, color }: { card: Card; small?: boolean; color?: Color }) {
-  const sym = SYMBOL[card.value] ?? card.value;
-  const shown = card.color ?? color ?? null;
-  return (
-    <span className={`zcard zcard--${card.color ?? 'wild'}${small ? ' is-small' : ''}${shown && !card.color ? ` shows-${shown}` : ''}`}>
-      <span className="zcard__corner">{sym}</span>
-      <span className="zcard__mid">{sym}</span>
-      <span className="zcard__corner zcard__corner--end">{sym}</span>
-    </span>
-  );
 }
 
 /** Colored cards of the same number or symbol can go down together. */
@@ -271,6 +258,19 @@ export function ZerouScreen(props: GameScreenProps) {
       className="zerou"
     >
       <div className={`zerou__table${myTurn ? ' is-myturn' : ''}`}>
+        {!over && (
+          <div className="actions actions--center zerou__lastrow">
+        <button
+          type="button"
+          className={`zerou__last${armed ? ' is-armed' : ''}${me.called && view.hand.length === 1 ? ' is-armed' : ''}`}
+          disabled={awaiting && canCall}
+          title={t('lastHint')}
+          onClick={() => (canCall ? onIntent({ type: 'last' }) : setArmed(!armed))}
+        >
+          📣 {armed || (me.called && view.hand.length === 1) ? t('lastArmed') : t('last')}
+        </button>
+          </div>
+        )}
         <div className="zerou__others">
           {others.map(({ p, i }) => (
             <div key={p.id} className={`zerou__opp${view.current === i && !over && !race ? ' is-turn' : ''}${view.winner === i ? ' is-winner' : ''}`}>
@@ -404,15 +404,6 @@ export function ZerouScreen(props: GameScreenProps) {
                 {t('pass')}
               </button>
             )}
-            <button
-              type="button"
-              className={`zerou__last${armed ? ' is-armed' : ''}${me.called && view.hand.length === 1 ? ' is-armed' : ''}`}
-              disabled={awaiting && canCall}
-              title={t('lastHint')}
-              onClick={() => (canCall ? onIntent({ type: 'last' }) : setArmed(!armed))}
-            >
-              📣 {armed || (me.called && view.hand.length === 1) ? t('lastArmed') : t('last')}
-            </button>
           </div>
         )}
 
@@ -610,3 +601,5 @@ function useRaceTimeout(view: ZerouView, onIntent: (intent: unknown) => void) {
     return () => clearTimeout(timer);
   }, [raceId]);
 }
+
+export { CardFace };

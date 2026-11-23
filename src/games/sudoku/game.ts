@@ -10,6 +10,9 @@ import type { ApplyResult, GameInstance, GameModule, SeatInfo } from '../module'
  * A wrong digit is refused and counted as a mistake, so a grid is never wrong, only incomplete.
  */
 
+/** Race: this many mistakes and a player is out of the race. */
+export const RACE_MAX_MISTAKES = 4;
+
 export type SudokuMode = 'coop' | 'race' | 'solo';
 export type SudokuLevel = 'easy' | 'medium' | 'hard';
 
@@ -33,6 +36,10 @@ export interface SudokuState {
   /** Coop only: who placed each digit, -1 for givens and empty cells. */
   placedBy: number[];
   mistakes: number[];
+  /** Race: players knocked out by their mistakes. */
+  out: number[];
+  /** Coop: each seat's pencil marks, as the digits jotted per cell, shown to the others. */
+  notes: number[][][];
   /** Seats in the order they finished (race and solo). In coop it stays empty. */
   finished: number[];
   /** Milliseconds from the start to each seat's finish, or null. */
@@ -44,7 +51,21 @@ export interface SudokuState {
   endMs: number | null;
 }
 
-export type SudokuIntent = { type: 'set'; cell: number; value: number };
+export type SudokuIntent = { type: 'set'; cell: number; value: number } | { type: 'notes'; cell: number; digits: number[] };
+
+/** The other cells that share a row, column or box with `i`. */
+export const peers = (i: number): number[] => {
+  const r = Math.floor(i / 9);
+  const c = i % 9;
+  const out: number[] = [];
+  for (let k = 0; k < 81; k++) {
+    const kr = Math.floor(k / 9);
+    const kc = k % 9;
+    if (k !== i && (kr === r || kc === c || (Math.floor(kr / 3) === Math.floor(r / 3) && Math.floor(kc / 3) === Math.floor(c / 3)))) out.push(k);
+  }
+  return out;
+};
+
 
 const ok = (): ApplyResult => ({ ok: true });
 const fail = (reason: string): ApplyResult => ({ ok: false, reason });
@@ -144,6 +165,8 @@ export function createSudoku(seats: SeatInfo[], seed: number, options: SudokuOpt
     grids: (shared ? [0] : seats.map((_, i) => i)).map(() => givens.slice()),
     placedBy: Array(81).fill(-1),
     mistakes: seats.map(() => 0),
+    out: [],
+    notes: seats.map(() => Array.from({ length: 81 }, () => [])),
     finished: [],
     finishMs: seats.map(() => null),
     startedAt: now,
@@ -164,20 +187,44 @@ export function filledCount(grid: number[]): number {
 export function applySudoku(s: SudokuState, seat: number, intent: SudokuIntent, now = Date.now()): ApplyResult {
   if (seat < 0 || seat >= s.players.length) return fail('Not a player');
   if (s.done) return fail('The game is over');
-  if (!intent || typeof intent !== 'object' || intent.type !== 'set') return fail('Bad move');
+  if (!intent || typeof intent !== 'object') return fail('Bad move');
+  if (intent.type === 'notes') {
+    const { cell, digits } = intent;
+    if (s.mode !== 'coop' || !Number.isInteger(cell) || cell < 0 || cell > 80 || !Array.isArray(digits)) return fail('Bad move');
+    if (s.givens[cell] !== 0 || gridOf(s, seat)[cell] !== 0) return ok();
+    s.notes[seat]![cell] = [...new Set(digits.filter(d => Number.isInteger(d) && d >= 1 && d <= 9))].sort();
+    return ok();
+  }
+  if (intent.type !== 'set') return fail('Bad move');
   const { cell, value } = intent;
   if (!Number.isInteger(cell) || cell < 0 || cell > 80) return fail('Bad move');
   if (!Number.isInteger(value) || value < 1 || value > 9) return fail('Bad move');
   if (s.finished.includes(seat)) return fail('You already finished');
+  if (s.out.includes(seat)) return fail('You are out of the race');
   const grid = gridOf(s, seat);
   if (s.givens[cell] !== 0) return fail('That square is given');
   if (grid[cell] !== 0) return fail('That square is filled');
   if (s.solution[cell] !== value) {
     s.mistakes[seat]!++;
+    if (s.mode === 'race' && s.mistakes[seat]! >= RACE_MAX_MISTAKES) {
+      s.out.push(seat);
+      // Everyone knocked out: the race ends with no winner.
+      if (s.out.length === s.players.length) {
+        s.done = true;
+        s.endMs = now - s.startedAt;
+      }
+    }
     return fail('Wrong digit');
   }
   grid[cell] = value;
-  if (s.mode === 'coop') s.placedBy[cell] = seat;
+  if (s.mode === 'coop') {
+    s.placedBy[cell] = seat;
+    // The cell is settled and its peers can't hold that digit any more: strike the marks everyone had.
+    for (const marks of s.notes) {
+      marks[cell] = [];
+      for (const p of peers(cell)) marks[p] = marks[p]!.filter(d => d !== value);
+    }
+  }
   if (filledCount(grid) < 81) return ok();
   if (s.mode === 'coop') {
     s.done = true;
@@ -207,6 +254,10 @@ export interface SudokuView {
   /** Coop: who placed each digit. */
   placedBy: number[];
   mistakes: number[];
+  /** Race: who is out after too many mistakes. */
+  out: number[];
+  /** Coop: every seat's pencil marks per cell (empty in the other modes). */
+  notes: number[][][];
   /** Cells filled per seat, so others' progress is visible without their digits. */
   filled: number[];
   finished: number[];
@@ -229,6 +280,8 @@ export function sudokuView(s: SudokuState, seat: number, now = Date.now()): Sudo
     grid: grid.slice(),
     placedBy: s.mode === 'coop' ? s.placedBy.slice() : [],
     mistakes: s.mistakes.slice(),
+    out: s.out.slice(),
+    notes: s.mode === 'coop' ? s.notes.map(m => m.map(d => d.slice())) : [],
     filled: s.players.map((_, i) => filledCount(gridOf(s, i))),
     finished: s.finished.slice(),
     finishMs: s.finishMs.slice(),

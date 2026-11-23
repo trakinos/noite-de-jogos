@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createRng, nextInt } from '../../engine/rng';
 import { EDGE_VERTS, HEX_VERTS, RES } from './board';
 import {
-  applyCatan, bankRatio, catanModule, catanView, createCatan, emptyHand, legalRoadSpots, legalSettlementSpots, roadLength, total, totalPoints,
+  applyCatan, autoTurn, bankRatio, catanModule, catanView, createCatan, emptyHand, legalRoadSpots, legalSettlementSpots, roadLength, total, totalPoints,
   type CatanIntent, type CatanState,
 } from './game';
 
@@ -328,5 +328,35 @@ describe('fuzz', () => {
       expect(applyCatan(s, 9, bad as never).ok).toBe(false);
     }
     expect(JSON.stringify(s)).toBe(before);
+  });
+});
+
+describe('catan turn clock', () => {
+  it('plays a whole game of timeouts: setup, rolls, robbers and discards all resolve and turns keep passing', () => {
+    const game = catanModule.create(seats(3), {}, 5) as InstanceType<typeof import('./game').CatanInstance>;
+    const keys = new Set<object>();
+    for (let i = 0; i < 80 && game.state.phase !== 'over'; i++) {
+      const input = game.clockInput();
+      expect(input.over).toBe(false);
+      expect(keys.has(input.turn)).toBe(false);
+      keys.add(input.turn);
+      expect(game.clockInput().turn).toBe(input.turn);
+      game.expire('turn', 0);
+    }
+    expect(game.state.phase).not.toBe('setup');
+    expect(game.state.turns).toBeGreaterThan(0);
+    // Every seat got its two settlements and roads.
+    for (let p = 0; p < 3; p++) expect(game.state.verts.filter(b => b?.seat === p).length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('a timed-out roll of 7 still ends in the next player\'s turn', () => {
+    const s = createCatan(seats(3), 9);
+    s.phase = 'roll';
+    s.setupStep = 6;
+    s.hands[1] = { wood: 9, brick: 0, sheep: 0, wheat: 0, ore: 0 };
+    autoTurn(s);
+    expect(s.phase).toBe('roll');
+    expect(s.current).toBe(1);
+    expect(s.turns).toBe(1);
   });
 });

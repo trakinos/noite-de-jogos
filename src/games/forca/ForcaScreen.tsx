@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { LocalClock } from '../../net/guest';
 import { useLang } from '../../i18n/LangProvider';
 import { Avatar } from '../../ui/components/Avatar';
 import { playerColor } from '../../ui/playerColor';
@@ -6,7 +7,7 @@ import { EndActions, GameFrame, RulesSheet, useGameText, useReason, type GameScr
 import { SimpleLobby, type LobbyProps } from '../shared/SimpleLobby';
 import { playSound } from '../shared/sound';
 import {
-  asForcaView, forcaModule, KEY_ROWS, LAST_LETTER_BONUS, MAX_HINT_LEN, MAX_MISSES, MAX_SECRET_LEN, MAX_SECRET_PART, MIN_SECRET_LETTERS, ROUNDS,
+  asForcaView, forcaModule, GUESS_OPTIONS, KEY_ROWS, LAST_LETTER_BONUS, MAX_HINT_LEN, MAX_MISSES, MAX_SECRET_LEN, MAX_SECRET_PART, MIN_SECRET_LETTERS, ROUNDS,
   SOLVE_BONUS, WRITE_SKIP_MS, WRITER_HANG_BONUS, WRITER_MISS_POINTS, type ForcaLog, type ForcaView,
 } from './game';
 
@@ -22,6 +23,9 @@ export const FORCA_TEXT: Texts = {
     rules3: `Com ${MAX_MISSES} erros o boneco é enforcado e a rodada acaba sem bônus. No fim, vence quem tiver mais pontos. Com o relógio ligado, quem deixa o tempo acabar perde a vez.`,
     rules4: 'A categoria CEP traz países, os estados do Brasil (e o Distrito Federal) e as capitais, com nomes de várias palavras como Rio Grande do Sul.',
     rules5: `Modo "Um jogador escreve": a cada rodada um jogador, em rodízio, escreve a palavra secreta (${MIN_SECRET_LETTERS} a ${MAX_SECRET_LEN} caracteres, só letras, espaços e hífens) e, se quiser, uma dica. Ele não chuta: ganha ${WRITER_MISS_POINTS} ponto por erro dos outros e +${WRITER_HANG_BONUS} se o boneco for enforcado. Todos escrevem o mesmo número de vezes. Se quem escreve passar a vez, demorar demais (relógio ou ${skipSecs} s) ou não responder, a rodada usa uma palavra da lista e ele joga junto, sem pontos de quem escreve.`,
+    lobbyGuess: 'Tempo por letra',
+    guessOff: 'Sem limite',
+    guessSecs: '{n} s',
     lobbyWords: 'Palavras',
     words_pt: 'Português',
     words_en: 'Inglês',
@@ -86,6 +90,9 @@ export const FORCA_TEXT: Texts = {
     rules3: `With ${MAX_MISSES} misses the figure is hanged and the round ends with no bonus. At the end, the most points wins. With the timer on, running out of time loses the turn.`,
     rules4: 'The Geography category has countries, the Brazilian states (and the Federal District) and their capitals, with multi-word names such as Rio Grande do Sul.',
     rules5: `"A player writes" mode: each round one player, in turn, writes the secret word (${MIN_SECRET_LETTERS} to ${MAX_SECRET_LEN} characters: letters, spaces and hyphens) and, optionally, a hint. They don't guess: they score ${WRITER_MISS_POINTS} point for every miss by the others and +${WRITER_HANG_BONUS} if the figure is hanged. Everyone writes the same number of times. If the writer passes, takes too long (the timer, or ${skipSecs} s) or doesn't answer, the round uses a list word and they guess along, with no writer points.`,
+    lobbyGuess: 'Time per letter',
+    guessOff: 'No limit',
+    guessSecs: '{n} s',
     lobbyWords: 'Words',
     words_pt: 'Portuguese',
     words_en: 'English',
@@ -149,8 +156,8 @@ export const FORCA_TEXT: Texts = {
 export function ForcaLobby(props: LobbyProps) {
   const t = useGameText(FORCA_TEXT);
   const parsed = forcaModule.parseOptions(props.lobby.options);
-  const { words, mode } = 'error' in parsed ? forcaModule.defaultOptions() : parsed;
-  const set = (patch: Record<string, string>) => props.host!.setOptions({ words, mode, ...patch });
+  const { words, mode, seconds } = 'error' in parsed ? forcaModule.defaultOptions() : parsed;
+  const set = (patch: Record<string, string | number>) => props.host!.setOptions({ words, mode, seconds, ...patch });
   const options = (
     <>
       <div className="bsetting">
@@ -183,6 +190,24 @@ export function ForcaLobby(props: LobbyProps) {
           </b>
         )}
       </div>
+      <div className="bsetting">
+        {props.host ? (
+          <label className="bsetting__select">
+            <span>{t('lobbyGuess')}</span>
+            <select value={seconds} onChange={e => set({ seconds: Number(e.target.value) })}>
+              {GUESS_OPTIONS.map(n => (
+                <option key={n} value={n}>
+                  {n === 0 ? t('guessOff') : t('guessSecs', { n })}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <b>
+            {t('lobbyGuess')}: {seconds === 0 ? t('guessOff') : t('guessSecs', { n: seconds })}
+          </b>
+        )}
+      </div>
     </>
   );
   return <SimpleLobby {...props} options={options} rules={{ game: 'forca', title: t('rulesTitle'), paragraphs: FORCA_RULES.map(k => t(k)) }} />;
@@ -201,6 +226,16 @@ export function ForcaScreen(props: GameScreenProps) {
   const amWriter = view.writer === view.me;
   const myTurn = !over && !view.roundOver && !writing && view.current === view.me && !amWriter;
   useForcaSounds(view);
+
+  // The host says how long this turn has left; the countdown runs on this device's clock from when the view arrived.
+  const deadline = useMemo(() => (view.endsInMs === null ? null : Date.now() + view.endsInMs), [props.view]);
+  const now = useNow(deadline !== null);
+  const ownClock: LocalClock | null = deadline === null ? null : { kind: 'turn', totalMs: view.turnMs, deadline };
+  // The host only looks at its clock when a move arrives, so every screen nudges it once its own countdown is over.
+  const late = deadline !== null && now >= deadline + 400 + view.me * 250;
+  useEffect(() => {
+    if (late && !awaiting) onIntent({ type: 'tick' });
+  }, [late, awaiting, props.view]);
   useEffect(() => {
     setSolveOpen(false);
     setSolving('');
@@ -213,7 +248,7 @@ export function ForcaScreen(props: GameScreenProps) {
     <GameFrame
       title={useLang().tr.t('gameForcaName')}
       code={props.code}
-      clock={over || view.roundOver ? null : props.clock}
+      clock={over || view.roundOver ? null : ownClock ?? props.clock}
       error={props.error}
       reason={reason}
       onDismissError={props.onDismissError}
@@ -435,6 +470,17 @@ function WritePhase({ view, t, awaiting, onIntent }: { view: ForcaView; t: TextF
       )}
     </div>
   );
+}
+
+function useNow(active: boolean): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!active) return;
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 200);
+    return () => clearInterval(timer);
+  }, [active]);
+  return now;
 }
 
 /** Seconds left from a host-given delay, counted down on this device; restarts each round. */

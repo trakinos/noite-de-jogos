@@ -1,6 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { TURN_TIMER_OPTIONS, type HostSession } from '../../net/host';
 import type { LobbyState } from '../../net/protocol';
+import { GAMES, type GameId } from '../../games/catalog';
+import { moduleFor } from '../../games/registry';
 import { useLang } from '../../i18n/LangProvider';
 import { colorHex, type PlayerColorId } from '../../theme/playerColors';
 import { pieceEmoji, type PlayerPieceId } from '../../theme/playerPieces';
@@ -17,6 +19,8 @@ interface Props {
   host: HostSession | null;
   onSetColor(color: PlayerColorId): void;
   onSetPiece(piece: PlayerPieceId): void;
+  /** Casts or clears this player's vote for the next game. */
+  onVote?(game: GameId | null): void;
   onLeave(): void;
   /** The game's own options section, below the turn timer. */
   options?: ReactNode;
@@ -26,10 +30,20 @@ interface Props {
   startGate?: { ready: boolean; notReady: string; summary: string };
 }
 
-export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onSetPiece, onLeave, options, onRules, startGate }: Props) {
+export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onSetPiece, onVote, onLeave, options, onRules, startGate }: Props) {
   const { tr } = useLang();
   const [startError, setStartError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [gameError, setGameError] = useState<string | null>(null);
+
+  function changeGame(id: string) {
+    if (!host) return;
+    const game = GAMES.find((g) => g.id === id);
+    if (!game) return;
+    const result = host.setGame(moduleFor(game.id));
+    setGameError(result.ok ? null : result.reason);
+    if (result.ok) setStartError(null);
+  }
 
   async function copy() {
     try {
@@ -54,7 +68,12 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onSetPiece
   return (
     <main className="screen lobby">
       <header className="lobby__header">
-        <h1>{tr.t('room', { code })}</h1>
+        <div className="lobby__title">
+          <h1>{tr.t('room', { code })}</h1>
+          <p className="lobby__game" aria-live="polite">
+            {tr.t('game')}: <b>{tr.t(GAMES.find((g) => g.id === lobby.game)?.nameKey ?? 'gameDominionName')}</b>
+          </p>
+        </div>
         {onRules && (
           <button type="button" className="rules-btn" onClick={onRules} title={tr.t('rules')}>
             <Icon name="book" />
@@ -80,6 +99,28 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onSetPiece
               </button>
             </div>
           </section>
+
+          {onVote && (
+            <section className="panel">
+              <h2>{tr.t('voteTitle')}</h2>
+              <p className="zone__hint">{tr.t('voteHint')}</p>
+              <ul className="seats">
+                {GAMES.filter((g) => g.available && g.maxPlayers >= lobby.players.length).map((g) => {
+                  const count = lobby.players.filter((p) => p.vote === g.id).length;
+                  const mine = lobby.players.find((p) => p.id === me)?.vote === g.id;
+                  return (
+                    <li key={g.id} className={mine ? 'is-me' : ''}>
+                      <span className="seats__name">{tr.t(g.nameKey)}</span>
+                      {g.id === lobby.game && <span className="pill">{tr.t('game')}</span>}
+                      <button type="button" className={mine ? 'primary' : ''} aria-pressed={mine} onClick={() => onVote(mine ? null : g.id)}>
+                        {count}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
 
           <section className="panel">
             <div className="picker__bar" style={{ marginBottom: 0 }}>
@@ -120,6 +161,25 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onSetPiece
         </div>
 
         <section className="panel">
+          {host && (
+            <div className="timer-setting">
+              <label htmlFor="game-pick">{tr.t('game')}</label>
+              <select id="game-pick" value={lobby.game} onChange={(e) => changeGame(e.target.value)}>
+                {GAMES.filter((g) => g.available).map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {tr.t(g.nameKey)}
+                  </option>
+                ))}
+              </select>
+              {gameError && <span className="error">{tr.reason(gameError)}</span>}
+            </div>
+          )}
+          {!host && (
+            <div className="timer-setting">
+              <label>{tr.t('game')}</label>
+              <b>{tr.t(GAMES.find((g) => g.id === lobby.game)?.nameKey ?? 'gameDominionName')}</b>
+            </div>
+          )}
           <div className="timer-setting">
             <Icon name="clock" />
             <label htmlFor="turn-timer">{tr.t('turnTimer')}</label>

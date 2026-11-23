@@ -197,6 +197,7 @@ export function App() {
           shareLink={joinLink(location.origin + location.pathname, active.code)}
           host={active.host}
           onSetColor={(c) => active.session.setColor(c)}
+          onVote={(game) => active.session.vote(game)}
           onSetPiece={(piece) => {
             savePiece(piece);
             active.session.setPiece(piece);

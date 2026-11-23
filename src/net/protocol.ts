@@ -10,6 +10,8 @@ export interface LobbyPlayer {
   color: PlayerColorId;
   /** The piece they play as; missing from hosts that predate pieces. */
   piece?: PlayerPieceId;
+  /** The game they voted to play next, if any. */
+  vote?: GameId;
 }
 
 export interface LobbyState {
@@ -30,7 +32,8 @@ export type GuestMessage =
   | { type: 'hello'; name: string; token: string | null; piece?: PlayerPieceId }
   | { type: 'intent'; intent: unknown }
   | { type: 'setColor'; color: PlayerColorId }
-  | { type: 'setPiece'; piece: PlayerPieceId };
+  | { type: 'setPiece'; piece: PlayerPieceId }
+  | { type: 'vote'; game: GameId | null };
 
 export type HostMessage =
   | { type: 'welcome'; playerId: string; token: string }
@@ -62,6 +65,7 @@ export function parseGuestMessage(raw: unknown): GuestMessage | null {
   }
   if (raw.type === 'setColor' && isPlayerColor(raw.color)) return { type: 'setColor', color: raw.color };
   if (raw.type === 'setPiece' && isPlayerPiece(raw.piece)) return { type: 'setPiece', piece: raw.piece };
+  if (raw.type === 'vote' && (raw.game === null || isGameId(raw.game))) return { type: 'vote', game: raw.game };
   return null;
 }
 

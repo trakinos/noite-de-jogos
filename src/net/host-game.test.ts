@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { HostSession } from './host';
 import { dominionModule } from '../games/dominion/module';
+import { moduleFor } from '../games/registry';
 import { flush } from './memory';
 import { dominionGame, join, viewOf, seededHostOptions, type TestClient } from './testing';
 
@@ -147,5 +148,61 @@ describe('HostSession game flow', () => {
     await flush();
     await join(host, 'Bo', { token });
     expect(host.lobby.players[1].color).toBe('red');
+  });
+});
+
+describe('HostSession.setGame', () => {
+  it('swaps the game in the lobby, keeping seats and resetting options', async () => {
+    const { host } = await lobbyOf(['Ana', 'Bia']);
+    const { velhaModule } = await import('../games/velha/game');
+    expect(host.setGame(velhaModule)).toEqual({ ok: true });
+    expect(host.lobby.game).toBe('velha');
+    expect(host.lobby.players).toHaveLength(2);
+    expect(host.start().ok).toBe(true);
+    expect(host.setGame(dominionModule)).toEqual({ ok: false, reason: 'Game in progress' });
+  });
+
+  it('refuses a game with too few seats', async () => {
+    const { host } = await lobbyOf(['Ana', 'Bia', 'Cid']);
+    const { velhaModule } = await import('../games/velha/game');
+    expect(host.setGame(velhaModule)).toEqual({ ok: false, reason: 'Too many players for that game' });
+    expect(host.lobby.game).toBe('dominion');
+  });
+});
+
+describe('HostSession votes', () => {
+  async function votingRoom(names: string[]) {
+    const host = new HostSession(dominionModule, { ...seededHostOptions(), resolveModule: moduleFor });
+    const clients = [await join(host, names[0], { local: true })];
+    for (const name of names.slice(1)) clients.push(await join(host, name));
+    return { host, clients };
+  }
+
+  it('switches to the top pick once everyone has voted', async () => {
+    const { host, clients } = await votingRoom(['Ana', 'Bia']);
+    clients[0].send({ type: 'vote', game: 'velha' });
+    await flush();
+    expect(host.lobby.game).toBe('dominion');
+    expect(host.lobby.players[0].vote).toBe('velha');
+    clients[1].send({ type: 'vote', game: 'velha' });
+    await flush();
+    expect(host.lobby.game).toBe('velha');
+    expect(host.lobby.players.every((p) => p.vote === undefined)).toBe(true);
+  });
+
+  it('keeps the current game on a tie that includes it', async () => {
+    const { host, clients } = await votingRoom(['Ana', 'Bia']);
+    clients[0].send({ type: 'vote', game: 'dominion' });
+    clients[1].send({ type: 'vote', game: 'velha' });
+    await flush();
+    expect(host.lobby.game).toBe('dominion');
+  });
+
+  it('rejects a vote for a game the room is too big for', async () => {
+    const { host, clients } = await votingRoom(['Ana', 'Bia', 'Cid']);
+    clients[1].send({ type: 'vote', game: 'velha' });
+    await flush();
+    expect(clients[1].last('error')?.reason).toBe('Too many players for that game');
+    expect(host.lobby.players[1].vote).toBeUndefined();
   });
 });

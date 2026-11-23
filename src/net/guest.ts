@@ -1,5 +1,6 @@
 import type { PlayerColorId } from '../theme/playerColors';
 import type { PlayerPieceId } from '../theme/playerPieces';
+import type { GameId } from '../games/catalog';
 import { parseHostMessage, type GuestMessage, type HostMessage, type LobbyState } from './protocol';
 import type { Connection } from './transport';
 import type { ClockKind } from './turnClock';
@@ -75,6 +76,12 @@ export class GuestSession {
   setPiece(piece: PlayerPieceId): void {
     if (this.state.status !== 'joined') return;
     const msg: GuestMessage = { type: 'setPiece', piece };
+    this.conn.send(msg);
+  }
+
+  vote(game: GameId | null): void {
+    if (this.state.status !== 'joined') return;
+    const msg: GuestMessage = { type: 'vote', game };
     this.conn.send(msg);
   }
 

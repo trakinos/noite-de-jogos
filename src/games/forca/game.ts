@@ -27,6 +27,9 @@ export const MAX_SECRET_PART = 16;
 export const MAX_HINT_LEN = 30;
 /** Written mode: how long the others wait before they may swap a silent writer's turn for a list word. */
 export const WRITE_SKIP_MS = 60_000;
+/** Seconds a player has to pick a letter (0 = no clock of its own). */
+export const GUESS_OPTIONS = [0, 15, 20, 30, 45] as const;
+export const DEFAULT_GUESS_SECONDS = 20;
 /** The on-screen keyboard, the same on every device. */
 export const KEY_ROWS = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'].map(row => row.split(''));
 
@@ -78,7 +81,9 @@ export type ForcaIntent =
   | { type: 'solve'; word: string }
   | { type: 'next' }
   | { type: 'write'; word: string; hint?: string }
-  | { type: 'skip' };
+  | { type: 'skip' }
+  /** A screen whose countdown reached zero nudges the host, which only looks at its clock when something arrives. */
+  | { type: 'tick' };
 
 const ok = (): ApplyResult => ({ ok: true });
 const fail = (reason: string): ApplyResult => ({ ok: false, reason });
@@ -307,6 +312,9 @@ export interface ForcaView {
   secret?: string;
   /** While the writer types: how long until the others may swap in a list word. */
   skipInMs: number | null;
+  /** The guessing clock: its whole length (0 when off) and what is left of this turn. */
+  turnMs: number;
+  endsInMs: number | null;
   /** The word with unguessed letters as null; spaces and hyphens shown. Whole word once the round ends. Empty while it is being written. */
   pattern: (string | null)[];
   /** The list category, or the writer's hint ('' when they gave none). */
@@ -327,7 +335,7 @@ export interface ForcaView {
   logTotal: number;
 }
 
-export function forcaView(s: ForcaState, seat: number, skipInMs: number | null = null): ForcaView {
+export function forcaView(s: ForcaState, seat: number, skipInMs: number | null = null, turn: { totalMs: number; endsInMs: number | null } = { totalMs: 0, endsInMs: null }): ForcaView {
   const writing = s.phase === 'write';
   // Nothing about the word leaves the host while it is being written: not even the list word kept as a fallback.
   const word = writing ? '' : secret(s);
@@ -340,6 +348,8 @@ export function forcaView(s: ForcaState, seat: number, skipInMs: number | null =
     phase: s.phase,
     writer: s.writer,
     skipInMs: writing ? skipInMs : null,
+    turnMs: turn.totalMs,
+    endsInMs: writing ? null : turn.endsInMs,
     pattern: [...word].map(ch => {
       const l = letterOf(ch);
       return l === null || reveal || s.guessed.includes(l) ? ch : null;
@@ -368,8 +378,31 @@ export class ForcaInstance implements GameInstance {
   private writeRound = -1;
   private writeStart = 0;
 
-  constructor(readonly state: ForcaState, private readonly now: () => number = Date.now) {
+  private turnKey = -2;
+  private turnStart = 0;
+
+  constructor(readonly state: ForcaState, private readonly now: () => number = Date.now, private readonly guessSeconds = 0) {
     this.track();
+  }
+
+  /** When the current guesser runs out of time; null with no clock, while a word is being written or between rounds. */
+  private deadline(): number | null {
+    const s = this.state;
+    if (this.guessSeconds <= 0 || s.phase !== 'guess' || s.roundOver || s.winner !== null) return null;
+    // Every new turn (and a right letter, which keeps the turn) starts the clock again.
+    if (s.turns !== this.turnKey) {
+      this.turnKey = s.turns;
+      this.turnStart = this.now();
+    }
+    return this.turnStart + this.guessSeconds * 1000;
+  }
+
+  /** The guesser let the time run out: the turn passes without a guess. */
+  private settle(): void {
+    const end = this.deadline();
+    if (end === null || this.now() < end) return;
+    this.expire('turn', 0);
+    this.deadline();
   }
 
   private seat(id: string): number {
@@ -390,15 +423,20 @@ export class ForcaInstance implements GameInstance {
   }
 
   apply(playerId: string, intent: unknown): ApplyResult {
+    this.settle();
+    if (intent && typeof intent === 'object' && (intent as { type?: unknown }).type === 'tick') return ok();
     const result = applyForca(this.state, this.seat(playerId), intent as ForcaIntent, this.waited());
     this.track();
+    this.deadline();
     return result;
   }
 
   viewFor(playerId: string): ForcaView {
     const seat = this.seat(playerId);
     if (seat < 0) throw new Error(`Unknown player: ${playerId}`);
-    return forcaView(this.state, seat, Math.max(0, WRITE_SKIP_MS - this.waited()));
+    const end = this.deadline();
+    const turn = { totalMs: this.guessSeconds * 1000, endsInMs: end === null ? null : Math.max(0, end - this.now()) };
+    return forcaView(this.state, seat, Math.max(0, WRITE_SKIP_MS - this.waited()), turn);
   }
 
   clockInput(): ClockInput {
@@ -430,6 +468,8 @@ export class ForcaInstance implements GameInstance {
 export interface ForcaOptions {
   words: ForcaLang;
   mode: ForcaMode;
+  /** Seconds per letter guess; 0 turns the clock off. */
+  seconds: number;
 }
 
 /** How many recently played list words this device remembers, per language, to keep them out of the next matches. */
@@ -460,17 +500,18 @@ export const forcaModule: GameModule<ForcaOptions> = {
   id: 'forca',
   minPlayers: 2,
   maxPlayers: 8,
-  defaultOptions: () => ({ words: 'pt', mode: 'list' }),
+  defaultOptions: () => ({ words: 'pt', mode: 'list', seconds: DEFAULT_GUESS_SECONDS }),
   parseOptions(raw) {
     const o = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
-    return { words: o.words === 'en' ? 'en' : 'pt', mode: o.mode === 'written' ? 'written' : 'list' };
+    const seconds = (GUESS_OPTIONS as readonly unknown[]).includes(o.seconds) ? (o.seconds as number) : DEFAULT_GUESS_SECONDS;
+    return { words: o.words === 'en' ? 'en' : 'pt', mode: o.mode === 'written' ? 'written' : 'list', seconds };
   },
   create(seats, options, seed) {
     const recent = loadRecent(options.words);
     const state = createForca(seats, seed, options.words, options.mode, new Set(recent));
     // The host's device remembers the list words of this match (in the written mode they are only fallbacks).
     if (options.mode === 'list') saveRecent(options.words, [...recent, ...state.words.map(w => w.word)]);
-    return new ForcaInstance(state);
+    return new ForcaInstance(state, Date.now, options.seconds);
   },
 };
 

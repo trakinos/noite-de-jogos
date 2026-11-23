@@ -17,7 +17,7 @@ export interface ActiveSession {
 
 export async function hostGame(game: GameId, name: string): Promise<ActiveSession> {
   const peer = await hostWithFreshCode(() => generateRoomCode());
-  const host = new HostSession(moduleFor(game));
+  const host = new HostSession(moduleFor(game), { resolveModule: moduleFor });
   peer.onConnection((conn) => host.accept(conn));
   const session = new GuestSession(host.connectLocal(), name, memoryTokenStore(), loadPiece());
   return {

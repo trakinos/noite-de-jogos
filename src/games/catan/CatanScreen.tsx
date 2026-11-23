@@ -5,6 +5,7 @@ import { playerColor } from '../../ui/playerColor';
 import { EndActions, GameFrame, RulesSheet, useGameText, useReason, type GameScreenProps, type Texts, type TextFn } from '../shared/GameFrame';
 import { SimpleLobby, type LobbyProps } from '../shared/SimpleLobby';
 import { playSound } from '../shared/sound';
+import { Die } from '../bairro/ui/Die';
 import { EDGE_VERTS, HEX_CENTERS, HEX_VERTS, RES, VERTEX_POS, pips, type Res } from './board';
 import { asCatanView, COSTS, emptyHand, total, WIN_POINTS, type CatanLog, type CatanView, type Hand } from './game';
 
@@ -248,6 +249,8 @@ export function CatanScreen(props: GameScreenProps) {
   const me = v.me;
   const myTurn = v.current === me;
   const over = v.phase === 'over';
+  const faces = useDiceFaces(v.dice);
+  const rolling = faces.rolling;
   const name = (i: number) => v.players[i]!.name;
   const color = (i: number) => playerColor(lobby, v.players[i]!.id);
 
@@ -302,7 +305,7 @@ export function CatanScreen(props: GameScreenProps) {
     <GameFrame
       title={useLang().tr.t('gameCatanName')}
       code={props.code}
-      clock={null}
+      clock={over ? null : props.clock}
       error={props.error}
       reason={reason}
       onDismissError={props.onDismissError}
@@ -313,7 +316,7 @@ export function CatanScreen(props: GameScreenProps) {
       <div className="catan__layout">
         <div className="catan__main">
           <p className={`catan__status${myTurn || owing ? ' is-mine' : ''}`}>{status}</p>
-          <Board v={v} color={color} spots={spots} mode={mode} onVertex={clickVertex} onEdge={clickEdge} onHex={clickHex} />
+          <Board rolled={rolling ? null : v.dice ? v.dice[0] + v.dice[1] : null} v={v} color={color} spots={spots} mode={mode} onVertex={clickVertex} onEdge={clickEdge} onHex={clickHex} />
           {v.phase === 'steal' && myTurn && (
             <div className="actions actions--center">
               {v.can.steal.map(i => (
@@ -349,10 +352,12 @@ export function CatanScreen(props: GameScreenProps) {
             ))}
           </div>
 
-          {v.dice && (
-            <p className="catan__dice">
-              {t('lastRoll')}: <b>{v.dice[0]}</b> + <b>{v.dice[1]}</b> = <b>{v.dice[0] + v.dice[1]}</b>
-            </p>
+          {faces.shown && (
+            <div className="catan__dice" role="img" aria-label={`${t('lastRoll')}: ${v.dice![0]} + ${v.dice![1]} = ${v.dice![0] + v.dice![1]}`}>
+              <Die face={faces.shown[0]} rolling={rolling} />
+              <Die face={faces.shown[1]} rolling={rolling} />
+              {!rolling && <b className="catan__sum">{faces.shown[0] + faces.shown[1]}</b>}
+            </div>
           )}
 
           <div className="catan__hand" aria-label={t('hand')}>
@@ -377,15 +382,19 @@ export function CatanScreen(props: GameScreenProps) {
             <div className="catan__actions">
               <button type="button" className={mode === 'road' ? 'primary' : ''} disabled={v.can.road.length === 0} onClick={() => setBuild(b => (b === 'road' ? null : 'road'))}>
                 {t('buildRoad')}
+                <Cost c={COSTS.road} />
               </button>
               <button type="button" className={mode === 'settlement' ? 'primary' : ''} disabled={v.can.settlement.length === 0} onClick={() => setBuild(b => (b === 'settlement' ? null : 'settlement'))}>
                 {t('buildSettlement')}
+                <Cost c={COSTS.settlement} />
               </button>
               <button type="button" className={mode === 'city' ? 'primary' : ''} disabled={v.can.city.length === 0} onClick={() => setBuild(b => (b === 'city' ? null : 'city'))}>
                 {t('buildCity')}
+                <Cost c={COSTS.city} />
               </button>
               <button type="button" disabled={!afford(COSTS.dev) || v.deckLeft === 0 || awaiting} onClick={() => onIntent({ type: 'buyDev' })}>
                 {t('buyDev')}
+                <Cost c={COSTS.dev} />
               </button>
               <button type="button" onClick={() => setTrading(true)}>
                 {t('trade')}
@@ -444,8 +453,10 @@ export function CatanScreen(props: GameScreenProps) {
   );
 }
 
-function Board({ v, color, spots, mode, onVertex, onEdge, onHex }: {
+function Board({ v, rolled, color, spots, mode, onVertex, onEdge, onHex }: {
   v: CatanView;
+  /** The sum just rolled once the dice have landed: tiles with that number light up. */
+  rolled: number | null;
   color: (i: number) => string;
   spots: { settlement: number[]; city: number[]; road: number[] };
   mode: Build;
@@ -482,7 +493,11 @@ function Board({ v, color, spots, mode, onVertex, onEdge, onHex }: {
         const pts = HEX_VERTS[i]!.map(k => VERTEX_POS[k]!.join(',')).join(' ');
         const hot = h.num === 6 || h.num === 8;
         return (
-          <g key={i} onClick={() => onHex(i)} className={robberOk.has(i) ? 'catan__hex is-target' : 'catan__hex'}>
+          <g
+            key={i}
+            onClick={() => onHex(i)}
+            className={`catan__hex${robberOk.has(i) ? ' is-target' : ''}${v.robber === i ? ' is-blocked' : rolled !== null && h.num === rolled ? ' is-rolled' : ''}`}
+          >
             <polygon points={pts} fill={TERRAIN_FILL[h.terrain]} className="catan__tile" />
             {h.terrain !== 'desert' && <text x={cx} y={cy! - 0.52} textAnchor="middle" fontSize="0.36" opacity="0.85">{RES_ICON[h.terrain as Res]}</text>}
             {h.num > 0 && (
@@ -540,6 +555,50 @@ function Board({ v, color, spots, mode, onVertex, onEdge, onHex }: {
       })}
     </svg>
   );
+}
+
+/** What a purchase costs, as icons: 🌲×1 🧱×1. */
+function Cost({ c }: { c: Partial<Hand> }) {
+  return (
+    <small className="catan__cost">
+      {RES.filter(r => (c[r] ?? 0) > 0).map(r => (
+        <span key={r}>
+          {RES_ICON[r]}
+          {c[r]}
+        </span>
+      ))}
+    </small>
+  );
+}
+
+/** The faces to show for a dice roll: random ones for a moment after a new roll, then the real ones. Quiet on first render. */
+function useDiceFaces(dice: [number, number] | null): { shown: [number, number] | null; rolling: boolean } {
+  const last = useRef(dice?.join());
+  const timers = useRef<{ tick?: ReturnType<typeof setInterval>; done?: ReturnType<typeof setTimeout> }>({});
+  const [state, setState] = useState<{ rolling: boolean; faces: [number, number] }>({ rolling: false, faces: [1, 1] });
+  const stop = () => {
+    clearInterval(timers.current.tick);
+    clearTimeout(timers.current.done);
+  };
+  useEffect(() => {
+    const key = dice?.join();
+    if (key === last.current) return;
+    last.current = key;
+    stop();
+    if (!dice || (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+      setState(st => ({ ...st, rolling: false }));
+      return;
+    }
+    let n = 0;
+    setState({ rolling: true, faces: [1, 1] });
+    timers.current.tick = setInterval(() => setState({ rolling: true, faces: [1 + ((n * 5 + 2) % 6), 1 + ((n++ * 3 + 4) % 6)] }), 100);
+    timers.current.done = setTimeout(() => {
+      stop();
+      setState(st => ({ ...st, rolling: false }));
+    }, 800);
+  }, [dice?.join()]);
+  useEffect(() => stop, []);
+  return { shown: dice ? (state.rolling ? state.faces : dice) : null, rolling: state.rolling && dice !== null };
 }
 
 function DevCardRow({ card, t, playable, fresh, onPlay }: { card: string; t: TextFn; playable?: boolean; fresh?: boolean; onPlay?: () => void }) {

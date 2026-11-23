@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { PieceSvg } from '../chess/Pieces';
 import type { PieceType } from '../chess/rules';
+import { CardFace } from '../zerou/CardFace';
+import type { Card } from '../zerou/game';
 
 /** Small drawn pictures for the rulebooks. Wordless, so they work in both languages. */
 
@@ -110,20 +112,24 @@ function NavalArt() {
   );
 }
 
-function ZerouArt() {
+let nextId = 0;
+/** Real Zerou! cards, drawn by the game's own card component. */
+function ZCards({ cards, plus }: { cards: [Card['color'], Card['value']][]; plus?: boolean }) {
   return (
     <Figure>
-      <svg viewBox="0 0 300 80" width="300">
-        <Card x={4} y={8} color={RED}>7</Card>
-        <Card x={58} y={8} color={BLUE}>7</Card>
-        <Card x={112} y={8} color={GREEN}>⊘</Card>
-        <Card x={166} y={8} color={YELLOW}>+2</Card>
-        <Card x={220} y={8} color={INK}>★</Card>
-        <text x="283" y="48" fontSize="22" fill="var(--muted)">…</text>
-      </svg>
+      <div className="ruleart__cards">
+        {cards.map(([color, value], i) => (
+          <span key={i} className="ruleart__zcard">
+            {plus && i > 0 && <b className="ruleart__plus">+</b>}
+            <CardFace card={{ id: nextId++, color, value }} />
+          </span>
+        ))}
+      </div>
     </Figure>
   );
 }
+
+const zerou = (cards: [Card['color'], Card['value']][], plus?: boolean) => <ZCards cards={cards} plus={plus} />;
 
 function VelhaArt() {
   return (
@@ -266,7 +272,15 @@ export const RULE_ART: Record<string, { after: number; node: ReactNode }[]> = {
   chess: [{ after: 0, node: <ChessArt /> }],
   pista: [{ after: 0, node: <PistaArt /> }],
   naval: [{ after: 0, node: <NavalArt /> }],
-  zerou: [{ after: 0, node: <ZerouArt /> }],
+  // after: rules1, rules2 (Pula, Inverte, +2, Coringa, +4), rulesSwap, rulesPairs, rulesCut, rulesNine
+  zerou: [
+    { after: 0, node: zerou([['r', '7'], ['r', '2'], ['b', '7']]) },
+    { after: 1, node: zerou([['y', 'skip'], ['g', 'rev'], ['r', 'draw2'], [null, 'wild'], [null, 'wild4']]) },
+    { after: 2, node: zerou([[null, 'swap']]) },
+    { after: 3, node: zerou([['r', '7'], ['b', '7'], ['g', '7']], true) },
+    { after: 4, node: zerou([['r', '5'], ['r', '5']]) },
+    { after: 5, node: zerou([['y', '9']]) },
+  ],
   velha: [{ after: 0, node: <VelhaArt /> }],
   forca: [{ after: 0, node: <ForcaArt /> }],
   stop: [{ after: 0, node: <StopArt /> }],

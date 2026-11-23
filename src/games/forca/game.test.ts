@@ -107,16 +107,39 @@ describe('forca', () => {
       for (const w of next.words) expect(avoid.has(w.word)).toBe(false);
     }
     // The module remembers in memory when there is no storage (as in these tests).
-    const a = forcaModule.create(seats, { words: 'en', mode: 'list' }, 11) as ForcaInstance;
-    const b = forcaModule.create(seats, { words: 'en', mode: 'list' }, 11) as ForcaInstance;
+    const a = forcaModule.create(seats, { words: 'en', mode: 'list', seconds: 0 }, 11) as ForcaInstance;
+    const b = forcaModule.create(seats, { words: 'en', mode: 'list', seconds: 0 }, 11) as ForcaInstance;
     const seen = new Set(a.state.words.map(w => w.word));
     for (const w of b.state.words) expect(seen.has(w.word)).toBe(false);
   });
 
   it('parses the lobby options, list words by default', () => {
-    expect(forcaModule.defaultOptions()).toEqual({ words: 'pt', mode: 'list' });
-    expect(forcaModule.parseOptions({ words: 'en', mode: 'written' })).toEqual({ words: 'en', mode: 'written' });
-    expect(forcaModule.parseOptions({ mode: 'bogus' })).toEqual({ words: 'pt', mode: 'list' });
+    expect(forcaModule.defaultOptions()).toEqual({ words: 'pt', mode: 'list', seconds: 20 });
+    expect(forcaModule.parseOptions({ words: 'en', mode: 'written', seconds: 30 })).toEqual({ words: 'en', mode: 'written', seconds: 30 });
+    expect(forcaModule.parseOptions({ mode: 'bogus', seconds: 7 })).toEqual({ words: 'pt', mode: 'list', seconds: 20 });
+    expect(forcaModule.parseOptions({ seconds: 0 })).toMatchObject({ seconds: 0 });
+  });
+
+  it('the guessing clock passes the turn when it runs out, and a right letter restarts it', () => {
+    let t = 1000;
+    const s = createForca(seats, 3, 'pt');
+    s.words[0] = { word: 'BANANA', category: 'Comida' };
+    const game = new ForcaInstance(s, () => t, 20);
+    const first = s.current;
+    const id = (seat: number) => seats[seat]!.id;
+    expect(game.viewFor(id(first)).endsInMs).toBe(20_000);
+    t += 15_000;
+    expect(game.apply(id(first), { type: 'letter', letter: 'A' })).toEqual({ ok: true });
+    // A right letter keeps the turn and the clock starts over.
+    expect(s.current).toBe(first);
+    expect(game.viewFor(id(first)).endsInMs).toBe(20_000);
+    t += 20_000;
+    expect(game.apply(id((first + 1) % 3), { type: 'tick' })).toEqual({ ok: true });
+    expect(s.current).toBe((first + 1) % 3);
+    expect(s.log.at(-1)).toEqual({ k: 'timeout', seat: first });
+    expect(game.viewFor(id(first)).endsInMs).toBe(20_000);
+    // No clock without the option.
+    expect(new ForcaInstance(createForca(seats, 3, 'pt'), () => t).viewFor('a').endsInMs).toBeNull();
   });
 });
 

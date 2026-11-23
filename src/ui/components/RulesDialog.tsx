@@ -3,6 +3,7 @@ import type { CardId } from '../../engine/types';
 import { useLang } from '../../i18n/LangProvider';
 import { RULES, RULES_CARDS } from '../../i18n/rules';
 import { Chips } from './Card';
+import { emphasize } from './RuleText';
 import { splitRuleText } from '../../theme';
 import { Icon } from './Icon';
 import { ruleArt } from '../../games/shared/RuleArt';
@@ -59,7 +60,7 @@ export function RulesDialog({ kingdom, onClose }: Props) {
                     <dt>{tr.card(id)}</dt>
                     <dd>
                       <Chips chips={chips} />
-                      {rest}
+                      {emphasize(rest)}
                     </dd>
                   </div>
                 );

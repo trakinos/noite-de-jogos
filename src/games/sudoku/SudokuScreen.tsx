@@ -5,7 +5,7 @@ import { playerColor } from '../../ui/playerColor';
 import { EndActions, GameFrame, RulesSheet, useGameText, useReason, type GameScreenProps, type Texts } from '../shared/GameFrame';
 import { SimpleLobby, type LobbyProps } from '../shared/SimpleLobby';
 import { playSound } from '../shared/sound';
-import { asSudokuView, sudokuModule, type SudokuView } from './game';
+import { asSudokuView, peers, RACE_MAX_MISTAKES, sudokuModule, type SudokuView } from './game';
 
 export const SUDOKU_RULES = ['rules1', 'rules2', 'rules3'];
 
@@ -14,7 +14,7 @@ export const SUDOKU_TEXT: Texts = {
     rulesTitle: 'Regras do Sudoku',
     rules1: 'Preencha a grade 9×9 de modo que cada linha, cada coluna e cada quadrado 3×3 tenha todos os números de 1 a 9, sem repetir. Os números já na grade são as pistas.',
     rules2: 'Toque numa casa e depois num número. Número errado não entra: conta como erro. Use o lápis para anotar candidatos sem se comprometer.',
-    rules3: 'Em dupla ou grupo (cooperativo), todos preenchem a mesma grade. Na corrida, cada um tem a sua grade e vence quem terminar primeiro. No solo, cada um resolve o mesmo quebra-cabeça no seu ritmo, sem vencedor.',
+    rules3: 'Em dupla ou grupo (cooperativo), todos preenchem a mesma grade. Na corrida, cada um tem a sua grade e vence quem terminar primeiro, mas 4 erros tiram você da corrida. No solo, cada um resolve o mesmo quebra-cabeça no seu ritmo, sem vencedor.',
     lobbyMode: 'Modo',
     lobbyLevel: 'Nível',
     mode_coop: 'Cooperativo',
@@ -33,18 +33,23 @@ export const SUDOKU_TEXT: Texts = {
     doneSolo: 'Todos terminaram!',
     youDone: 'Você terminou! Esperando os outros…',
     finishedAt: 'terminou em {time}',
+    mistakesMax: 'erros: {n}/{max}',
+    doneRaceNone: 'Todos estouraram o limite de erros. Ninguém venceu!',
+    youOut: 'Você estourou o limite de erros e saiu da corrida. Os outros continuam…',
+    outTag: 'fora da corrida',
     total: 'Tempo total: {time}',
     playAgain: 'Jogar de novo',
     'reason:Wrong digit': 'Esse número não vai aí.',
     'reason:That square is given': 'Essa casa é uma pista.',
     'reason:That square is filled': 'Essa casa já está preenchida.',
     'reason:You already finished': 'Você já terminou.',
+    'reason:You are out of the race': 'Você saiu da corrida.',
   },
   en: {
     rulesTitle: 'Sudoku rules',
     rules1: 'Fill the 9×9 grid so every row, every column and every 3×3 box holds each number from 1 to 9 exactly once. The numbers already on the grid are the clues.',
     rules2: 'Tap a square, then a number. A wrong number does not go in: it counts as a mistake. Use the pencil to jot candidates without committing.',
-    rules3: 'In co-op, everyone fills the same grid. In a race, each player has their own grid and whoever finishes first wins. In solo, everyone solves the same puzzle at their own pace, with no winner.',
+    rules3: 'In co-op, everyone fills the same grid. In a race, each player has their own grid and whoever finishes first wins, but 4 mistakes put you out. In solo, everyone solves the same puzzle at their own pace, with no winner.',
     lobbyMode: 'Mode',
     lobbyLevel: 'Level',
     mode_coop: 'Co-op',
@@ -63,12 +68,17 @@ export const SUDOKU_TEXT: Texts = {
     doneSolo: 'Everyone finished!',
     youDone: 'You finished! Waiting for the others…',
     finishedAt: 'finished in {time}',
+    mistakesMax: 'mistakes: {n}/{max}',
+    doneRaceNone: 'Everyone hit the mistake limit. Nobody won!',
+    youOut: "You hit the mistake limit and are out of the race. The others play on…",
+    outTag: 'out of the race',
     total: 'Total time: {time}',
     playAgain: 'Play again',
     'reason:Wrong digit': "That number doesn't go there.",
     'reason:That square is given': 'That square is a clue.',
     'reason:That square is filled': 'That square is already filled.',
     'reason:You already finished': 'You already finished.',
+    'reason:You are out of the race': 'You are out of the race.',
   },
 };
 
@@ -111,17 +121,6 @@ export function formatTime(ms: number): string {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 }
 
-const peers = (i: number): number[] => {
-  const r = Math.floor(i / 9);
-  const c = i % 9;
-  const out: number[] = [];
-  for (let k = 0; k < 81; k++) {
-    const kr = Math.floor(k / 9);
-    const kc = k % 9;
-    if (k !== i && (kr === r || kc === c || (Math.floor(kr / 3) === Math.floor(r / 3) && Math.floor(kc / 3) === Math.floor(c / 3)))) out.push(k);
-  }
-  return out;
-};
 
 export function SudokuScreen(props: GameScreenProps) {
   const view = asSudokuView(props.view);
@@ -136,7 +135,8 @@ export function SudokuScreen(props: GameScreenProps) {
   const [focus, setFocus] = useState(0);
   const { lobby, awaiting, onIntent } = props;
   const mine = view.finished.includes(view.me);
-  const locked = view.done || mine;
+  const out = view.out.includes(view.me);
+  const locked = view.done || mine || out;
 
   const base = useRef({ at: Date.now(), ms: view.elapsedMs });
   const [now, setNow] = useState(Date.now());
@@ -162,15 +162,58 @@ export function SudokuScreen(props: GameScreenProps) {
     if (view.done && !before.done) playSound(view.mode === 'race' && view.winner !== view.me ? 'lose' : 'win');
   }, [view.grid, view.mistakes, view.done]);
 
+  // Co-op: cells another player just filled glow for a moment, in that player's color.
+  const [fresh, setFresh] = useState<Record<number, number>>({});
+  const prevGrid = useRef(view.grid);
+  useEffect(() => {
+    const before = prevGrid.current;
+    prevGrid.current = view.grid;
+    if (view.mode !== 'coop' || before === view.grid) return;
+    const added = view.grid.flatMap((v, i) => (v !== 0 && before[i] === 0 && view.placedBy[i] !== view.me && view.placedBy[i]! >= 0 ? [i] : []));
+    if (added.length === 0) return;
+    setFresh(f => ({ ...f, ...Object.fromEntries(added.map(i => [i, view.placedBy[i]!])) }));
+    const timer = setTimeout(() => setFresh(f => Object.fromEntries(Object.entries(f).filter(([k]) => !added.includes(Number(k))))), 3000);
+    return () => clearTimeout(timer);
+  }, [view.grid]);
+
+  // A mark for a digit that already sits in the cell's row, column or box can't be right any more: drop it, whoever placed that digit.
+  useEffect(() => {
+    setNotes(n => {
+      let next: Record<number, number[]> | null = null;
+      for (const [key, digits] of Object.entries(n)) {
+        const cell = Number(key);
+        const keep = view.grid[cell] !== 0 ? [] : digits.filter(d => !peers(cell).some(p => view.grid[p] === d));
+        if (keep.length === digits.length) continue;
+        next ??= { ...n };
+        if (keep.length === 0) delete next[cell];
+        else next[cell] = keep;
+      }
+      return next ?? n;
+    });
+  }, [view.grid]);
+
+  // Coop: the others see my pencil marks. One move travels at a time, so changes wait their turn and go one cell per round trip.
+  const sentNotes = useRef<Record<number, string>>({});
+  useEffect(() => {
+    if (view.mode !== 'coop' || awaiting || view.done) return;
+    for (const key of new Set([...Object.keys(notes), ...Object.keys(sentNotes.current)])) {
+      const cell = Number(key);
+      const digits = view.grid[cell] === 0 ? notes[cell] ?? [] : [];
+      if ((sentNotes.current[cell] ?? '') === digits.join('')) continue;
+      sentNotes.current[cell] = digits.join('');
+      onIntent({ type: 'notes', cell, digits });
+      return;
+    }
+  }, [notes, awaiting, view.grid, view.mode, view.done]);
+
   const place = (digit: number) => {
     setFocus(digit);
     if (sel === null || locked || awaiting) return;
     if (view.grid[sel] !== 0) return;
     if (pencil) {
-      setNotes(n => {
-        const cur = n[sel] ?? [];
-        return { ...n, [sel]: cur.includes(digit) ? cur.filter(d => d !== digit) : [...cur, digit].sort() };
-      });
+      const cur = notes[sel] ?? [];
+      const digits = cur.includes(digit) ? cur.filter(d => d !== digit) : [...cur, digit].sort();
+      setNotes(n => ({ ...n, [sel]: digits }));
       return;
     }
     onIntent({ type: 'set', cell: sel, value: digit });
@@ -208,9 +251,10 @@ export function SudokuScreen(props: GameScreenProps) {
   let status = '';
   if (view.done) {
     if (view.mode === 'coop') status = t('doneCoop');
-    else if (view.mode === 'race') status = t('doneRace', { name: view.players[view.winner!]!.name });
+    else if (view.mode === 'race') status = view.winner === null ? t('doneRaceNone') : t('doneRace', { name: view.players[view.winner]!.name });
     else status = t('doneSolo');
-  } else if (mine) status = t('youDone');
+  } else if (out) status = t('youOut');
+  else if (mine) status = t('youDone');
 
   return (
     <GameFrame
@@ -238,8 +282,8 @@ export function SudokuScreen(props: GameScreenProps) {
             if (given) cls.push('is-given');
             if (i === sel) cls.push('is-sel');
             else if (near.has(i)) cls.push('is-near');
+            if (fresh[i] !== undefined) cls.push('is-fresh');
             if (selDigit && v === selDigit) cls.push('is-same');
-            else if (selDigit && v === 0 && notes[i]?.includes(selDigit)) cls.push('is-marked');
             if (Math.floor(i / 9) % 3 === 2 && i < 72) cls.push('row-end');
             if (i % 9 % 3 === 2 && i % 9 < 8) cls.push('col-end');
             return (
@@ -252,9 +296,9 @@ export function SudokuScreen(props: GameScreenProps) {
                   if (v) setFocus(v);
                 }}
                 aria-label={`${Math.floor(i / 9) + 1},${(i % 9) + 1} ${v || ''}`}
-                style={owner >= 0 ? { color: playerColor(lobby, view.players[owner]!.id) } : undefined}
+                style={owner >= 0 ? ({ color: playerColor(lobby, view.players[owner]!.id), '--fresh': fresh[i] !== undefined ? playerColor(lobby, view.players[fresh[i]!]!.id) : undefined } as React.CSSProperties) : undefined}
               >
-                {v !== 0 ? v : (notes[i]?.length ? <span className="sudoku__notes" aria-hidden="true">{[1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => <i key={d} className={d === focus ? 'is-focus' : undefined}>{notes[i]!.includes(d) ? d : ''}</i>)}</span> : null)}
+                {v !== 0 ? v : <Marks mine={notes[i] ?? []} others={view.notes.flatMap((m, seat) => (seat === view.me ? [] : [{ seat, digits: m[i] ?? [] }]))} color={seat => playerColor(lobby, view.players[seat]!.id)} />}
               </button>
             );
           })}
@@ -273,7 +317,7 @@ export function SudokuScreen(props: GameScreenProps) {
               <button type="button" className={pencil ? 'primary' : ''} aria-pressed={pencil} onClick={() => setPencil(p => !p)}>
                 ✎ {t('pencil')}
               </button>
-              <span className="muted">{t('mistakes', { n: view.mistakes[view.me]! })}</span>
+              <span className="muted">{view.mode === 'race' ? t('mistakesMax', { n: view.mistakes[view.me]!, max: RACE_MAX_MISTAKES }) : t('mistakes', { n: view.mistakes[view.me]! })}</span>
             </div>
           </>
         )}
@@ -299,12 +343,30 @@ function Progress({ view, lobby, t }: { view: SudokuView; lobby: GameScreenProps
             <Avatar name={p.name} color={playerColor(lobby, p.id)} />
             <b>{p.name}</b>
             <span className="muted">
-              {left !== null && left !== undefined ? t('finishedAt', { time: formatTime(left) }) : view.mode === 'coop' ? t('mistakes', { n: view.mistakes[i]! }) : t('filledOf', { n: view.filled[i]! })}
+              {view.out.includes(i) ? t('outTag') : left !== null && left !== undefined ? t('finishedAt', { time: formatTime(left) }) : view.mode === 'coop' ? t('mistakes', { n: view.mistakes[i]! }) : t('filledOf', { n: view.filled[i]! })}
             </span>
             {view.mode !== 'coop' && <progress max={81} value={view.filled[i]} />}
           </div>
         );
       })}
     </div>
+  );
+}
+
+/** The pencil marks in a cell: mine in the text color, and in co-op the other players' in theirs. */
+function Marks({ mine, others, color }: { mine: number[]; others: { seat: number; digits: number[] }[]; color(seat: number): string }) {
+  const theirs = others.filter(o => o.digits.length > 0);
+  if (mine.length === 0 && theirs.length === 0) return null;
+  return (
+    <span className="sudoku__notes" aria-hidden="true">
+      {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => {
+        const other = mine.includes(d) ? undefined : theirs.find(o => o.digits.includes(d));
+        return (
+          <i key={d} style={other ? { color: color(other.seat) } : undefined}>
+            {mine.includes(d) || other ? d : ''}
+          </i>
+        );
+      })}
+    </span>
   );
 }

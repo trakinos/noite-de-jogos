@@ -21,7 +21,12 @@ import { TurnActions } from '../components/TurnActions';
 import { TurnBoard } from '../components/TurnBoard';
 import { EMPTY_PILES_TO_END, buyablePiles, canStillPlayAction, endGameStatus, guardStillApplies, hasNoActionToPlay, intentForHandCard, isMyTurn, playableHand } from '../moves';
 import { playerColor } from '../playerColor';
+import { useAttackRound } from '../useAttackRound';
+import { useTimerTick } from '../useTimerTick';
+import { useBoardSounds } from '../useBoardSounds';
 import { useCardMotion } from '../useCardMotion';
+import { playSound } from '../../games/shared/sound';
+import { MuteButton } from '../../games/shared/GameFrame';
 
 type Tab = 'hand' | 'supply' | 'log';
 const TABS: { id: Tab; label: 'tabHand' | 'tabSupply' | 'tabLog' }[] = [
@@ -57,6 +62,8 @@ export function Board({ view, lobby, code, error, clock, onIntent, onDismissErro
   const menu = useRef<HTMLDetailsElement>(null);
   const root = useRef<HTMLElement>(null);
   useCardMotion(root, view);
+  useBoardSounds(view);
+  const attack = useAttackRound(view);
   const names = view.players.map((p) => p.name);
   const online = (i: number) => lobby.players.find((p) => p.id === view.players[i].id)?.online ?? false;
   const colorOf = (i: number) => playerColor(lobby, view.players[i].id);
@@ -67,6 +74,10 @@ export function Board({ view, lobby, code, error, clock, onIntent, onDismissErro
   const me = view.players[view.you];
   const mine = isMyTurn(view);
   const idle = mine && view.prompt === null && view.waitingOn === null && view.group === null;
+  // A Regular in play: the first Coin played this turn is worth more.
+  const merchantBonus = mine && !view.turn.silverPlayed ? view.turn.merchants : 0;
+  const merchantBadge = merchantBonus > 0 && view.hand.includes('silver') ? { index: view.hand.indexOf('silver'), text: '+$' + merchantBonus } : null;
+  useTimerTick(clock, clock?.kind === 'response' ? view.prompt !== null : idle);
   const [rules, setRules] = useState(false);
   // Hiding the waiting dialog lasts until that group of choices is over.
   const [groupHidden, setGroupHidden] = useState(false);
@@ -97,6 +108,7 @@ export function Board({ view, lobby, code, error, clock, onIntent, onDismissErro
 
   useEffect(() => {
     if (!error) return;
+    playSound('wrong');
     const timer = setTimeout(onDismissError, TOAST_MS);
     return () => clearTimeout(timer);
   }, [error]);
@@ -108,7 +120,8 @@ export function Board({ view, lobby, code, error, clock, onIntent, onDismissErro
           {tr.t('appName')}
           <span className="room">{code}</span>
         </div>
-        <Opponents view={view} online={online} colorOf={colorOf} />
+        <Opponents view={view} online={online} colorOf={colorOf} attack={attack} />
+        <MuteButton />
         <button type="button" className="rules-btn" onClick={() => setRules(true)} title={tr.t('rules')}>
           <Icon name="book" />
           <span>{tr.t('rules')}</span>
@@ -212,6 +225,12 @@ export function Board({ view, lobby, code, error, clock, onIntent, onDismissErro
 
       <div className={`board__dock ${mine ? 'is-mine' : ''}`} style={myTint}>
         <section className="board__turn">
+          {attack && attack.outcomes[view.you] && (
+            <div className={`attack-note attack-note--${attack.outcomes[view.you]}`} role="status">
+              <Icon name={attack.outcomes[view.you] === 'blocked' ? 'shield' : 'sword'} />
+              {tr.t(attack.outcomes[view.you] === 'blocked' ? 'attackBlockedYou' : 'attackHitYou', { card: tr.card(attack.card), name: names[attack.attacker] })}
+            </div>
+          )}
           <TurnActions
             view={view}
             onPlayAll={() => guarded({ type: 'playAllTreasures' }, tr.t('guardAllTreasures'))}
@@ -266,6 +285,7 @@ export function Board({ view, lobby, code, error, clock, onIntent, onDismissErro
             cards={view.hand}
             playable={playableHand(view)}
             active={idle}
+            badge={merchantBadge}
             onPlay={(i) => {
               const intent = intentForHandCard(view, i);
               if (!intent) return;

@@ -1,3 +1,4 @@
+import { GAMES, type GameId } from '../games/catalog';
 import type { ApplyResult, GameInstance, GameModule } from '../games/module';
 import { PLAYER_COLORS, type PlayerColorId } from '../theme/playerColors';
 import { PLAYER_PIECES, type PlayerPieceId } from '../theme/playerPieces';
@@ -15,6 +16,8 @@ export interface HostOptions {
   random?: () => number;
   makeToken?: () => string;
   scheduler?: Scheduler;
+  /** Looks up a game's module so a won vote can switch the room to it; without it votes are tallied but never applied. */
+  resolveModule?: (id: GameId) => GameModule;
 }
 
 interface Seat {
@@ -24,6 +27,7 @@ interface Seat {
   conn: Connection | null;
   color: PlayerColorId;
   piece: PlayerPieceId;
+  vote: GameId | null;
 }
 
 const ok = (): ApplyResult => ({ ok: true });
@@ -53,14 +57,16 @@ export class HostSession {
   private readonly random: () => number;
   private readonly makeToken: () => string;
   private readonly scheduler: Scheduler;
+  private readonly resolveModule: ((id: GameId) => GameModule) | undefined;
 
   constructor(
-    private readonly module: GameModule,
+    private module: GameModule,
     opts: HostOptions = {},
   ) {
     this.random = opts.random ?? Math.random;
     this.makeToken = opts.makeToken ?? randomToken;
     this.scheduler = opts.scheduler ?? realScheduler;
+    this.resolveModule = opts.resolveModule;
     this.options = module.defaultOptions();
   }
 
@@ -75,7 +81,7 @@ export class HostSession {
     return {
       game: this.module.id,
       hostId: this.hostSeatId ?? '',
-      players: this.seats.map((s) => ({ id: s.id, name: s.name, online: s.conn !== null, color: s.color, piece: s.piece })),
+      players: this.seats.map((s) => ({ id: s.id, name: s.name, online: s.conn !== null, color: s.color, piece: s.piece, ...(s.vote ? { vote: s.vote } : {}) })),
       options,
       inGame: this.activeGame !== null,
       turnTimer: this.turnTimer,
@@ -106,6 +112,10 @@ export class HostSession {
         if (seat && seat.conn === conn) this.setPiece(seat, conn, msg.piece);
         return;
       }
+      if (msg.type === 'vote') {
+        if (seat && seat.conn === conn) this.vote(seat, conn, msg.game);
+        return;
+      }
       if (msg.type === 'setColor') {
         if (seat && seat.conn === conn) this.setColor(seat, conn, msg.color);
         return;
@@ -122,6 +132,22 @@ export class HostSession {
     const parsed = this.module.parseOptions(raw);
     if (typeof parsed === 'object' && parsed !== null && 'error' in parsed) return fail((parsed as { error: string }).error);
     this.options = parsed;
+    this.broadcastLobby();
+    return ok();
+  }
+
+  /** Swaps the game while the room stays open: seats, colors and the timer are kept, the options reset to the new game's defaults. */
+  setGame(module: GameModule): ApplyResult {
+    if (this.activeGame) return fail('Game in progress');
+    if (module.id === this.module.id) {
+      this.clearVotes();
+      this.broadcastLobby();
+      return ok();
+    }
+    if (this.seats.length > module.maxPlayers) return fail('Too many players for that game');
+    this.module = module;
+    this.options = module.defaultOptions();
+    this.clearVotes();
     this.broadcastLobby();
     return ok();
   }
@@ -204,6 +230,7 @@ export class HostSession {
       id: `p${this.nextSeat++}`, name, token: this.makeToken(), conn, color: this.freeColor(token),
       // A guest without a piece (an older page) gets one by seat, so every token on the board has a shape.
       piece: piece ?? PLAYER_PIECES[this.seats.length % PLAYER_PIECES.length]!.id,
+      vote: null,
     };
     this.seats.push(seat);
     if (isHost && this.hostSeatId === null) this.hostSeatId = seat.id;
@@ -244,6 +271,32 @@ export class HostSession {
       return;
     }
     this.gameChanged();
+  }
+
+  /** A vote for the next game; once every connected player has voted, the leader is applied (a tie keeps the current game if it is among them). */
+  private vote(seat: Seat, conn: Connection, game: GameId | null): void {
+    if (this.activeGame) return void send(conn, { type: 'error', reason: 'Game in progress' });
+    if (game !== null) {
+      const info = GAMES.find((g) => g.id === game);
+      if (!info?.available) return void send(conn, { type: 'error', reason: 'Unknown game' });
+      if (this.seats.length > info.maxPlayers) return void send(conn, { type: 'error', reason: 'Too many players for that game' });
+    }
+    seat.vote = game;
+    const voters = this.seats.filter((s) => s.conn !== null);
+    if (this.resolveModule && voters.length > 0 && voters.every((s) => s.vote !== null)) {
+      const counts = new Map<GameId, number>();
+      for (const s of voters) counts.set(s.vote!, (counts.get(s.vote!) ?? 0) + 1);
+      const top = Math.max(...counts.values());
+      const leaders = GAMES.map((g) => g.id).filter((id) => counts.get(id) === top);
+      const winner = leaders.includes(this.module.id) ? this.module.id : leaders[0]!;
+      if (this.setGame(this.resolveModule(winner)).ok) return;
+      this.clearVotes();
+    }
+    this.broadcastLobby();
+  }
+
+  private clearVotes(): void {
+    for (const s of this.seats) s.vote = null;
   }
 
   private setColor(seat: Seat, conn: Connection, color: PlayerColorId): void {

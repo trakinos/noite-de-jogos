@@ -60,6 +60,8 @@ const PATHS = {
       <circle cx="12" cy="16.5" r="1" fill="currentColor" />
     </>
   ),
+  shield: <path d="M12 3l7 3v5.5c0 4.6-3 8-7 9.5-4-1.5-7-4.9-7-9.5V6l7-3zM9 12l2.2 2.2L15.5 10" />,
+  sword: <path d="M14.5 4.5L20 4l-.5 5.5L9.5 19.5l-5-5 10-10zM4 20l3.5-3.5M7 14l3 3" />,
   trophy: <path d="M8 4h8v6a4 4 0 0 1-8 0V4zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 14v4M8 20h8" />,
   wifiOff: (
     <>

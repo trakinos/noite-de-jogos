@@ -3,7 +3,7 @@
  * Browsers only allow audio after a tap, so the context is created lazily and resumed on the first gesture.
  */
 
-export type SoundName = 'move' | 'click' | 'hit' | 'miss' | 'sunk' | 'alert' | 'win' | 'lose' | 'coin' | 'spin' | 'card' | 'pop' | 'wrong' | 'clue' | 'draw';
+export type SoundName = 'move' | 'click' | 'hit' | 'miss' | 'sunk' | 'alert' | 'win' | 'lose' | 'coin' | 'spin' | 'card' | 'pop' | 'wrong' | 'clue' | 'draw' | 'discard' | 'trash' | 'buy' | 'turn' | 'tick' | 'pileout' | 'reveal' | 'block';
 
 const MUTE_KEY = 'ndj-muted';
 let ctx: AudioContext | null = null;
@@ -155,6 +155,64 @@ const SOUNDS: Record<SoundName, () => void> = {
   draw: () => {
     noise(0.16, 900, 0.12);
     tones([{ freq: 300, to: 190, start: 0.02, dur: 0.16, type: 'triangle', gain: 0.14 }]);
+  },
+  /** Two quick flicks sliding away: a card tossed onto the discard pile. */
+  discard: () => {
+    noise(0.07, 3200, 0.13);
+    noise(0.07, 2600, 0.11, 0.07);
+    tones([{ freq: 760, to: 430, start: 0, dur: 0.16, type: 'sine', gain: 0.07 }]);
+  },
+  /** A low crunch: a card thrown out of the game for good. */
+  trash: () => {
+    noise(0.1, 700, 0.3);
+    noise(0.1, 500, 0.3, 0.06);
+    noise(0.16, 350, 0.3, 0.12);
+    tones([{ freq: 170, to: 50, start: 0, dur: 0.32, type: 'sawtooth', gain: 0.1 }]);
+  },
+  /** A little till: the clink of a purchase. */
+  buy: () => {
+    noise(0.05, 5000, 0.12);
+    tones([
+      { freq: 1568, start: 0.03, dur: 0.14, type: 'sine', gain: 0.14 },
+      { freq: 2093, start: 0.11, dur: 0.4, type: 'sine', gain: 0.13 },
+      { freq: 4186, start: 0.11, dur: 0.2, type: 'sine', gain: 0.025 },
+    ]);
+  },
+  /** A bright quick climb: it is your turn. */
+  turn: () => tones([
+    { freq: 330, start: 0, dur: 0.14, type: 'triangle', gain: 0.2 },
+    { freq: 494, start: 0.09, dur: 0.14, type: 'triangle', gain: 0.2 },
+    { freq: 659, start: 0.18, dur: 0.14, type: 'triangle', gain: 0.2 },
+    { freq: 988, start: 0.27, dur: 0.4, type: 'sine', gain: 0.16 },
+    { freq: 1976, start: 0.27, dur: 0.25, type: 'sine', gain: 0.03 },
+  ]),
+  /** A dry woodblock knock: the turn timer is running out. */
+  tick: () => {
+    tones([{ freq: 1500, to: 1100, start: 0, dur: 0.05, type: 'sine', gain: 0.16 }]);
+    noise(0.02, 6000, 0.08);
+  },
+  /** A hollow falling tone: a pile in the Supply has run out. */
+  pileout: () => {
+    noise(0.12, 800, 0.15);
+    tones([
+      { freq: 440, to: 220, start: 0, dur: 0.3, type: 'triangle', gain: 0.2 },
+      { freq: 330, to: 165, start: 0.13, dur: 0.38, type: 'triangle', gain: 0.18 },
+    ]);
+  },
+  /** A quick high shimmer: cards turned face up. */
+  reveal: () => tones([
+    { freq: 1175, start: 0, dur: 0.1, type: 'sine', gain: 0.09 },
+    { freq: 1568, start: 0.06, dur: 0.1, type: 'sine', gain: 0.09 },
+    { freq: 2349, start: 0.12, dur: 0.22, type: 'sine', gain: 0.08 },
+  ]),
+  /** A metallic clang: a shield stops an attack. */
+  block: () => {
+    noise(0.06, 6000, 0.2);
+    tones([
+      { freq: 800, start: 0, dur: 0.3, type: 'triangle', gain: 0.16 },
+      { freq: 1130, start: 0, dur: 0.22, type: 'triangle', gain: 0.1 },
+      { freq: 1960, start: 0, dur: 0.12, type: 'square', gain: 0.03 },
+    ]);
   },
   wrong: () => tones([{ freq: 200, to: 120, start: 0, dur: 0.25, type: 'sawtooth', gain: 0.08 }]),
   /** A soft rising chime: a message has arrived. */

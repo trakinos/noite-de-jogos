@@ -68,6 +68,13 @@ export function TurnBoard({ view, names, clock }: Props) {
             <Icon name="coin" />
             <b>{'$' + t.coins}</b>
           </span>
+          {mine && !t.silverPlayed && t.merchants > 0 && (
+            <span className="ctr ctr--bonus" title={tr.t('merchantBonusHint', { card: tr.card('silver'), n: t.merchants })}>
+              <Icon name="coin" />
+              <b>{'+$' + t.merchants}</b>
+              {tr.t('merchantBonus', { card: tr.card('silver') })}
+            </span>
+          )}
         </div>
         {clock?.kind === 'turn' && <TimerBar clock={clock} />}
       </div>

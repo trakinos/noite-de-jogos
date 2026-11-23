@@ -3,6 +3,7 @@ import { KINGDOM_IDS } from '../../../cards/registry';
 import { createRng, shuffle } from '../../../engine/rng';
 import type { CardId } from '../../../engine/types';
 import { useLang } from '../../../i18n/LangProvider';
+import type { GameId } from '../../catalog';
 import type { HostSession } from '../../../net/host';
 import type { LobbyState } from '../../../net/protocol';
 import { KingdomPicker } from '../../../ui/components/KingdomPicker';
@@ -67,6 +68,8 @@ interface LobbyProps {
   host: HostSession | null;
   onSetColor(color: PlayerColorId): void;
   onSetPiece(piece: PlayerPieceId): void;
+  /** Casts or clears this player's vote for the next game. */
+  onVote?(game: GameId | null): void;
   onLeave(): void;
 }
 

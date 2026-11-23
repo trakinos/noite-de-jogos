@@ -237,7 +237,8 @@ export function StopScreen(props: GameScreenProps) {
   const deadline = useMemo(() => (view.endsInMs === null ? null : Date.now() + view.endsInMs), [props.view]);
   const now = useNow(deadline !== null);
   // The letter is drawn first; the writing time only runs once it has landed.
-  const introEnd = useMemo(() => Date.now() + view.introMs, [props.view]);
+  // With no intro left it is 0: a fresh `Date.now()` here would run ahead of the 200ms `now` tick and briefly disable (blur) the inputs on every echo.
+  const introEnd = useMemo(() => (view.introMs > 0 ? Date.now() + view.introMs : 0), [props.view]);
   const drawing = writing && now < introEnd;
   const secs = deadline === null ? 0 : Math.max(0, Math.ceil((deadline - Math.max(now, introEnd)) / 1000));
   const timeUp = deadline !== null && now >= deadline;

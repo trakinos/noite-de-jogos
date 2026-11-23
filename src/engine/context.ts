@@ -152,7 +152,7 @@ export function createContext(state: GameState, me: number): EffectContext {
           optionIds: ['reveal', 'dontReveal'],
         });
         if (choice !== 0) return false;
-        ctx.log(opp, 'reveals', [reaction]);
+        ctx.log(opp, 'blocks the attack with', [reaction]);
         return true;
       });
       return ctx.opponents().filter((_, i) => !blocked[i]);

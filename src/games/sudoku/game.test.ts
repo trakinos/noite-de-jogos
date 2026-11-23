@@ -110,3 +110,33 @@ describe('sudoku rules', () => {
     expect(() => g.viewFor('zed')).toThrow();
   });
 });
+
+describe('sudoku race mistake limit', () => {
+  it('knocks a player out after 4 mistakes and ends the race when everyone is out', () => {
+    const s = start('race');
+    const cell = s.givens.findIndex(g => g === 0);
+    const wrong = (s.solution[cell]! % 9) + 1;
+    for (let i = 0; i < 4; i++) expect(applySudoku(s, 0, { type: 'set', cell, value: wrong }).ok).toBe(false);
+    expect(s.out).toEqual([0]);
+    expect(applySudoku(s, 0, { type: 'set', cell, value: s.solution[cell]! })).toEqual({ ok: false, reason: 'You are out of the race' });
+    expect(s.done).toBe(false);
+    for (let i = 0; i < 4; i++) applySudoku(s, 1, { type: 'set', cell, value: wrong });
+    expect(s.done).toBe(true);
+    expect(s.winner).toBeNull();
+  });
+});
+
+describe('sudoku coop pencil marks', () => {
+  it('shares each player\'s marks and strikes them once the digit is placed', () => {
+    const s = start('coop');
+    const cell = s.givens.findIndex(g => g === 0);
+    expect(applySudoku(s, 0, { type: 'notes', cell, digits: [3, 3, 5, 12] })).toEqual({ ok: true });
+    expect(sudokuView(s, 1).notes[0]![cell]).toEqual([3, 5]);
+    expect(applySudoku(s, 1, { type: 'set', cell, value: s.solution[cell]! })).toEqual({ ok: true });
+    expect(sudokuView(s, 1).notes[0]![cell]).toEqual([]);
+    // Not shared outside coop.
+    const r = start('race');
+    expect(applySudoku(r, 0, { type: 'notes', cell, digits: [1] }).ok).toBe(false);
+    expect(sudokuView(r, 0).notes).toEqual([]);
+  });
+});
