@@ -75,7 +75,8 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onSetPiece
         <div className="lobby__title">
           <h1>{tr.t('room', { code })}</h1>
           <p className="lobby__game" aria-live="polite">
-            {tr.t('game')}: <b>{tr.t(GAMES.find((g) => g.id === lobby.game)?.nameKey ?? 'gameDominionName')}</b>
+            {tr.t('game')}: <b>{tr.t(GAMES.find((g) => g.id === lobby.game)?.nameKey ?? 'gameDominionName')}</b>{' '}
+            <small className="front__ver">v{GAMES.find((g) => g.id === lobby.game)?.version}</small>
           </p>
         </div>
         {onRules && (
@@ -112,7 +113,7 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onSetPiece
                 <select aria-label={tr.t('voteTitle')} value={pickGame} onChange={(e) => setPickGame(e.target.value as GameId)}>
                   {voteGames.map((g) => (
                     <option key={g.id} value={g.id}>
-                      {tr.t(g.nameKey)}
+                      {tr.t(g.nameKey)} · v{g.version}
                     </option>
                   ))}
                 </select>
@@ -184,7 +185,7 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onSetPiece
               <select id="game-pick" value={lobby.game} onChange={(e) => changeGame(e.target.value)}>
                 {GAMES.filter((g) => g.available).map((g) => (
                   <option key={g.id} value={g.id}>
-                    {tr.t(g.nameKey)}
+                    {tr.t(g.nameKey)} · v{g.version}
                   </option>
                 ))}
               </select>
@@ -194,7 +195,9 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onSetPiece
           {!host && (
             <div className="timer-setting">
               <label>{tr.t('game')}</label>
-              <b>{tr.t(GAMES.find((g) => g.id === lobby.game)?.nameKey ?? 'gameDominionName')}</b>
+              <b>
+                {tr.t(GAMES.find((g) => g.id === lobby.game)?.nameKey ?? 'gameDominionName')} v{GAMES.find((g) => g.id === lobby.game)?.version}
+              </b>
             </div>
           )}
           <div className="timer-setting">

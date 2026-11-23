@@ -111,6 +111,9 @@ Built on a shared frame (`src/games/shared/`): each game is an engine + module +
 - [ ] Sound in Dominion and Dono do Bairro (they don't use the shared sound module yet).
 - [ ] **Zerou!, Coringa mode** (asked 2026-11-16): a match of several rounds where everyone starts with a score (lobby setting, default 20). At the end of each round, the cards left in each loser's hand are counted and subtracted from their score. The first player to reach 0 becomes the Coringa: they keep playing but can no longer win, so their job is to create chaos and hurt the others' games. Open questions: card count or card values, how the match ends, and what happens when a second player reaches 0.
 
+### E. History and leaderboards (added 2026-11-23)
+- [ ] **Memory across games:** remember what was played and who played, plus high scores and a leaderboard. To brainstorm on 2026-11-24. Open questions: where it is stored (per device, or shared among friends), how players are identified from one night to the next, which games count and how each one scores, and what the leaderboard and past-games screens look like.
+
 ## Dominion Friends
 
 ### 1. Put it online ✅

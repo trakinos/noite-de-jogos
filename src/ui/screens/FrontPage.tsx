@@ -111,7 +111,9 @@ export function FrontPage({ initialName, invitedCode, busy, error, onHost, onJoi
         <section key={game.id} className={`front__row ${game.available ? '' : 'front__row--soon'}`}>
           <div className={`front__art front__art--${game.id}`} aria-hidden="true" />
           <div className="front__text">
-            <b>{tr.t(game.nameKey)}</b>
+            <b>
+              {tr.t(game.nameKey)} <small className="front__ver">v{game.version}</small>
+            </b>
             <span className="muted">
               {tr.t(game.tagKey)} · {tr.t('playersRange', { min: game.minPlayers, max: game.maxPlayers })} · {tr.t(game.lengthKey)}
             </span>

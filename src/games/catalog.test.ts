@@ -20,6 +20,10 @@ describe('game catalog', () => {
     ]);
   });
 
+  it('gives every game a semver version', () => {
+    for (const g of GAMES) expect(g.version).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+
   it('recognises game ids', () => {
     expect(isGameId('dominion')).toBe(true);
     expect(isGameId('bairro')).toBe(true);
