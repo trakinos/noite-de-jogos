@@ -25,6 +25,10 @@ export const STOP_TEXT: Texts = {
     lobbyTime: 'Tempo por rodada',
     lobbyCategories: 'Categorias',
     lobbyMin: 'Escolha pelo menos {n}.',
+    away: 'em outra aba',
+    awayNow: '{name} está em outra aba ou janela',
+    leftTimes: 'Saiu da aba {n} vez(es) durante a escrita',
+    searchWord: 'Buscar "{w}" no Google',
     lobbyLetters: 'Letras que podem sair',
     lobbyLettersHint: 'Desmarque as letras que você não quer no jogo.',
     lettersOut: 'Sem as letras: {l}',
@@ -97,6 +101,10 @@ export const STOP_TEXT: Texts = {
     lobbyTime: 'Time per round',
     lobbyCategories: 'Categories',
     lobbyMin: 'Pick at least {n}.',
+    away: 'on another tab',
+    awayNow: '{name} is on another tab or window',
+    leftTimes: 'Left the tab {n} time(s) while writing',
+    searchWord: 'Search "{w}" on Google',
     lobbyLetters: 'Letters that can come up',
     lobbyLettersHint: "Untick the letters you don't want in the game.",
     lettersOut: 'Without the letters: {l}',
@@ -308,6 +316,25 @@ export function StopScreen(props: GameScreenProps) {
     if (late && !awaiting && !dirty) onIntent({ type: 'tick' });
   }, [late, awaiting, dirty, props.view]);
 
+  // Tell the table when this screen is hidden or not focused, so peeking at another tab is visible to everyone.
+  const [away, setAway] = useState(false);
+  useEffect(() => {
+    const check = () => setAway(document.hidden || !document.hasFocus());
+    check();
+    document.addEventListener('visibilitychange', check);
+    window.addEventListener('blur', check);
+    window.addEventListener('focus', check);
+    return () => {
+      document.removeEventListener('visibilitychange', check);
+      window.removeEventListener('blur', check);
+      window.removeEventListener('focus', check);
+    };
+  }, []);
+  // Level-triggered: whatever the host has differs from the truth, send it once a move can travel.
+  useEffect(() => {
+    if (!awaiting && away !== view.away[view.me]) onIntent({ type: 'away', away });
+  }, [away, awaiting, props.view]);
+
   useStopSounds(view, writing ? secs : 0);
 
   const ranking = view.players
@@ -454,6 +481,18 @@ export function StopScreen(props: GameScreenProps) {
                           <Avatar name={p.name} color={playerColor(lobby, p.id)} />
                           <span className="stop__who">{p.name}</span>
                           <b className="stop__word">{answer || '—'}</b>
+                          {answer && (
+                            <a
+                              className="stop__search"
+                              href={`https://www.google.com/search?q=${encodeURIComponent(answer)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title={t('searchWord', { w: answer })}
+                              aria-label={t('searchWord', { w: answer })}
+                            >
+                              🔍
+                            </a>
+                          )}
                           <span className="stop__mark">{t(`mark_${mark}`)}</span>
                           <span className="stop__plus">{t('plus', { n: pointsFor(mark) })}</span>
                           {links.map(x => {
@@ -547,6 +586,12 @@ export function StopScreen(props: GameScreenProps) {
               <Avatar name={p.name} color={playerColor(lobby, p.id)} />
               <b>{p.name}</b>
               {writing && <span className="stop__filled">{t('filled', { n: view.filled[i]!, total })}</span>}
+              {writing && view.away[i] && i !== view.me && (
+                <span className="stop__away" role="status" title={t('awayNow', { name: p.name })}>
+                  👀 {t('away')}
+                </span>
+              )}
+              {view.awayCount[i]! > 0 && <span className="stop__left" title={t('leftTimes', { n: view.awayCount[i]! })}>↗{view.awayCount[i]}</span>}
               {view.phase === 'review' && view.ready[i] && (
                 <span className="stop__isready" title={t('ready')}>
                   <Icon name="check" />

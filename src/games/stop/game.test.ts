@@ -297,3 +297,16 @@ describe('stop excluded letters', () => {
     expect(stopModule.parseOptions({ rounds: 5, excluded: ['A', 'Z', 'K'] })).toMatchObject({ excluded: ['A', 'Z'] });
   });
 });
+
+describe('stop tab-away tracking', () => {
+  it('records who is away and counts each departure while writing', () => {
+    const s = createStop([{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], defaultStopOptions(), 1, 0);
+    expect(applyStop(s, 0, { type: 'away', away: true }, 5000)).toEqual({ ok: true });
+    expect(stopView(s, 1, 5000).away).toEqual([true, false]);
+    applyStop(s, 0, { type: 'away', away: true }, 5100);
+    applyStop(s, 0, { type: 'away', away: false }, 5200);
+    applyStop(s, 0, { type: 'away', away: true }, 5300);
+    expect(s.awayCount).toEqual([2, 0]);
+    expect(applyStop(s, 0, { type: 'away', away: 'yes' as unknown as boolean }, 5400).ok).toBe(false);
+  });
+});

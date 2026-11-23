@@ -2350,3 +2350,11 @@ body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-are
 .forca__podium li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 12px; border-radius: var(--r-md); background: var(--surface-2); }
 .forca__podium li.is-winner { background: color-mix(in srgb, var(--accent) 25%, transparent); font-weight: 800; }
 .forca__winner { text-align: center; }
+
+.stop__search { flex: none; display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; font-size: 0.85rem; text-decoration: none; background: var(--surface); border: 1px solid var(--border); }
+.stop__search:hover { border-color: var(--accent); }
+
+.stop__away { font-size: 0.75rem; font-weight: 800; padding: 1px 8px; border-radius: 99px; background: var(--danger); color: #fff; animation: stop-away 1s ease-in-out infinite; }
+@keyframes stop-away { 50% { opacity: 0.55; } }
+.stop__left { font-size: 0.72rem; font-weight: 700; color: var(--danger); }
+@media (prefers-reduced-motion: reduce) { .stop__away { animation: none; } }

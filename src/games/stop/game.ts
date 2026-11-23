@@ -78,6 +78,9 @@ export interface StopState {
   /** Answers the players say are the same word, with who said so; a pair counts once more than half agree. */
   sames: SamePair[];
   ready: boolean[];
+  /** Who is looking at another tab or window right now, and how many times each player left it while writing. */
+  away: boolean[];
+  awayCount: number[];
   /** Totals of the rounds already scored. */
   scores: number[];
   /** Points of the round just scored, per seat. */
@@ -91,6 +94,8 @@ export type StopIntent =
   | { type: 'answers'; answers: string[] }
   | { type: 'stop'; answers?: string[] }
   | { type: 'tick' }
+  /** The player's screen lost or regained focus (another tab or window). */
+  | { type: 'away'; away: boolean }
   | { type: 'vote'; seat: number; cat: number }
   /** Toggles my vote that the answers of seats `a` and `b` in category `cat` are the same word. */
   | { type: 'same'; a: number; b: number; cat: number }
@@ -143,6 +148,8 @@ export function createStop(seats: SeatInfo[], options: StopOptions, seed: number
     answers: [],
     rejects: [],
     ready: [],
+    away: seats.map(() => false),
+    awayCount: seats.map(() => 0),
     sames: [],
     scores: seats.map(() => 0),
     roundPoints: null,
@@ -260,6 +267,12 @@ export function applyStop(s: StopState, seat: number, intent: StopIntent, now: n
     case 'tick':
       settle(s, now);
       return ok();
+    case 'away':
+      if (typeof intent.away !== 'boolean') return fail('Bad move');
+      // Leaving only counts while the sheet is open to writing.
+      if (intent.away && !s.away[seat] && s.phase === 'writing') s.awayCount[seat]!++;
+      s.away[seat] = intent.away;
+      return ok();
     case 'vote': {
       settle(s, now);
       if (s.phase !== 'review') return ok();
@@ -339,6 +352,9 @@ export interface StopView {
   sames: SamePair[] | null;
   sameNeeded: number;
   ready: boolean[];
+  /** Who is on another tab or window, and how many times they left while writing. */
+  away: boolean[];
+  awayCount: number[];
   /** Totals of the rounds already scored. */
   scores: number[];
   /** This round's points per seat: provisional during the review, final on the scores; null while writing. */
@@ -371,6 +387,8 @@ export function stopView(s: StopState, seat: number, now: number): StopView {
     sames: open ? s.sames : null,
     sameNeeded: sameVotesNeeded(s.players.length),
     ready: s.ready,
+    away: s.away.slice(),
+    awayCount: s.awayCount.slice(),
     scores: s.scores,
     roundPoints: s.phase === 'scores' ? s.roundPoints : open ? roundPoints(s) : null,
     winners: s.winners,
