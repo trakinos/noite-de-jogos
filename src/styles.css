@@ -2341,3 +2341,12 @@ body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-are
 .lobby__title h1 { margin: 0; }
 .lobby__game { margin: 0; font-size: 1.05rem; color: var(--muted, inherit); }
 .lobby__game b { color: var(--accent); }
+
+.stop__letters { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+.stop__letters legend { flex-basis: 100%; }
+.stop__letterpick { min-width: 2.6rem; font-weight: 700; }
+
+.forca__podium { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px; }
+.forca__podium li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 12px; border-radius: var(--r-md); background: var(--surface-2); }
+.forca__podium li.is-winner { background: color-mix(in srgb, var(--accent) 25%, transparent); font-weight: 800; }
+.forca__winner { text-align: center; }

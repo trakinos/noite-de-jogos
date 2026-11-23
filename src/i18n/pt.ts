@@ -155,6 +155,8 @@ const pt: Dictionary = {
     "game": "Jogo",
     "voteTitle": "Votar no jogo",
     "voteHint": "Quando todos votarem, o mais votado entra.",
+    "voteSuggest": "Sugerir",
+    "voteClear": "Tirar meu voto",
     "timerOff": "Desligado",
     "timerSeconds": "{n} s",
     "timerHint": "Respostas a ataques têm 30 s.",

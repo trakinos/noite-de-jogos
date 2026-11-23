@@ -33,13 +33,13 @@ describe('zerou!', () => {
     expect(s.draw.length + s.discard.length + 4 * HAND).toBe(DECK_SIZE);
   });
 
-  it('matches by color or symbol; +4 only without the current color', () => {
+  it('matches by color or symbol; +4 can be played any time', () => {
     const s = createZerou(seats(2), 1);
     rig(s, [card(900, 'r', '5'), card(901, null, 'wild4')], card(950, 'r', '2'));
     const hand = s.hands[s.current]!;
     expect(canPlay(s, hand, card(1, 'b', '2'))).toBe(true);
     expect(canPlay(s, hand, card(1, 'b', '7'))).toBe(false);
-    expect(canPlay(s, hand, hand[1]!)).toBe(false);
+    expect(canPlay(s, hand, hand[1]!)).toBe(true);
   });
 
   it('skip, reverse with two players and +2 all hand the turn back', () => {

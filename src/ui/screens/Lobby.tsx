@@ -35,6 +35,10 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onSetPiece
   const [startError, setStartError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [gameError, setGameError] = useState<string | null>(null);
+  const voteGames = GAMES.filter((g) => g.available && g.maxPlayers >= lobby.players.length);
+  const myVote = lobby.players.find((p) => p.id === me)?.vote ?? null;
+  const [pickGame, setPickGame] = useState<GameId>(myVote ?? voteGames.find((g) => g.id !== lobby.game)?.id ?? lobby.game);
+  const votes = voteGames.map((g) => ({ g, count: lobby.players.filter((p) => p.vote === g.id).length })).filter((v) => v.count > 0);
 
   function changeGame(id: string) {
     if (!host) return;
@@ -104,21 +108,34 @@ export function Lobby({ lobby, me, code, shareLink, host, onSetColor, onSetPiece
             <section className="panel">
               <h2>{tr.t('voteTitle')}</h2>
               <p className="zone__hint">{tr.t('voteHint')}</p>
-              <ul className="seats">
-                {GAMES.filter((g) => g.available && g.maxPlayers >= lobby.players.length).map((g) => {
-                  const count = lobby.players.filter((p) => p.vote === g.id).length;
-                  const mine = lobby.players.find((p) => p.id === me)?.vote === g.id;
-                  return (
-                    <li key={g.id} className={mine ? 'is-me' : ''}>
+              <div className="timer-setting">
+                <select aria-label={tr.t('voteTitle')} value={pickGame} onChange={(e) => setPickGame(e.target.value as GameId)}>
+                  {voteGames.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {tr.t(g.nameKey)}
+                    </option>
+                  ))}
+                </select>
+                <button type="button" className="primary" disabled={myVote === pickGame} onClick={() => onVote(pickGame)}>
+                  {tr.t('voteSuggest')}
+                </button>
+                {myVote && (
+                  <button type="button" className="ghost" onClick={() => onVote(null)}>
+                    {tr.t('voteClear')}
+                  </button>
+                )}
+              </div>
+              {votes.length > 0 && (
+                <ul className="seats">
+                  {votes.map(({ g, count }) => (
+                    <li key={g.id} className={g.id === myVote ? 'is-me' : ''}>
                       <span className="seats__name">{tr.t(g.nameKey)}</span>
                       {g.id === lobby.game && <span className="pill">{tr.t('game')}</span>}
-                      <button type="button" className={mine ? 'primary' : ''} aria-pressed={mine} onClick={() => onVote(mine ? null : g.id)}>
-                        {count}
-                      </button>
+                      <span className="pill pill--accent">{count}</span>
                     </li>
-                  );
-                })}
-              </ul>
+                  ))}
+                </ul>
+              )}
             </section>
           )}
 

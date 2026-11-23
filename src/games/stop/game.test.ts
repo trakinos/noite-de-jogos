@@ -284,3 +284,16 @@ describe('stop', () => {
     expect(s.answers[0]).toEqual(['', '', '']);
   });
 });
+
+describe('stop excluded letters', () => {
+  it('never draws an excluded letter and refuses options with too few letters left', () => {
+    const excluded = ['A', 'B', 'C', 'D', 'E'];
+    for (let seed = 0; seed < 20; seed++) {
+      const s = createStop([{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], { ...defaultStopOptions(), rounds: 10, excluded }, seed, 0);
+      expect(s.letters.some(l => excluded.includes(l))).toBe(false);
+      expect(new Set(s.letters).size).toBe(10);
+    }
+    expect(stopModule.parseOptions({ rounds: 10, excluded: 'ABCDEFGHIJLMNO'.split('') })).toHaveProperty('error');
+    expect(stopModule.parseOptions({ rounds: 5, excluded: ['A', 'Z', 'K'] })).toMatchObject({ excluded: ['A', 'Z'] });
+  });
+});

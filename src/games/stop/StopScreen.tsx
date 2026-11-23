@@ -25,6 +25,9 @@ export const STOP_TEXT: Texts = {
     lobbyTime: 'Tempo por rodada',
     lobbyCategories: 'Categorias',
     lobbyMin: 'Escolha pelo menos {n}.',
+    lobbyLetters: 'Letras que podem sair',
+    lobbyLettersHint: 'Desmarque as letras que você não quer no jogo.',
+    lettersOut: 'Sem as letras: {l}',
     seconds: '{n} s',
     cat_nome: 'Nome',
     cat_animal: 'Animal',
@@ -94,6 +97,9 @@ export const STOP_TEXT: Texts = {
     lobbyTime: 'Time per round',
     lobbyCategories: 'Categories',
     lobbyMin: 'Pick at least {n}.',
+    lobbyLetters: 'Letters that can come up',
+    lobbyLettersHint: "Untick the letters you don't want in the game.",
+    lettersOut: 'Without the letters: {l}',
     seconds: '{n} s',
     cat_nome: 'Name',
     cat_animal: 'Animal',
@@ -169,7 +175,7 @@ export function StopLobby(props: LobbyProps) {
           <span>{t('lobbyRounds')}</span>
           <select value={o.rounds} onChange={e => set({ rounds: Number(e.target.value) })}>
             {ROUND_OPTIONS.map(n => (
-              <option key={n} value={n}>{n}</option>
+              <option key={n} value={n} disabled={LETTERS.length - (o.excluded?.length ?? 0) < n}>{n}</option>
             ))}
           </select>
         </label>
@@ -201,6 +207,30 @@ export function StopLobby(props: LobbyProps) {
           );
         })}
       </fieldset>
+      <fieldset className="bsetting stop__letters">
+        <legend>
+          {t('lobbyLetters')} <span className="muted">{t('lobbyLettersHint')}</span>
+        </legend>
+        {LETTERS.map(l => {
+          const on = !o.excluded?.includes(l);
+          const pool = LETTERS.length - (o.excluded?.length ?? 0);
+          return (
+            <label key={l} className="bsetting__switch stop__letterpick">
+              <input
+                type="checkbox"
+                checked={on}
+                // Every round needs its own letter.
+                disabled={on && pool <= o.rounds}
+                onChange={() => {
+                  const excluded = on ? [...(o.excluded ?? []), l] : (o.excluded ?? []).filter(x => x !== l);
+                  set({ excluded });
+                }}
+              />
+              <span>{l}</span>
+            </label>
+          );
+        })}
+      </fieldset>
     </>
   ) : (
     <div className="bsetting stop__summary">
@@ -210,6 +240,7 @@ export function StopLobby(props: LobbyProps) {
       <span>
         {t('lobbyCategories')}: {o.categories.map(c => t(`cat_${c}`)).join(', ')}
       </span>
+      {o.excluded && o.excluded.length > 0 && <span>{t('lettersOut', { l: o.excluded.join(' ') })}</span>}
     </div>
   );
   return <SimpleLobby {...props} options={options} rules={{ game: 'stop', title: t('rulesTitle'), paragraphs: STOP_RULES.map(k => t(k)) }} />;
@@ -342,7 +373,7 @@ export function StopScreen(props: GameScreenProps) {
                         value={value}
                         maxLength={MAX_ANSWER}
                         disabled={locked}
-                        placeholder={`${view.letter}…`}
+                        placeholder={drawing ? '' : `${view.letter}…`}
                         autoComplete="off"
                         autoCorrect="off"
                         autoCapitalize="words"
@@ -368,7 +399,7 @@ export function StopScreen(props: GameScreenProps) {
                 <button type="button" className="stop__btn" disabled={!complete || locked || view.stopBy !== null || wantStop} onClick={() => setWantStop(true)}>
                   {t('stop')}
                 </button>
-                <p className="muted">{complete ? t('stopReady') : t('stopHint', { letter: view.letter })}</p>
+                <p className="muted">{complete ? t('stopReady') : t('stopHint', { letter: drawing ? '?' : view.letter })}</p>
               </div>
             </section>
           )}

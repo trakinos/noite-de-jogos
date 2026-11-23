@@ -5,8 +5,8 @@ import type { ApplyResult, GameInstance, GameModule, SeatInfo } from '../module'
 /**
  * Zerou!: match the top card by color or symbol, and be the first to empty your hand.
  * Pula skips the next player, Inverte turns the order around (with two players it skips), +2 makes the next player draw 2
- * and lose their turn, Coringa picks the color, Coringa +4 picks the color and makes the next player draw 4 (only when you
- * have nothing of the current color), Troca-Troca picks the color and swaps hands with another player.
+ * and lose their turn, Coringa picks the color, Coringa +4 picks the color and makes the next player draw 4,
+ * Troca-Troca picks the color and swaps hands with another player.
  *
  * House rules from the playtest:
  * - Accusing: nothing is automatic. Anyone may accuse any opponent at any time. Holding exactly one card without having
@@ -149,8 +149,7 @@ export function top(s: ZerouState): Card {
 export function canPlay(s: ZerouState, hand: Card[], card: Card): boolean {
   // Under a +2 / +4 only the same kind of card answers, whatever its color.
   if (s.pending) return card.value === s.pending.kind;
-  if (card.value === 'wild' || card.value === 'swap') return true;
-  if (card.value === 'wild4') return !hand.some(c => c.color === s.color);
+  if (card.value === 'wild' || card.value === 'wild4' || card.value === 'swap') return true;
   return card.color === s.color || card.value === top(s).value;
 }
 
@@ -224,7 +223,7 @@ export function playCards(s: ZerouState, seat: number, intent: PlayIntent, now: 
     }
   } else {
     if (s.drawn !== null && (cards.length > 1 || first.id !== s.drawn)) return fail('You can only play the card you drew');
-    if (!canPlay(s, hand, first)) return fail(s.pending ? 'Answer with the same kind of card, or draw' : first.value === 'wild4' ? 'Coringa +4 only without the current color' : 'That card does not match');
+    if (!canPlay(s, hand, first)) return fail(s.pending ? 'Answer with the same kind of card, or draw' : 'That card does not match');
     if (cards.length > 1 && cards.some(c => c.color === null || c.value !== first.value)) return fail('Only cards of the same number go together');
   }
   const wild = lastCard.color === null;

@@ -15,7 +15,7 @@ export const ZEROU_TEXT: Texts = {
   pt: {
     rulesTitle: 'Regras do Zerou!',
     rules1: `Cada um recebe ${HAND} cartas. Na sua vez, jogue uma carta da mesma cor ou do mesmo número/símbolo da carta de cima. Sem jogada (ou se preferir), compre: você compra até vir uma carta que sirva, e pode jogá-la na hora ou passar.`,
-    rules2: 'Cartas especiais. Pula: o próximo perde a vez. Inverte: troca o sentido (com dois jogadores, funciona como Pula). +2: o próximo compra 2 e perde a vez, a não ser que responda com outro +2, e a compra soma e passa adiante. Coringa: você escolhe a cor. Coringa +4: escolhe a cor e o próximo compra 4 e perde a vez, mas só vale se você não tiver nenhuma carta da cor atual; ele também pode ser respondido com outro +4, mesmo tendo a cor.',
+    rules2: 'Cartas especiais. Pula: o próximo perde a vez. Inverte: troca o sentido (com dois jogadores, funciona como Pula). +2: o próximo compra 2 e perde a vez, a não ser que responda com outro +2, e a compra soma e passa adiante. Coringa: você escolhe a cor. Coringa +4: escolhe a cor e o próximo compra 4 e perde a vez, e pode ser jogado a qualquer momento; ele também pode ser respondido com outro +4.',
     rulesSwap: 'Troca-Troca: escolha a cor e um jogador, e vocês trocam a mão inteira. Quem recebe uma mão de uma carta só não precisa dizer Última!. Se for a sua última carta, você simplesmente zera.',
     rulesPairs: 'Pares: tendo duas ou mais cartas do mesmo número ou símbolo, mesmo de cores diferentes, você pode jogá-las juntas, desde que a primeira sirva na mesa. Toque nelas na ordem e aperte Jogar: a última fica por cima e define a cor. Os efeitos somam: dois +2 fazem o próximo comprar 4, dois Pula pulam dois jogadores, dois Inverte se anulam. Coringas e Troca-Troca não fazem par, e depois de comprar só vale a carta comprada.',
     rulesCut: 'Corte: quem tiver uma carta idêntica à de cima (mesma cor e mesmo número ou símbolo) pode jogá-la fora da vez, desde que o jogador da vez ainda não tenha jogado nem comprado. O efeito da carta vale normalmente e o jogo segue a partir de quem cortou. Compras já feitas não voltam. Coringas não cortam.',
@@ -78,7 +78,6 @@ export const ZEROU_TEXT: Texts = {
     playAgain: 'Jogar de novo',
     'reason:Not your turn': 'Não é a sua vez.',
     'reason:That card does not match': 'Essa carta não combina com a de cima.',
-    'reason:Coringa +4 only without the current color': 'O Coringa +4 só vale sem cartas da cor atual.',
     'reason:You can only play the card you drew': 'Agora só dá para jogar a carta comprada.',
     'reason:Draw a card first': 'Compre uma carta antes de passar.',
     'reason:Nobody to accuse': 'Não há ninguém para acusar.',
@@ -92,7 +91,7 @@ export const ZEROU_TEXT: Texts = {
   en: {
     rulesTitle: 'Zerou! rules',
     rules1: `Everyone gets ${HAND} cards. On your turn, play a card matching the top card's color or number/symbol. With nothing to play (or if you'd rather), draw: you keep drawing until a card fits, and may play it at once or pass.`,
-    rules2: 'Special cards. Skip: the next player loses their turn. Reverse: switches direction (with two players it works as Skip). +2: the next player draws 2 and loses their turn, unless they answer with another +2, which adds up and moves on. Wild: you pick the color. Wild +4: pick the color, and the next player draws 4 and loses their turn, but only when you have no card of the current color; it can also be answered with another +4, even holding the color.',
+    rules2: 'Special cards. Skip: the next player loses their turn. Reverse: switches direction (with two players it works as Skip). +2: the next player draws 2 and loses their turn, unless they answer with another +2, which adds up and moves on. Wild: you pick the color. Wild +4: pick the color, and the next player draws 4 and loses their turn, and it can be played at any time; it can also be answered with another +4.',
     rulesSwap: "Hand Swap (Troca-Troca): pick the color and a player, and the two of you swap whole hands. Whoever receives a one-card hand doesn't need to call Última!. As your last card it simply wins.",
     rulesPairs: 'Pairs: holding two or more cards of the same number or symbol, even in different colors, you may play them together as long as the first one fits the pile. Tap them in order and press Play: the last one ends up on top and sets the color. Effects add up: two +2s make the next player draw 4, two Skips skip two players, two Reverses cancel out. Wilds and Hand Swaps never pair, and after drawing only the drawn card can be played.',
     rulesCut: "Cutting in: if you hold a card identical to the top card (same color and same number or symbol) you may play it out of turn, as long as the current player hasn't played or drawn yet. The card's effect applies as usual and play continues from whoever cut in. Cards already drawn stay drawn. Wilds can't cut in.",
@@ -155,7 +154,6 @@ export const ZEROU_TEXT: Texts = {
     playAgain: 'Play again',
     'reason:Not your turn': "It's not your turn.",
     'reason:That card does not match': "That card doesn't match the top card.",
-    'reason:Coringa +4 only without the current color': 'Wild +4 only when you have none of the current color.',
     'reason:You can only play the card you drew': 'You can only play the card you drew now.',
     'reason:Draw a card first': 'Draw a card before passing.',
     'reason:Nobody to accuse': 'There is nobody to accuse.',

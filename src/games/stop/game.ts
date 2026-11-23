@@ -36,6 +36,8 @@ export interface StopOptions {
   /** Seconds to write each round. */
   seconds: number;
   categories: CategoryId[];
+  /** Letters never drawn, on top of the ones already left out. */
+  excluded?: string[];
 }
 
 export type StopPhase = 'writing' | 'review' | 'scores';
@@ -132,7 +134,7 @@ export function createStop(seats: SeatInfo[], options: StopOptions, seed: number
   const s: StopState = {
     players: seats,
     options,
-    letters: shuffle(rng, LETTERS).slice(0, options.rounds),
+    letters: shuffle(rng, LETTERS.filter(l => !options.excluded?.includes(l))).slice(0, options.rounds),
     round: -1,
     phase: 'writing',
     deadline: null,
@@ -423,12 +425,15 @@ export const stopModule: GameModule<StopOptions> = {
     const d = defaultStopOptions();
     const rounds = (ROUND_OPTIONS as readonly unknown[]).includes(o.rounds) ? (o.rounds as number) : d.rounds;
     const seconds = (TIME_OPTIONS as readonly unknown[]).includes(o.seconds) ? (o.seconds as number) : d.seconds;
-    if (o.categories === undefined) return { rounds, seconds, categories: d.categories };
+    const excluded = Array.isArray(o.excluded) ? LETTERS.filter(l => (o.excluded as unknown[]).includes(l)) : [];
+    if (LETTERS.length - excluded.length < rounds) return { error: 'Not enough letters left for that many rounds' };
+    const extra = excluded.length > 0 ? { excluded } : {};
+    if (o.categories === undefined) return { rounds, seconds, categories: d.categories, ...extra };
     const picked = Array.isArray(o.categories) ? o.categories : [];
     // Kept in the list's own order, whatever order they were ticked in.
     const categories = CATEGORIES.filter(c => picked.includes(c));
     if (categories.length < MIN_CATEGORIES) return { error: `Pick at least ${MIN_CATEGORIES} categories` };
-    return { rounds, seconds, categories };
+    return { rounds, seconds, categories, ...extra };
   },
   create: (seats, options, seed) => new StopInstance(createStop(seats, options, seed, Date.now())),
 };

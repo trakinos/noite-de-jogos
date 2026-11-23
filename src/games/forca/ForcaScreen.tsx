@@ -217,9 +217,12 @@ export function ForcaScreen(props: GameScreenProps) {
   const view = asForcaView(props.view);
   const t = useGameText(FORCA_TEXT);
   const reason = useReason(t);
+  const { tr } = useLang();
   const [rules, setRules] = useState(false);
   const [solving, setSolving] = useState('');
   const [solveOpen, setSolveOpen] = useState(false);
+  /** The winner's modal can be put away to look at the final board. */
+  const [winClosed, setWinClosed] = useState(false);
   const { lobby, awaiting, onIntent } = props;
   const over = view.winner !== null;
   const writing = view.phase === 'write';
@@ -246,7 +249,7 @@ export function ForcaScreen(props: GameScreenProps) {
 
   return (
     <GameFrame
-      title={useLang().tr.t('gameForcaName')}
+      title={tr.t('gameForcaName')}
       code={props.code}
       clock={over || view.roundOver ? null : ownClock ?? props.clock}
       error={props.error}
@@ -294,10 +297,7 @@ export function ForcaScreen(props: GameScreenProps) {
                       : t('solvedBy', { name: view.players[view.roundOver.solvedBy]!.name, word: view.roundOver.word })}
                   </b>
                   {over ? (
-                    <>
-                      <h2>{t('win', { name: view.players[view.winner!]!.name })}</h2>
-                      <EndActions isHost={props.isHost} onPlayAgain={props.onPlayAgain} onBackToLobby={props.onBackToLobby} onLeave={props.onLeave} playAgain={t('playAgain')} />
-                    </>
+                    winClosed && <EndActions isHost={props.isHost} onPlayAgain={props.onPlayAgain} onBackToLobby={props.onBackToLobby} onLeave={props.onLeave} playAgain={t('playAgain')} />
                   ) : (
                     <button type="button" className="primary lg" disabled={awaiting} onClick={() => onIntent({ type: 'next' })}>
                       {t('next')}
@@ -381,6 +381,25 @@ export function ForcaScreen(props: GameScreenProps) {
           </section>
         </aside>
       </div>
+      {over && !winClosed && (
+        <div className="overlay" role="dialog" aria-modal="true" aria-label={t('win', { name: view.players[view.winner!]!.name })}>
+          <div className="panel gframe__rules forca__winner">
+            <h2>🏆 {t('win', { name: view.players[view.winner!]!.name })}</h2>
+            <ol className="forca__podium">
+              {ranking.map(({ p, i, score }) => (
+                <li key={p.id} className={i === view.winner ? 'is-winner' : ''}>
+                  <span>{p.name}</span>
+                  <b>{t('points', { n: score })}</b>
+                </li>
+              ))}
+            </ol>
+            <EndActions isHost={props.isHost} onPlayAgain={props.onPlayAgain} onBackToLobby={props.onBackToLobby} onLeave={props.onLeave} playAgain={t('playAgain')} />
+            <button type="button" className="ghost" onClick={() => setWinClosed(true)}>
+              {tr.t('close')}
+            </button>
+          </div>
+        </div>
+      )}
       {rules && <RulesSheet game="forca" title={t('rulesTitle')} paragraphs={FORCA_RULES.map(k => t(k))} onClose={() => setRules(false)} />}
     </GameFrame>
   );

@@ -157,6 +157,8 @@ const ui = {
   "game": "Game",
   "voteTitle": "Vote for the game",
   "voteHint": "Once everyone has voted, the top pick is played.",
+  "voteSuggest": "Suggest",
+  "voteClear": "Remove my vote",
   "timerOff": "Off",
   "timerSeconds": "{n} s",
   "timerHint": "Attack responses get 30 s.",
